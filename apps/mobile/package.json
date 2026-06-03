@@ -1,0 +1,23 @@
+{
+  "name": "@pic4paws/mobile",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "expo start",
+    "build": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint .",
+    "test": "vitest run --passWithNoTests"
+  },
+  "dependencies": {
+    "@pic4paws/domain": "0.1.0",
+    "expo": "^54.0.24",
+    "expo-router": "^6.0.15",
+    "react": "^19.2.1",
+    "react-native": "^0.82.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.2.7"
+  }
+}

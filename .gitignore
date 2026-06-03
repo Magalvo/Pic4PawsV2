@@ -1,9 +1,17 @@
 node_modules/
 dist/
+dist-types/
+.next/
+.turbo/
+build/
 coverage/
 .env
 .env.*
 !.env.example
 *.log
 *.tsbuildinfo
+*.tmp
 .DS_Store
+prototypes/**/public/images/
+notification-payload.zip
+notification-payload/

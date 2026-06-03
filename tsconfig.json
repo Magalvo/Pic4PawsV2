@@ -2,7 +2,12 @@
   "files": [],
   "references": [
     { "path": "./packages/domain" },
-    { "path": "./apps/api" },
-    { "path": "./apps/web" }
+    { "path": "./packages/config" },
+    { "path": "./packages/database" },
+    { "path": "./packages/payments" },
+    { "path": "./packages/ui" },
+    { "path": "./apps/mobile" },
+    { "path": "./apps/web" },
+    { "path": "./apps/workers" }
   ]
 }

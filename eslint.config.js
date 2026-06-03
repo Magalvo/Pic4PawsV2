@@ -7,9 +7,13 @@ export default tseslint.config(
     ignores: [
       '**/dist/**',
       '**/dist-types/**',
+      '**/.next/**',
+      '**/build/**',
+      '**/*.d.ts',
       'node_modules/**',
       'coverage/**',
       'reference/**',
+      'prototypes/**',
       'eslint.config.js',
     ],
   },

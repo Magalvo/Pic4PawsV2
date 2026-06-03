@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "composite": true,
+    "declaration": true,
+    "declarationMap": true,
+    "outDir": "dist",
+    "rootDir": "src",
+    "types": ["node"],
+    "paths": {
+      "@pic4paws/domain": ["../../packages/domain/src/index.ts"]
+    }
+  },
+  "include": ["src"],
+  "references": [{ "path": "../../packages/domain" }]
+}

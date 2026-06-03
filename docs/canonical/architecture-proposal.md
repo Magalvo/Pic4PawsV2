@@ -1,7 +1,8 @@
 # Pic4Paws V2 Architecture Proposal
 
-Status: Pending human approval
+Status: Approved
 Date: 2026-06-03
+Approved: 2026-06-03
 
 ## 1. Executive Recommendation
 
@@ -257,6 +258,8 @@ Every feature should follow:
 
 ## 6. Proposed Folder Structure
 
+The monorepo should be managed with Turborepo on top of package-manager workspaces. `pnpm` workspaces are preferred for speed and deterministic installs, while npm workspaces remain acceptable if we choose to minimize tooling changes during early setup.
+
 Final target structure after approval:
 
 ```text
@@ -281,17 +284,18 @@ tests/
   policies/
 ```
 
-## 7. Open Decisions For Approval
+## 7. Approved Decisions
 
-Please approve or adjust:
+Approved:
 
 - Frontend split: Expo mobile app plus Next.js web/dashboard.
 - Supabase as primary Postgres/Auth/RLS platform in an EU region.
 - Cloudflare R2 as media storage for pet feed images.
 - Cloudflare Workers for payment webhooks and low-cost edge APIs.
 - Eupago as first PSP candidate, with Ifthenpay and Stripe evaluated as fallbacks/complements.
+- Turborepo plus package-manager workspaces for efficient monorepo orchestration.
 
-Once approved, the next document should be `docs/canonical/sdd.md` with strict interfaces for `User`, `Shelter`, `Pet`, `AdoptionForm` and `DonationTransaction`.
+Next document: `docs/canonical/sdd.md` with strict interfaces for `User`, `Shelter`, `Pet`, `AdoptionForm` and `DonationTransaction`.
 
 ## 8. Sources Checked
 

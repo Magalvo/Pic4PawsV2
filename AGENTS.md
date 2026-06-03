@@ -16,13 +16,11 @@ This codebase follows Spec-Driven Development. Features should start from a work
 
 Current required pipeline:
 
-1. Architecture proposal in `docs/canonical/architecture-proposal.md`.
-2. Human approval.
-3. SDD in `docs/canonical/sdd.md`.
-4. Human approval.
-5. Strict TDD feature cycles.
+1. Architecture proposal in `docs/canonical/architecture-proposal.md`. Approved.
+2. SDD in `docs/canonical/sdd.md`. Approved.
+3. Strict TDD feature cycles.
 
-Do not continue implementing product features until the architecture proposal is approved.
+Do not implement product features without a work item, work spec and failing test first.
 
 ## Legacy App Rule
 
@@ -31,8 +29,8 @@ The legacy app under `reference/` is strictly functional reference. Use it to un
 ## Stack
 
 - TypeScript strict mode
-- Final stack pending approval in `docs/canonical/architecture-proposal.md`
-- Current React/Vite and Express code is exploratory boilerplate until architecture approval
+- Approved stack in `docs/canonical/architecture-proposal.md`
+- Current React/Vite and Express code is exploratory boilerplate to be revised by `FOUND-002`
 - Vitest for unit and integration tests
 - ESLint and Prettier for quality gates
 

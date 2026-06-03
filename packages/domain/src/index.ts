@@ -1,3 +1,13 @@
+export type UUID = string;
+export type ISODateTime = string;
+export type Locale = 'pt-PT' | 'en';
+export type CurrencyCode = 'EUR';
+
+export type PaymentProvider = 'eupago' | 'ifthenpay' | 'stripe';
+
+export const productName = 'Pic4Paws';
+export const primaryCtaLabel = 'Comecar fundacao aprovada';
+
 export type AdoptionStatus = 'available' | 'pending' | 'adopted';
 export type PetSpecies = 'dog' | 'cat' | 'rabbit' | 'other';
 
