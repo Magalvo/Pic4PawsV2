@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#ec5b13",
+                        "secondary": "#2dd4bf",
+                        "background-light": "#f8f6f6",
+                        "background-dark": "#221610",
+                    },
+                    fontFamily: {
+                        "display": ["Inter", "sans-serif"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100">
+<div class="relative flex min-h-screen w-full flex-col max-w-md mx-auto bg-white dark:bg-slate-900 shadow-xl overflow-hidden">
+<!-- Header -->
+<header class="flex items-center justify-between px-4 pt-4 pb-2 bg-white dark:bg-slate-900 sticky top-0 z-20">
+<div class="flex items-center text-primary">
+<span class="material-symbols-outlined text-3xl">pets</span>
+</div>
+<h1 class="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">Pic4Paws</h1>
+<div class="flex items-center">
+<button class="p-2 text-slate-600 dark:text-slate-400">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-slate-600 dark:text-slate-400">
+<span class="material-symbols-outlined">send</span>
+</button>
+</div>
+</header>
+<!-- Tabs -->
+<nav class="flex border-b border-slate-100 dark:border-slate-800 px-4 bg-white dark:bg-slate-900 sticky top-[60px] z-20">
+<button class="flex-1 py-3 text-sm font-bold border-b-2 border-primary text-primary">For You</button>
+<button class="flex-1 py-3 text-sm font-bold border-b-2 border-transparent text-slate-500 dark:text-slate-400">Following</button>
+</nav>
+<!-- Main Feed -->
+<main class="flex-1 overflow-y-auto pb-20">
+<!-- Post Item 1 -->
+<article class="relative flex flex-col w-full border-b border-slate-100 dark:border-slate-800 pb-6">
+<!-- User/Shelter Header -->
+<div class="flex items-center gap-3 p-4">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden border border-primary/20">
+<img class="w-full h-full object-cover" data-alt="Shelter logo or profile picture" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDSaKRUGcUPL7fkeTbpRbB17VyjoONp5Eu0muAxQf-R6MZa4cuf2WAIdVU_NtvJf9QKzlfC0g-emydkmHE-e34EhblaP8jJi2dEyWuifMXH8dvPy89jY3Brk5MxFk4pp1bbr6SKcxxRpTaL3g-e6QnaIKk6RXjJ78tyFMUN2ryVh5JA1_wnjEOOmzJ_nd7K3EH7VO_XdJ6X4Gl1F2YL-uSALT3qMjX2GwYGx3Q4RSOIMhkCw1hRtdt83DWFZScSwNMfFNw8eEiQ1NYD"/>
+</div>
+<div>
+<h3 class="text-sm font-bold">Happy Tails Sanctuary</h3>
+<p class="text-xs text-slate-500">2 miles away • Austin, TX</p>
+</div>
+<button class="ml-auto text-slate-400">
+<span class="material-symbols-outlined">more_horiz</span>
+</button>
+</div>
+<!-- Main Photo with Overlays -->
+<div class="relative w-full aspect-[4/5] bg-slate-200 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Portrait of a friendly Golden Retriever sitting in grass" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCggwOF65Ce8LRAv2ptDsHmaQmZyOaWb5IA7VXhek24bydNJy_DLwHEu-9LBSusiSYp1QCEOD3JszKKo8wveugITfKef-JsKmXoOPH15uUnsujmoqwO3rO-qm614czunCS8eM59WzpiD6sZuAwVQXCh0iBR1Sqagg8D3vL5teVcjvw7VwJmmtFkKBR-6Z6oQBVvvixLB-ZfSw523LdHDMZwk21Nxv7fy2ztP6GpKfLAECl5rrgR9EmiEHUJ6SuORstzhaRvJEBq4oI0"/>
+<!-- Action Overlay Buttons -->
+<div class="absolute bottom-6 left-4 right-4 flex flex-col gap-2">
+<div class="flex gap-2">
+<button class="flex-1 bg-primary text-white font-bold py-3 rounded-xl shadow-lg hover:bg-primary/90 flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-lg">favorite</span>
+                                Adopt Me
+                            </button>
+</div>
+<div class="flex gap-2">
+<button class="flex-1 bg-secondary text-white font-bold py-2 rounded-xl shadow-lg hover:bg-secondary/90 flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-lg">verified_user</span>
+                                Sponsor
+                            </button>
+<button class="flex-1 bg-white/90 backdrop-blur text-slate-900 font-bold py-2 rounded-xl shadow-lg flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-lg">volunteer_activism</span>
+                                Donate
+                            </button>
+</div>
+</div>
+</div>
+<!-- Interaction Bar -->
+<div class="flex items-center gap-4 px-4 pt-4">
+<button class="flex items-center gap-1 text-slate-700 dark:text-slate-300">
+<span class="material-symbols-outlined text-2xl text-primary">favorite</span>
+<span class="text-sm font-semibold">1,248</span>
+</button>
+<button class="flex items-center gap-1 text-slate-700 dark:text-slate-300">
+<span class="material-symbols-outlined text-2xl">chat_bubble</span>
+<span class="text-sm font-semibold">42</span>
+</button>
+<button class="flex items-center gap-1 text-slate-700 dark:text-slate-300">
+<span class="material-symbols-outlined text-2xl">share</span>
+</button>
+<button class="ml-auto text-slate-700 dark:text-slate-300">
+<span class="material-symbols-outlined text-2xl">bookmark</span>
+</button>
+</div>
+<!-- Description -->
+<div class="px-4 pt-2">
+<p class="text-sm leading-relaxed">
+<span class="font-bold">Happy Tails Sanctuary</span> Meet Buddy! A 2-year-old Golden Retriever with the biggest heart. He loves tennis balls and long walks. Is he your forever friend? 🐾
+                    </p>
+<button class="text-xs text-slate-500 mt-1 uppercase font-semibold">View all 42 comments</button>
+</div>
+</article>
+<!-- Post Item 2 -->
+<article class="relative flex flex-col w-full border-b border-slate-100 dark:border-slate-800 pb-6">
+<div class="flex items-center gap-3 p-4">
+<div class="w-10 h-10 rounded-full bg-secondary/10 flex items-center justify-center overflow-hidden border border-secondary/20">
+<img class="w-full h-full object-cover" data-alt="Shelter profile picture showing a puppy" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC4p9hz5OpaQvcKJbC1oPJa9shnILbj_Bz8uiHbBP4MiEYbyEs3TiCAs1vOgGSz9dOtRaAtbXqfobHH0n9Wy-6zSsBDjxUtl9BujCtLcrZm-Bv2ne8-duVr93WwlxGryXDfgNSn8vUALPuKav9FW0j6zSFLO2-hnp2KRJO9MFC1-kvcfyR84rdquhmA1ZmiOHwIhWMPEYExWFSPsZJxvJeBYxV8ljAQYUUMKZGLqJ5LLRZXDEOd0cx6pxlGRCyuP9vrahk4aYfvU8i8"/>
+</div>
+<div>
+<h3 class="text-sm font-bold">Paws &amp; Claws Rescue</h3>
+<p class="text-xs text-slate-500">5 miles away • Round Rock, TX</p>
+</div>
+<button class="ml-auto text-slate-400">
+<span class="material-symbols-outlined">more_horiz</span>
+</button>
+</div>
+<div class="relative w-full aspect-[4/5] bg-slate-200 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="Elegant gray cat looking curiously at the camera" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwGf-51qEvNJdZoDnAvHU6K8wUS4TC69ZQmV3g3uvHsIZQg7qGGpJCAEbDSjEOVjZj_k3Iqj12vfnFUMqFegj3IrkSIyT7eYgdQBhAsCwJ0u6rkBDVI8ACpuBdoJwAZ-kOrkivFiHvfFFdm4l7SQBVC2BZ5xwyJHt2i02IpJyA3XA8mRBiMW0R5fVfU4P6OhY9AdPFLjuWlQalfMeR-A0Qvh__0_HKR4qT02Wc-KP1iaa564-N12A_ZBascev7ZTom46JV5vgKDki4"/>
+<div class="absolute bottom-6 left-4 right-4 flex flex-col gap-2">
+<button class="w-full bg-primary text-white font-bold py-3 rounded-xl shadow-lg flex items-center justify-center gap-2">
+<span class="material-symbols-outlined">favorite</span>
+                            Adopt Me
+                        </button>
+<div class="flex gap-2">
+<button class="flex-1 bg-secondary text-white font-bold py-2 rounded-xl shadow-lg flex items-center justify-center gap-2">
+<span class="material-symbols-outlined">verified_user</span>
+                                Sponsor
+                            </button>
+<button class="flex-1 bg-white/90 backdrop-blur text-slate-900 font-bold py-2 rounded-xl shadow-lg flex items-center justify-center gap-2">
+<span class="material-symbols-outlined">volunteer_activism</span>
+                                Donate
+                            </button>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-4 px-4 pt-4">
+<button class="flex items-center gap-1 text-slate-700 dark:text-slate-300">
+<span class="material-symbols-outlined text-2xl">favorite</span>
+<span class="text-sm font-semibold">856</span>
+</button>
+<button class="flex items-center gap-1 text-slate-700 dark:text-slate-300">
+<span class="material-symbols-outlined text-2xl">chat_bubble</span>
+<span class="text-sm font-semibold">18</span>
+</button>
+<button class="ml-auto text-slate-700 dark:text-slate-300">
+<span class="material-symbols-outlined text-2xl">bookmark</span>
+</button>
+</div>
+</article>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-100 dark:border-slate-800 px-6 py-2 pb-6 flex justify-between items-center z-30">
+<a class="flex flex-col items-center gap-1 text-primary" href="#">
+<span class="material-symbols-outlined text-2xl font-variation-fill">home</span>
+<span class="text-[10px] font-bold">Feed</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500" href="#">
+<span class="material-symbols-outlined text-2xl">search</span>
+<span class="text-[10px] font-medium">Explore</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500" href="#">
+<span class="material-symbols-outlined text-2xl">history</span>
+<span class="text-[10px] font-medium">History</span>
+</a>
+<a class="flex flex-col items-center gap-1 text-slate-400 dark:text-slate-500" href="#">
+<span class="material-symbols-outlined text-2xl">person</span>
+<span class="text-[10px] font-medium">Profile</span>
+</a>
+</nav>
+</div>
+</body></html>

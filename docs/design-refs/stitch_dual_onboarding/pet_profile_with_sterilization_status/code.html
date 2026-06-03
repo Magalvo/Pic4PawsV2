@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#ec5b13",
+                        "secondary": "#2d9da6",
+                        "background-light": "#f8f6f6",
+                        "background-dark": "#221610",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<title>Sparky's Profile | Pic4Paws</title>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100">
+<div class="relative flex min-h-screen flex-col overflow-x-hidden">
+<header class="sticky top-0 z-50 flex items-center bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md p-4 justify-between border-b border-primary/10">
+<button class="text-primary flex size-10 items-center justify-center rounded-full hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined">arrow_back</span>
+</button>
+<h2 class="text-lg font-bold leading-tight tracking-tight flex-1 text-center">Sparky's Profile</h2>
+<div class="flex gap-2">
+<button class="text-primary flex size-10 items-center justify-center rounded-full hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined">share</span>
+</button>
+<button class="text-primary flex size-10 items-center justify-center rounded-full hover:bg-primary/10 transition-colors">
+<span class="material-symbols-outlined">favorite</span>
+</button>
+</div>
+</header>
+<main class="flex-1 pb-24">
+<div class="@container max-w-4xl mx-auto">
+<div class="@[480px]:px-4 @[480px]:py-6">
+<div class="w-full bg-center bg-no-repeat bg-cover flex flex-col justify-end overflow-hidden @[480px]:rounded-xl min-h-[400px] shadow-lg relative group" data-alt="Happy golden retriever sitting in a sunny field" style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuDtEPcjNA8fxLiydFtPzdVpE7NpbNIZjgXnqNUYh-RDe3TAhhQJkSwuVotl6PjbL0IC94Spik-bIQQ8He49WX9dFK-9ownyFW--oEudX5zzgBG6dRKT4Dgb0QJ_FjtUXlmuM_-ZsfwjNVKXUZc_ZACbgjXimdgkgbZZM4h64RVe0uscMGF3kACtuK0np4h1Sb6nrgw4xJB2YlS0XLScVZduR6dADGdFWOc5-zvVp2ogrRRRHWKyGHppcBBQ0-IdFL46-IpOJbtj9NH3");'>
+<div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+<div class="relative p-6 text-white">
+<span class="inline-block px-3 py-1 rounded-full bg-primary text-xs font-bold uppercase tracking-wider mb-2">Available for Adoption</span>
+<h1 class="text-4xl font-bold">Sparky</h1>
+<p class="text-white/90 font-medium">Golden Retriever • 2 Years Old</p>
+</div>
+</div>
+</div>
+<div class="px-4 py-6 flex flex-col gap-8">
+<div class="flex items-center gap-4 p-4 rounded-xl bg-white dark:bg-slate-800 shadow-sm border border-primary/5">
+<div class="bg-primary/10 p-3 rounded-full text-primary">
+<span class="material-symbols-outlined text-3xl">location_on</span>
+</div>
+<div>
+<p class="text-sm text-slate-500 dark:text-slate-400">Current Shelter</p>
+<p class="font-bold text-slate-800 dark:text-slate-100">Paws &amp; Claws Sanctuary, Seattle</p>
+</div>
+</div>
+<section>
+<h3 class="text-xl font-bold mb-3 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">info</span>
+                            About Me
+                        </h3>
+<p class="text-slate-600 dark:text-slate-300 leading-relaxed bg-white dark:bg-slate-800 p-6 rounded-xl border border-primary/5">
+                            Hi there! I'm Sparky, and they call me that because I have a "sparkling" personality! I'm a young Golden Retriever who loves belly rubs, playing fetch in the water, and making new friends. I'm fully house-trained and know basic commands like sit and stay. I'm looking for a forever home where I can share my endless supply of love and tail wags.
+                        </p>
+</section>
+<section class="bg-secondary/10 dark:bg-secondary/5 p-6 rounded-xl border border-secondary/20">
+<div class="flex justify-between items-end mb-4">
+<div>
+<h3 class="text-xl font-bold text-secondary flex items-center gap-2">
+<span class="material-symbols-outlined">volunteer_activism</span>
+                                    Sponsorship Goals
+                                </h3>
+<p class="text-slate-600 dark:text-slate-400 text-sm">Monthly medical &amp; nutrition fund</p>
+</div>
+<span class="text-2xl font-black text-secondary">70%</span>
+</div>
+<div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-4 mb-3 overflow-hidden">
+<div class="bg-secondary h-full rounded-full w-[70%]"></div>
+</div>
+<p class="text-sm text-slate-500 dark:text-slate-400 italic">
+                            $210 of $300 covered this month. Your sponsorship helps provide Sparky with premium food and regular vet checkups.
+                        </p>
+</section>
+<div class="grid grid-cols-2 gap-4">
+<div class="p-4 rounded-xl bg-white dark:bg-slate-800 border border-primary/5 flex flex-col items-center text-center gap-2">
+<span class="material-symbols-outlined text-primary">medical_services</span>
+<span class="text-xs text-slate-500 uppercase font-bold tracking-tighter">Vaccinated</span>
+<span class="font-bold">Up to Date</span>
+</div><div class="p-4 rounded-xl bg-white dark:bg-slate-800 border border-primary/5 flex flex-col items-center text-center gap-2">
+<span class="material-symbols-outlined text-primary">content_cut</span>
+<span class="text-xs text-slate-500 uppercase font-bold tracking-tighter">Sterilized</span>
+<span class="font-bold">Yes</span>
+</div>
+<div class="p-4 rounded-xl bg-white dark:bg-slate-800 border border-primary/5 flex flex-col items-center text-center gap-2">
+<span class="material-symbols-outlined text-primary">pets</span>
+<span class="text-xs text-slate-500 uppercase font-bold tracking-tighter">Energy Level</span>
+<span class="font-bold">High</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+<footer class="fixed bottom-0 left-0 right-0 bg-white/90 dark:bg-background-dark/90 backdrop-blur-xl border-t border-primary/10 px-4 py-4 z-50">
+<div class="max-w-4xl mx-auto flex gap-3">
+<button class="flex-1 bg-secondary hover:bg-secondary/90 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95">
+<span class="material-symbols-outlined">favorite</span>
+                    Sponsor
+                </button>
+<button class="flex-[2] bg-primary hover:bg-primary/90 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95">
+<span class="material-symbols-outlined">home_health</span>
+                    Adopt Me
+                </button>
+</div>
+</footer>
+<nav class="hidden">
+<div class="flex gap-2 border-t border-primary/10 bg-background-light dark:bg-background-dark px-4 pb-3 pt-2">
+<a class="flex flex-1 flex-col items-center justify-end gap-1 rounded-full text-primary" href="#">
+<div class="material-symbols-outlined">home</div>
+<p class="text-xs font-medium leading-normal tracking-[0.015em]">Home</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-slate-400" href="#">
+<div class="material-symbols-outlined">search</div>
+<p class="text-xs font-medium leading-normal tracking-[0.015em]">Search</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-slate-400" href="#">
+<div class="material-symbols-outlined">favorite</div>
+<p class="text-xs font-medium leading-normal tracking-[0.015em]">Favorites</p>
+</a>
+<a class="flex flex-1 flex-col items-center justify-end gap-1 text-slate-400" href="#">
+<div class="material-symbols-outlined">person</div>
+<p class="text-xs font-medium leading-normal tracking-[0.015em]">Profile</p>
+</a>
+</div>
+</nav>
+</div>
+</body></html>

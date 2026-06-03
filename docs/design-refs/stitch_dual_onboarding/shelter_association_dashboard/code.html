@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#ec5b13",
+                        "secondary": "#2dd4bf",
+                        "background-light": "#f8f6f6",
+                        "background-dark": "#221610",
+                    },
+                    fontFamily: {
+                        "display": ["Inter"]
+                    },
+                    borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+                },
+            },
+        }
+    </script>
+<title>Pic4Paws - Shelter Dashboard</title>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display text-slate-900 dark:text-slate-100 min-h-screen pb-24">
+<!-- Header Section -->
+<header class="sticky top-0 z-10 bg-background-light/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-primary/10">
+<div class="flex items-center justify-between p-4 max-w-5xl mx-auto">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">pets</span>
+</div>
+<div>
+<h1 class="text-xl font-bold leading-tight tracking-tight">Happy Tails Sanctuary</h1>
+<p class="text-xs text-slate-500 dark:text-slate-400 font-medium uppercase tracking-wider">Shelter Partner</p>
+</div>
+</div>
+<button class="px-4 py-2 rounded-full border border-primary text-primary text-sm font-semibold hover:bg-primary/5 transition-colors">
+                Edit Profile
+            </button>
+</div>
+</header>
+<main class="max-w-5xl mx-auto p-4 space-y-8">
+<!-- Analytics Summary -->
+<section>
+<h2 class="text-lg font-bold mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">analytics</span>
+                Performance Overview
+            </h2>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class="flex flex-col gap-2 rounded-xl p-6 border border-primary/20 bg-white dark:bg-slate-800 shadow-sm">
+<p class="text-slate-600 dark:text-slate-400 text-sm font-medium">Total Monthly Donations</p>
+<div class="flex items-baseline gap-2">
+<p class="text-3xl font-bold text-slate-900 dark:text-white">$4,250</p>
+<p class="text-secondary text-sm font-bold flex items-center">
+<span class="material-symbols-outlined text-xs">arrow_upward</span>12%
+                        </p>
+</div>
+<div class="w-full bg-primary/5 h-1.5 rounded-full mt-2">
+<div class="bg-primary h-full rounded-full" style="width: 70%"></div>
+</div>
+</div>
+<div class="flex flex-col gap-2 rounded-xl p-6 border border-primary/20 bg-white dark:bg-slate-800 shadow-sm">
+<p class="text-slate-600 dark:text-slate-400 text-sm font-medium">Active Sponsors</p>
+<div class="flex items-baseline gap-2">
+<p class="text-3xl font-bold text-slate-900 dark:text-white">128</p>
+<p class="text-secondary text-sm font-bold flex items-center">
+<span class="material-symbols-outlined text-xs">arrow_upward</span>5%
+                        </p>
+</div>
+<div class="flex -space-x-2 mt-2">
+<img class="w-8 h-8 rounded-full border-2 border-white dark:border-slate-800" data-alt="Profile picture of a donor" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCFaI_Nuqjmb70MbqpxYb3H3cxhh2jvWBAGhloqgmQ_VuIXOEyQ8rA2PnhpmBQWACYWoIz9hqAk3iXwFQ_JlyVO-RmEqHNy97gqfePzoTbd5_jwFEAaLQSm0Oq830mzVL9M9y250TGCpbBgqxrAGq6wNaGCTq7R_lrHIE4cZ7QjxdPLRMqpipOYckuElzwLaosTAE0iqqh4XTLVq37hFbEWdwNfDzWqUE-P6Re5MhCfL-F8hxU76UgZ_Ezia8tn2wyuism-YQjmI4MX"/>
+<img class="w-8 h-8 rounded-full border-2 border-white dark:border-slate-800" data-alt="Profile picture of a donor" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB4GsAxY2Laz2cU32XF_c4UK5RBDZY9uYSOGeDEx9jxaBnK4UqO_Y4hPZQYUMvM5-UDxW7NvEutjYYbLvR8AWeTaoezlc2129qfi7dPIGLNaxRXlbH-5DwTy-8v_NBvjYcLt9SqxXv7MxId7D8BWW3rS81QzYCY2NYE5Txda-UXAwKNXzHc9rHAePMpQAWIoRNE59A-Dgcy1FcWVSm-Kit2jqitjqK67l-PaMZ_YmVrRntaneIuRZKcD-geQeQOff7B9JTWVbx0pWCV"/>
+<img class="w-8 h-8 rounded-full border-2 border-white dark:border-slate-800" data-alt="Profile picture of a donor" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCUrTgE_Yvq5JTipgSs7pn7ywpMUdUltrESmB7WTvdLpS840K7OJfexHNs_cXHxeY_GYSd1EN8tRxxPCh3dV-CweSA9jxT3A8ayl0FoedUEd4YxuVIrVMQivqtxMoU_amw26X-qvlo6wmRIvLNvhsMExCK4HAPwDGCFTSx4zhYGTGR7g_EJiD53R60d5krJV-Y2w2QANOCkKSkHmNiQ2Flv7r7xsMP8KdQw_GsIcx4sKQPnkQgvupEb_7STh88nlFCOtifHQAKt6jgi"/>
+<div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary border-2 border-white dark:border-slate-800">+125</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Upload Action Card -->
+<section class="bg-primary rounded-xl p-6 text-white relative overflow-hidden shadow-lg shadow-primary/20">
+<div class="relative z-10">
+<h3 class="text-xl font-bold mb-2">Have a new resident?</h3>
+<p class="text-white/80 text-sm mb-4 max-w-xs">Upload photos and details to find them a sponsor or a forever home today.</p>
+<button class="bg-white text-primary px-6 py-2.5 rounded-lg font-bold flex items-center gap-2 hover:bg-slate-50 transition-colors">
+<span class="material-symbols-outlined">add_a_photo</span>
+                    Upload New Pet
+                </button>
+</div>
+<div class="absolute right-[-20px] bottom-[-20px] opacity-10">
+<span class="material-symbols-outlined text-[150px]">pets</span>
+</div>
+</section>
+<!-- Residents Section -->
+<section>
+<div class="flex items-center justify-between mb-6">
+<h2 class="text-[22px] font-bold tracking-tight">Active Residents</h2>
+<div class="flex gap-2">
+<button class="p-2 rounded-lg border border-primary/20 text-slate-500"><span class="material-symbols-outlined">filter_list</span></button>
+<button class="p-2 rounded-lg border border-primary/20 text-slate-500"><span class="material-symbols-outlined">grid_view</span></button>
+</div>
+</div>
+<div class="flex gap-3 pb-4 overflow-x-auto no-scrollbar mb-4">
+<button class="flex h-10 shrink-0 items-center justify-center gap-x-2 rounded-xl bg-primary px-6 text-white font-medium">All</button>
+<button class="flex h-10 shrink-0 items-center justify-center gap-x-2 rounded-xl bg-primary/10 px-6 text-slate-700 dark:text-slate-200 font-medium hover:bg-primary/20">Dogs</button>
+<button class="flex h-10 shrink-0 items-center justify-center gap-x-2 rounded-xl bg-primary/10 px-6 text-slate-700 dark:text-slate-200 font-medium hover:bg-primary/20">Cats</button>
+<button class="flex h-10 shrink-0 items-center justify-center gap-x-2 rounded-xl bg-primary/10 px-6 text-slate-700 dark:text-slate-200 font-medium hover:bg-primary/20">Small Pets</button>
+</div>
+<!-- Pet Grid -->
+<div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
+<!-- Pet Card 1 -->
+<div class="bg-white dark:bg-slate-800 rounded-xl overflow-hidden border border-primary/10 shadow-sm group">
+<div class="relative aspect-square">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="A happy golden retriever puppy" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAZMdsennhz8i8vExWTgRn1mIV6z2q1LloQPVQmzM9MQXzuJTe0wWJtdc7XdcsAg0hd4vZrETskmbdhF62XcssA7LQ-KDEgjKSMDSHussnuOU6dKufnH_VlhQwPCKMJ3sayI-arWxL3E49V4DkoFI7L8MViu1KCsIpTcNujnnYmJHjSO-jfvAWHXkxbU3RofyYnZqC148sWenWB0HnHMcuHeFdgYnZB1xwQ7YI0mRSBSVmsqd_Mbv4YFSpWmXUB4gOxDUY4P_fA363x"/>
+<div class="absolute top-2 right-2 bg-secondary text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase">Sponsored</div>
+</div>
+<div class="p-3">
+<h4 class="font-bold text-slate-900 dark:text-white">Buddy</h4>
+<div class="flex flex-wrap gap-1 mt-2">
+<span class="text-[10px] bg-primary/5 text-primary px-2 py-0.5 rounded-full font-medium">#GoodWithCats</span>
+<span class="text-[10px] bg-primary/5 text-primary px-2 py-0.5 rounded-full font-medium">#HighEnergy</span>
+</div>
+</div>
+</div>
+<!-- Pet Card 2 -->
+<div class="bg-white dark:bg-slate-800 rounded-xl overflow-hidden border border-primary/10 shadow-sm group">
+<div class="relative aspect-square">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="A cute black and white cat" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA1xQHMfRNpsKmtN8KFwvmcGhXVh-r7L4CmCDKJ97cMXq83uBb-_YJBx9An8vidLPaX--YAmc9Ef-xD5otiGgzgauIF7pfc5kqkGToiq8iyL1dAHPnaNJl7COWLTP7b3ngjARYaDarcVC2VNybvxNpm8jcLgsUW-mAfo6SJ1gVbSn-7V0cYikaMqQpJ3pssDoWYWYTnr3UHKR_YpJ1KHVq-Sd_uRYFchYehYfMVr9ZdGCjsPcuNp40DdTbAoYHCgdMzRmcxulQj7SQ5"/>
+<div class="absolute top-2 right-2 bg-primary/20 text-primary text-[10px] font-bold px-2 py-1 rounded-full uppercase">Needs Sponsor</div>
+</div>
+<div class="p-3">
+<h4 class="font-bold text-slate-900 dark:text-white">Luna</h4>
+<div class="flex flex-wrap gap-1 mt-2">
+<span class="text-[10px] bg-primary/5 text-primary px-2 py-0.5 rounded-full font-medium">#Quiet</span>
+<span class="text-[10px] bg-primary/5 text-primary px-2 py-0.5 rounded-full font-medium">#IndoorOnly</span>
+</div>
+</div>
+</div>
+<!-- Pet Card 3 -->
+<div class="bg-white dark:bg-slate-800 rounded-xl overflow-hidden border border-primary/10 shadow-sm group">
+<div class="relative aspect-square">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="A brown and white dog sitting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDu_Bu_7ZB_Bm9106_XVZnV7bMz_f5HQPq2NcTaJUp4jkh5nCYmROt-q90K-xtJA-D8n4TsckGG_9zUACkZPjH_8VgMwDHYTbmlAVmm1ZokPWDKBOsUxWIxhyqH3D4Hq6sDHRP1GWOb2E7NW0sKdwjftUe8byJbe7h73IT_ZqwzDHPhgWkIvh1fkMdVhlmogvY9OQKos_tljarGAIkTBpoFUb8PDWaqXniPLw7RCn0tDkVke70SWHZ96rO_teTVzHc9CRVPE1WjZU2y"/>
+<div class="absolute top-2 right-2 bg-secondary text-white text-[10px] font-bold px-2 py-1 rounded-full uppercase">Sponsored</div>
+</div>
+<div class="p-3">
+<h4 class="font-bold text-slate-900 dark:text-white">Max</h4>
+<div class="flex flex-wrap gap-1 mt-2">
+<span class="text-[10px] bg-primary/5 text-primary px-2 py-0.5 rounded-full font-medium">#SeniorDog</span>
+<span class="text-[10px] bg-primary/5 text-primary px-2 py-0.5 rounded-full font-medium">#LovesKids</span>
+</div>
+</div>
+</div>
+<!-- Pet Card 4 -->
+<div class="bg-white dark:bg-slate-800 rounded-xl overflow-hidden border border-primary/10 shadow-sm group">
+<div class="relative aspect-square">
+<img class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" data-alt="A white rabbit in a cage" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDP_w679TyRfKiOWttIGKwN6Nmb_DPepHvBQfgfLbRGa4p9UhvjKJ1lqD4lEbtNXjyIQ5doZk7ncI84m63qH3rDJSgUtUwepu1XdoSBQAPIUfNehahU49oPofb3D9sSXRXw_JPQLbGqTC6xGWPUUp0eP04ljbDpQ9vmVYDVVOGEuhPjsjgNWlQTLNd5GE-AE-RpvxT0tG4pk7p8V7vntZI_8awuIyJN-a3Jt5EI3OP6LcHr_4xE88YK5I3c7qmr1xIYDV69wrVW6n9h"/>
+<div class="absolute top-2 right-2 bg-primary/20 text-primary text-[10px] font-bold px-2 py-1 rounded-full uppercase">Needs Sponsor</div>
+</div>
+<div class="p-3">
+<h4 class="font-bold text-slate-900 dark:text-white">Snowball</h4>
+<div class="flex flex-wrap gap-1 mt-2">
+<span class="text-[10px] bg-primary/5 text-primary px-2 py-0.5 rounded-full font-medium">#SmallPet</span>
+<span class="text-[10px] bg-primary/5 text-primary px-2 py-0.5 rounded-full font-medium">#Vegetarian</span>
+</div>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-0 right-0 bg-background-light dark:bg-background-dark border-t border-primary/10 px-4 pb-6 pt-2 z-50">
+<div class="max-w-xl mx-auto flex justify-between items-center">
+<a class="flex flex-col items-center gap-1 group" href="#">
+<div class="text-slate-400 group-hover:text-primary transition-colors flex h-8 items-center justify-center">
+<span class="material-symbols-outlined">rss_feed</span>
+</div>
+<p class="text-[10px] font-bold text-slate-400 group-hover:text-primary uppercase tracking-tighter">Feed</p>
+</a>
+<a class="flex flex-col items-center gap-1 group" href="#">
+<div class="text-slate-400 group-hover:text-primary transition-colors flex h-8 items-center justify-center">
+<span class="material-symbols-outlined">search</span>
+</div>
+<p class="text-[10px] font-bold text-slate-400 group-hover:text-primary uppercase tracking-tighter">Explore</p>
+</a>
+<a class="flex flex-col items-center gap-1 group" href="#">
+<div class="text-slate-400 group-hover:text-primary transition-colors flex h-8 items-center justify-center">
+<span class="material-symbols-outlined">volunteer_activism</span>
+</div>
+<p class="text-[10px] font-bold text-slate-400 group-hover:text-primary uppercase tracking-tighter">History</p>
+</a>
+<a class="flex flex-col items-center gap-1" href="#">
+<div class="text-primary flex h-8 items-center justify-center">
+<span class="material-symbols-outlined fill-[1]">person</span>
+</div>
+<p class="text-[10px] font-bold text-primary uppercase tracking-tighter">Profile</p>
+</a>
+</div>
+</nav>
+<!-- Floating Action Button for Mobile Quick Upload -->
+<button class="fixed bottom-24 right-6 bg-primary text-white p-4 rounded-full shadow-lg shadow-primary/40 md:hidden flex items-center justify-center">
+<span class="material-symbols-outlined">add</span>
+</button>
+</body></html>

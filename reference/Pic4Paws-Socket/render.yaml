@@ -1,0 +1,6 @@
+services:
+  - name: your-websocket-server
+    type: web
+    routes:
+      - path: /
+        handle: code

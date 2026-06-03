@@ -1,0 +1,20 @@
+/* styles.css */
+.appBarSearch {
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  display: flex;
+  padding: 16px;
+}
+
+.pagination {
+  border-radius: 4px;
+  margin-top: 1rem;
+  padding: 16px;
+}
+
+/* Media query for xs breakpoint */
+@media (max-width: 600px) {
+  .gridContainer {
+    flex-direction: column-reverse;
+  }
+}

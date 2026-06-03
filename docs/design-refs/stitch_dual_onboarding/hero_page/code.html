@@ -1,0 +1,110 @@
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "primary": "#ec5b13",
+            "background-light": "#f8f6f6",
+            "background-dark": "#221610",
+            "accent-teal": "#2d7a7a"
+          },
+          fontFamily: {
+            "display": ["Inter"]
+          },
+          borderRadius: {"DEFAULT": "0.5rem", "lg": "1rem", "xl": "1.5rem", "full": "9999px"},
+        },
+      },
+    }
+  </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light dark:bg-background-dark font-display min-h-screen flex flex-col">
+<!-- Main Container -->
+<main class="flex-grow flex flex-col items-center justify-center px-6 py-12 max-w-6xl mx-auto w-full">
+<!-- Header/Logo Section -->
+<header class="mb-12 text-center">
+<div class="inline-flex items-center justify-center p-4 bg-primary/10 rounded-full mb-4">
+<span class="material-icons text-primary text-5xl">pets</span>
+</div>
+<h1 class="text-4xl font-bold text-slate-900 dark:text-slate-100 mb-2">Pic4Paws</h1>
+<p class="text-slate-600 dark:text-slate-400 max-w-md mx-auto">
+        Connecting paws with forever homes. Choose your path to start making a difference today.
+      </p>
+</header>
+<!-- Selection Cards Grid -->
+<div class="grid md:grid-cols-2 gap-8 w-full">
+<!-- Adopter Path -->
+<div class="group relative bg-white dark:bg-slate-800/50 p-8 rounded-xl border-2 border-transparent hover:border-primary transition-all duration-300 shadow-xl flex flex-col items-center text-center cursor-pointer">
+<div class="w-full h-48 mb-6 rounded-lg overflow-hidden">
+<img alt="A happy person hugging a golden retriever" class="w-full h-full object-cover" data-alt="Happy person hugging a friendly golden retriever" src="https://lh3.googleusercontent.com/aida-public/AB6AXuABfilx8T8n2r4n8qCa0bYdRQEJNySVM2FHBNaw679XgSpFcZX4fqKIEnxNPuyp6BdCmEVcL8PKzeDCnGdTKnwoX_qHt4k16UMmxj_hElhYCJ018fPkRWtkF4pN87VhD5gIRUafejrYOC2fISbEkRTJ6y7uibiKv1FM-oa0C0pVcHNbtm8srWWO_RzKVkiQbbIsWSsaSSc1jGHgLMJjyflWH0Z4lT9wc4dCNtSYKLTfKEGOOUZBE0GoBwYvwYi9ZF3TIBecAlLJVxGI"/>
+</div>
+<div class="bg-primary/20 p-4 rounded-full mb-4 text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+<span class="material-icons text-4xl">favorite</span>
+</div>
+<h2 class="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-3">Register as an Adopter</h2>
+<p class="text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
+          Ready to meet your new best friend? Browse local pets, connect with shelters, and start the journey to bring a companion home.
+        </p>
+<button class="mt-auto w-full bg-primary text-white py-4 rounded-lg font-bold hover:brightness-110 transition-all flex items-center justify-center gap-2">
+<span>Get Started</span>
+<span class="material-icons">arrow_forward</span>
+</button>
+</div>
+<!-- Shelter Path -->
+<div class="group relative bg-white dark:bg-slate-800/50 p-8 rounded-xl border-2 border-transparent hover:border-accent-teal transition-all duration-300 shadow-xl flex flex-col items-center text-center cursor-pointer">
+<div class="w-full h-48 mb-6 rounded-lg overflow-hidden">
+<img alt="Multiple puppies behind a safe enclosure waiting" class="w-full h-full object-cover" data-alt="Cute puppies looking through a wooden fence" src="https://lh3.googleusercontent.com/aida-public/AB6AXuApMLEALNddDVIS_3f6t1x7rW5a_dmGFy4bgoaY62RXVwDfrlC-KrRfrUA1ZrnqOUi-bn2VuIYifGTEVkdcPoHBvWk3qelFBOIQcpzP6L8HNWrIbB7bsw-eSoY8eNAlm8GfsEqbSMEkZ26fXG-eKwZXTM87oIJdAYY7g2bdkmuzuzmJnA--O00C4qX7GhQMd6Rs3gYT1w8iv7wAMGN5tLA6RzT9kNgbn0KdVFdmq3uQ9pz7iFg9F7Jj4YInq9CBrUv8Vf67CSRag52r"/>
+</div>
+<div class="bg-accent-teal/20 p-4 rounded-full mb-4 text-accent-teal group-hover:bg-accent-teal group-hover:text-white transition-colors">
+<span class="material-icons text-4xl">apartment</span>
+</div>
+<h2 class="text-2xl font-bold text-slate-900 dark:text-slate-100 mb-3">Shelter / Association</h2>
+<p class="text-slate-600 dark:text-slate-400 mb-8 leading-relaxed">
+          Manage your residents, share beautiful photos, and find the perfect families for your animals through our streamlined platform.
+        </p>
+<button class="mt-auto w-full bg-accent-teal text-white py-4 rounded-lg font-bold hover:brightness-110 transition-all flex items-center justify-center gap-2">
+<span>Register Shelter</span>
+<span class="material-icons">arrow_forward</span>
+</button>
+</div>
+</div>
+<!-- Footer Links -->
+<footer class="mt-16 text-center">
+<p class="text-slate-500 dark:text-slate-500 text-sm">
+        Already have an account? 
+        <a class="text-primary font-semibold hover:underline" href="#">Sign In</a>
+</p>
+<div class="flex gap-6 mt-8 justify-center">
+<a class="text-slate-400 hover:text-primary transition-colors" href="#">
+<span class="material-icons">help_outline</span>
+<span class="sr-only">Help</span>
+</a>
+<a class="text-slate-400 hover:text-primary transition-colors" href="#">
+<span class="material-icons">info</span>
+<span class="sr-only">About</span>
+</a>
+<a class="text-slate-400 hover:text-primary transition-colors" href="#">
+<span class="material-icons">policy</span>
+<span class="sr-only">Privacy</span>
+</a>
+</div>
+</footer>
+</main>
+<!-- Background Decoration -->
+<div class="fixed top-0 left-0 w-full h-full -z-10 overflow-hidden pointer-events-none opacity-20 dark:opacity-5">
+<div class="absolute -top-24 -left-24 w-96 h-96 bg-primary rounded-full blur-[100px]"></div>
+<div class="absolute -bottom-24 -right-24 w-96 h-96 bg-accent-teal rounded-full blur-[100px]"></div>
+</div>
+</body></html>
