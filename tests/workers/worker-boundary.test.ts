@@ -1,0 +1,104 @@
+import { describe, expect, it } from 'vitest';
+import { handleWorkerRequest, type WorkerEnv } from '../../apps/workers/src/index';
+
+const validEnv: WorkerEnv = {
+  APP_ENV: 'production',
+  PUBLIC_APP_ORIGIN: 'https://pic4paws.pt',
+  SUPABASE_URL: 'https://example.supabase.co',
+  SUPABASE_ANON_KEY: 'anon-key',
+  SUPABASE_SERVICE_ROLE_KEY: 'service-role-secret',
+  CLOUDFLARE_ACCOUNT_ID: 'cloudflare-account',
+  R2_PUBLIC_BUCKET: 'pic4paws-public',
+  R2_PRIVATE_BUCKET: 'pic4paws-private',
+  R2_ACCESS_KEY_ID: 'r2-access-key',
+  R2_SECRET_ACCESS_KEY: 'r2-secret-key',
+  WORKER_PAYMENT_WEBHOOK_PATH: '/webhooks/payments',
+  PAYMENT_PRIMARY_PROVIDER: 'eupago',
+  EUPAGO_API_KEY: 'eupago-api-key',
+  EUPAGO_WEBHOOK_SECRET: 'eupago-webhook-secret',
+};
+
+const json = async (response: Response) => response.json() as Promise<Record<string, unknown>>;
+
+describe('worker health boundary', () => {
+  it('returns health status when environment config is valid', async () => {
+    const response = await handleWorkerRequest(new Request('https://worker.test/health'), validEnv);
+
+    expect(response.status).toBe(200);
+    await expect(json(response)).resolves.toEqual({
+      status: 'ok',
+      service: 'pic4paws',
+      environment: 'production',
+    });
+  });
+
+  it('returns safe configuration errors without leaking secrets', async () => {
+    const response = await handleWorkerRequest(
+      new Request('https://worker.test/health'),
+      {
+        ...validEnv,
+        SUPABASE_URL: 'not-a-url',
+        SUPABASE_SERVICE_ROLE_KEY: 'super-secret-value',
+        R2_SECRET_ACCESS_KEY: '',
+      },
+    );
+
+    expect(response.status).toBe(500);
+    const body = await json(response);
+
+    expect(body).toEqual({
+      status: 'configuration_error',
+      errors: [
+        { path: 'SUPABASE_URL', message: 'Invalid URL' },
+        { path: 'R2_SECRET_ACCESS_KEY', message: 'Required' },
+      ],
+    });
+    expect(JSON.stringify(body)).not.toContain('super-secret-value');
+  });
+});
+
+describe('worker payment webhook boundary', () => {
+  it('uses the validated environment webhook path and rejects non-POST requests', async () => {
+    const response = await handleWorkerRequest(
+      new Request('https://worker.test/webhooks/payments'),
+      validEnv,
+    );
+
+    expect(response.status).toBe(405);
+    await expect(json(response)).resolves.toEqual({
+      status: 'method_not_allowed',
+      allowedMethods: ['POST'],
+    });
+  });
+
+  it('rejects invalid JSON webhook payloads', async () => {
+    const response = await handleWorkerRequest(
+      new Request('https://worker.test/webhooks/payments', {
+        method: 'POST',
+        body: '{not-json',
+      }),
+      validEnv,
+    );
+
+    expect(response.status).toBe(400);
+    await expect(json(response)).resolves.toEqual({
+      status: 'invalid_json',
+    });
+  });
+
+  it('does not process payment state before provider adapter verification exists', async () => {
+    const response = await handleWorkerRequest(
+      new Request('https://worker.test/webhooks/payments', {
+        method: 'POST',
+        body: JSON.stringify({ providerEventId: 'evt-1', status: 'paid' }),
+      }),
+      validEnv,
+    );
+
+    expect(response.status).toBe(501);
+    await expect(json(response)).resolves.toEqual({
+      status: 'provider_adapter_not_configured',
+      provider: 'eupago',
+    });
+  });
+});

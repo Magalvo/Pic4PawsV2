@@ -3,6 +3,10 @@ export type ISODateTime = string;
 export type Locale = 'pt-PT' | 'en';
 export type CurrencyCode = 'EUR';
 
+export * from './auth';
+export * from './media-policy';
+export * from './pet-lifecycle';
+
 export type PaymentProvider = 'eupago' | 'ifthenpay' | 'stripe';
 
 export const productName = 'Pic4Paws';
