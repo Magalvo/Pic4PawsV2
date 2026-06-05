@@ -66,6 +66,7 @@ Completed foundation work:
 - `MEDIA-WORKER-PERSIST-001`
 - `MEDIA-UPLOAD-CLIENT-001` on branch `codex/MEDIA-UPLOAD-CLIENT-001`
 - `MEDIA-UPLOAD-BINARY-CLIENT-001` on branch `codex/MEDIA-UPLOAD-BINARY-CLIENT-001`
+- `MEDIA-UPLOAD-FLOW-CLIENT-001` on branch `codex/MEDIA-UPLOAD-FLOW-CLIENT-001`
 
 The Worker now has:
 
@@ -79,24 +80,25 @@ Web/Mobile now has:
 - a platform-neutral `@pic4paws/client` package
 - a tested media upload intent client with injected `fetch` and bearer token provider
 - a tested signed URL binary upload executor with injected `fetch`
+- a tested composed media upload flow client with distinct intent and binary upload failure phases
 - safe Worker success/failure normalization
 - no client-side Supabase service-role keys or R2 credentials
 
 ## 5. Recommended Next Work Item
 
-Recommended next item: `MEDIA-UPLOAD-FLOW-CLIENT-001`.
+Recommended next item: `WEB-MEDIA-UPLOAD-001`.
 
-Goal: compose media upload intent creation and signed URL binary upload into a single Web/Mobile-safe flow.
+Goal: integrate the composed media upload flow into the Portuguese-first Web foundation with fake/injected dependencies first.
 
 Suggested scope:
 
 - create work item and work spec
-- add a TypeScript helper that requests an upload intent and then uploads bytes to the signed URL
-- inject `fetch` and bearer token provider in tests
-- preserve separate failure states for intent creation, content validation and signed URL upload
-- assert the helper never receives or stores R2 credentials, Supabase service-role keys or internal provider errors
-- do not build UI yet
-- do not persist media assets from the client
+- add a small Web-facing upload adapter or component boundary that calls `createMediaUploadFlowClient`
+- keep bearer token and `fetch` dependencies injectable in tests
+- render PT-PT states for idle, uploading, uploaded, intent failure and binary upload failure
+- assert the Web layer never sends bearer tokens to signed URLs
+- do not use real Supabase or R2 credentials in Web tests
+- do not add post-upload confirmation or media processing yet
 
 ## 6. Handoff Prompt For Codex
 
