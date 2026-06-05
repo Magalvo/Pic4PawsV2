@@ -8,6 +8,17 @@ import {
   type WorkerPetDraftAuthenticator,
 } from './pet-drafts';
 export {
+  createSupabaseAuthAdapter,
+  SupabaseAuthAdapterError,
+} from './auth-supabase';
+export type {
+  SupabaseAuthClientLike,
+  SupabaseAuthGetUserResult,
+  SupabaseAuthQueryResult,
+  SupabaseAuthTableQueryLike,
+  SupabaseAuthUserLike,
+} from './auth-supabase';
+export {
   createSupabasePetRepositories,
   SupabasePetRepositoryError,
 } from './pet-supabase';
