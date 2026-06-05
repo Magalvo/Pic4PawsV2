@@ -15,13 +15,13 @@ body {
 
 .shell {
   min-height: 100vh;
-  display: grid;
-  place-items: center;
+  width: min(100%, 1040px);
+  margin: 0 auto;
   padding: 24px;
 }
 
 .hero {
-  width: min(100%, 720px);
+  padding: 72px 0 40px;
 }
 
 .eyebrow {
@@ -39,13 +39,17 @@ h1 {
 }
 
 p {
-  max-width: 620px;
+  max-width: 680px;
   color: #334155;
   font-size: 18px;
   line-height: 1.6;
 }
 
-a {
+.lead {
+  margin-bottom: 24px;
+}
+
+.status-pill {
   display: inline-flex;
   min-height: 48px;
   align-items: center;
@@ -53,5 +57,45 @@ a {
   color: white;
   font-weight: 800;
   padding: 0 22px;
-  text-decoration: none;
+}
+
+.readiness {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  padding-bottom: 48px;
+}
+
+.readiness-item {
+  border: 1px solid #f1d8cd;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 18px;
+}
+
+.readiness-item h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.readiness-item p {
+  margin: 0 0 16px;
+  font-size: 15px;
+  line-height: 1.45;
+}
+
+.readiness-item span {
+  color: #2aa7a2;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+@media (max-width: 760px) {
+  .hero {
+    padding-top: 44px;
+  }
+
+  .readiness {
+    grid-template-columns: 1fr;
+  }
 }

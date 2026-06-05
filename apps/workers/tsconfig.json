@@ -9,9 +9,16 @@
     "types": ["@cloudflare/workers-types"],
     "paths": {
       "@pic4paws/config": ["../../packages/config/src/index.ts"],
+      "@pic4paws/database": ["../../packages/database/src/index.ts"],
+      "@pic4paws/domain": ["../../packages/domain/src/index.ts"],
       "@pic4paws/payments": ["../../packages/payments/src/index.ts"]
     }
   },
   "include": ["src"],
-  "references": [{ "path": "../../packages/config" }, { "path": "../../packages/payments" }]
+  "references": [
+    { "path": "../../packages/config" },
+    { "path": "../../packages/database" },
+    { "path": "../../packages/domain" },
+    { "path": "../../packages/payments" }
+  ]
 }

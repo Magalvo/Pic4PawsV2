@@ -3,3 +3,6 @@ export const appConfig = {
   defaultLocale: 'pt-PT',
   supportedLocales: ['pt-PT', 'en'],
 } as const;
+
+export * from './env';
+export * from './r2';

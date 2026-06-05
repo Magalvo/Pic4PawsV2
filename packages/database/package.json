@@ -12,6 +12,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@pic4paws/domain": "0.1.0"
+    "@pic4paws/domain": "0.1.0",
+    "drizzle-orm": "^0.45.2"
   }
 }

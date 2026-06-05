@@ -12,6 +12,8 @@
   },
   "dependencies": {
     "@pic4paws/config": "0.1.0",
+    "@pic4paws/database": "0.1.0",
+    "@pic4paws/domain": "0.1.0",
     "@pic4paws/payments": "0.1.0"
   },
   "devDependencies": {
