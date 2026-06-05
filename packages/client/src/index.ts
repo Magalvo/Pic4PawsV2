@@ -28,6 +28,8 @@ export type MediaUploadClientIntent = {
   createdAt: string;
   mediaAssetId?: string;
   mediaAssetPersisted?: boolean;
+  uploadMethod?: 'PUT' | 'POST';
+  uploadHeaders?: Record<string, string>;
 };
 
 export type MediaUploadClientFailureStatus =
@@ -59,6 +61,42 @@ export type MediaUploadClient = {
   requestMediaUploadIntent: (
     request: MediaUploadClientRequest,
   ) => Promise<RequestMediaUploadIntentResult>;
+};
+
+export type MediaUploadBinaryFailureStatus =
+  | 'upload_intent_not_ready'
+  | 'upload_intent_missing_signed_url'
+  | 'upload_content_mismatch'
+  | 'signed_upload_failed';
+
+export type UploadMediaBinaryInput = {
+  intent: MediaUploadClientIntent;
+  body: BodyInit;
+  contentType: string;
+  byteSize: number;
+};
+
+export type UploadMediaBinaryResult =
+  | {
+      ok: true;
+      status: 'uploaded';
+      mediaId: string;
+      objectKey: string;
+      responseStatus: number;
+    }
+  | {
+      ok: false;
+      status: MediaUploadBinaryFailureStatus;
+      reasons: string[];
+      responseStatus?: number;
+    };
+
+export type CreateMediaUploadBinaryClientInput = {
+  fetch: MediaUploadClientFetch;
+};
+
+export type MediaUploadBinaryClient = {
+  uploadMediaBinary: (input: UploadMediaBinaryInput) => Promise<UploadMediaBinaryResult>;
 };
 
 const sanitizeMediaUploadPayload = (request: MediaUploadClientRequest): MediaUploadClientRequest => ({
@@ -179,3 +217,129 @@ export const createMediaUploadClient = ({
     },
   };
 };
+
+const unsafeUploadHeaderNameTokenGroups = [
+  ['authorization'],
+  ['cookie'],
+  ['proxy', 'authorization'],
+  ['r2', 'access', 'key'],
+  ['r2', 'secret', 'key'],
+  ['supabase', 'service', 'role', 'key'],
+];
+
+const isUnsafeUploadHeaderName = (name: string): boolean => {
+  const tokens = name.toLowerCase().split(/[^a-z0-9]+/u);
+
+  return unsafeUploadHeaderNameTokenGroups.some((group) =>
+    group.every((token) => tokens.includes(token)),
+  );
+};
+
+const containsSecretLikeValue = (value: string): boolean => {
+  const normalizedValue = value.toLowerCase();
+
+  return [
+    ['service', 'role'],
+    ['secret', 'key'],
+    ['access', 'token'],
+  ].some((group) => group.every((token) => normalizedValue.includes(token)));
+};
+
+const sanitizeUploadHeaders = (intent: MediaUploadClientIntent): Record<string, string> => {
+  const headers: Record<string, string> = {
+    'Content-Type': intent.contentType,
+  };
+
+  for (const [name, value] of Object.entries(intent.uploadHeaders ?? {})) {
+    if (isUnsafeUploadHeaderName(name) || containsSecretLikeValue(value)) {
+      continue;
+    }
+
+    headers[name] = value;
+  }
+
+  return headers;
+};
+
+const validateBinaryUploadInput = ({
+  intent,
+  contentType,
+  byteSize,
+}: UploadMediaBinaryInput): UploadMediaBinaryResult | null => {
+  if (intent.status !== 'upload_ready' || intent.dryRunOnly) {
+    return {
+      ok: false,
+      status: 'upload_intent_not_ready',
+      reasons: ['upload_intent_not_ready'],
+    };
+  }
+
+  if (!intent.signedUrl?.trim()) {
+    return {
+      ok: false,
+      status: 'upload_intent_missing_signed_url',
+      reasons: ['missing_signed_url'],
+    };
+  }
+
+  if (contentType !== intent.contentType) {
+    return {
+      ok: false,
+      status: 'upload_content_mismatch',
+      reasons: ['content_type_mismatch'],
+    };
+  }
+
+  if (byteSize !== intent.byteSize) {
+    return {
+      ok: false,
+      status: 'upload_content_mismatch',
+      reasons: ['byte_size_mismatch'],
+    };
+  }
+
+  return null;
+};
+
+export const createMediaUploadBinaryClient = ({
+  fetch,
+}: CreateMediaUploadBinaryClientInput): MediaUploadBinaryClient => ({
+  uploadMediaBinary: async (input) => {
+    const invalidInput = validateBinaryUploadInput(input);
+
+    if (invalidInput) {
+      return invalidInput;
+    }
+
+    try {
+      const response = await fetch(input.intent.signedUrl as string, {
+        method: input.intent.uploadMethod ?? 'PUT',
+        headers: sanitizeUploadHeaders(input.intent),
+        body: input.body,
+      });
+
+      if (!response.ok) {
+        return {
+          ok: false,
+          status: 'signed_upload_failed',
+          reasons: ['signed_upload_rejected'],
+          responseStatus: response.status,
+        };
+      }
+
+      return {
+        ok: true,
+        status: 'uploaded',
+        mediaId: input.intent.mediaId,
+        objectKey: input.intent.objectKey,
+        responseStatus: response.status,
+      };
+    } catch {
+      return {
+        ok: false,
+        status: 'signed_upload_failed',
+        reasons: ['signed_upload_network_error'],
+      };
+    }
+  },
+});

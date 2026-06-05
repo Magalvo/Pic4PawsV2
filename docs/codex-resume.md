@@ -65,6 +65,7 @@ Completed foundation work:
 - `R2-SIGNER-SDK-001`
 - `MEDIA-WORKER-PERSIST-001`
 - `MEDIA-UPLOAD-CLIENT-001` on branch `codex/MEDIA-UPLOAD-CLIENT-001`
+- `MEDIA-UPLOAD-BINARY-CLIENT-001` on branch `codex/MEDIA-UPLOAD-BINARY-CLIENT-001`
 
 The Worker now has:
 
@@ -77,22 +78,22 @@ Web/Mobile now has:
 
 - a platform-neutral `@pic4paws/client` package
 - a tested media upload intent client with injected `fetch` and bearer token provider
+- a tested signed URL binary upload executor with injected `fetch`
 - safe Worker success/failure normalization
 - no client-side Supabase service-role keys or R2 credentials
 
 ## 5. Recommended Next Work Item
 
-Recommended next item: `MEDIA-UPLOAD-BINARY-CLIENT-001`.
+Recommended next item: `MEDIA-UPLOAD-FLOW-CLIENT-001`.
 
-Goal: define a browser/mobile-safe binary upload executor for signed media upload intents.
+Goal: compose media upload intent creation and signed URL binary upload into a single Web/Mobile-safe flow.
 
 Suggested scope:
 
 - create work item and work spec
-- add a TypeScript helper that accepts an upload intent, file/blob-like body, MIME type and byte size
-- inject `fetch` in tests
-- upload bytes to the signed URL using the method and headers returned by the Worker
-- normalize signed URL upload failures into safe client errors
+- add a TypeScript helper that requests an upload intent and then uploads bytes to the signed URL
+- inject `fetch` and bearer token provider in tests
+- preserve separate failure states for intent creation, content validation and signed URL upload
 - assert the helper never receives or stores R2 credentials, Supabase service-role keys or internal provider errors
 - do not build UI yet
 - do not persist media assets from the client
