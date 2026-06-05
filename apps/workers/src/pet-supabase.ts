@@ -1,3 +1,4 @@
+import type { MediaAssetRepository } from './media-upload';
 import type { PetDraftRepository, PetPublishRepository } from './pet-drafts';
 import type {
   PetDraftRecord,
@@ -7,6 +8,7 @@ import type {
 } from '@pic4paws/domain';
 import type {
   PetDraftInsertContract,
+  MediaAssetInsertContract,
   PetDraftSponsorshipMetadata,
   PetDraftUpdateContract,
 } from '@pic4paws/database';
@@ -46,6 +48,7 @@ export type CreateSupabasePetRepositoriesInput = {
 };
 
 export type CreateSupabasePetRepositoriesResult = {
+  mediaAssetRepository: MediaAssetRepository;
   petDraftRepository: PetDraftRepository;
   petPublishRepository: PetPublishRepository;
 };
@@ -109,6 +112,21 @@ const toPetInsertRow = (insert: PetDraftInsertContract): PetRow => ({
   medical: insert.medical,
   sponsorship: insert.sponsorship,
   published_at: insert.publishedAt,
+  created_at: insert.createdAt,
+  updated_at: insert.updatedAt,
+  deleted_at: insert.deletedAt,
+});
+
+const toMediaAssetInsertRow = (insert: MediaAssetInsertContract) => ({
+  id: insert.id,
+  owner_user_id: insert.ownerUserId,
+  shelter_id: insert.shelterId,
+  r2_object_key: insert.r2ObjectKey,
+  mime_type: insert.mimeType,
+  visibility: insert.visibility,
+  width: insert.width,
+  height: insert.height,
+  derivative_metadata: insert.derivativeMetadata,
   created_at: insert.createdAt,
   updated_at: insert.updatedAt,
   deleted_at: insert.deletedAt,
@@ -178,6 +196,24 @@ const toPetDraftRecord = (row: PetRow): PetDraftRecord => ({
 export const createSupabasePetRepositories = ({
   client,
 }: CreateSupabasePetRepositoriesInput): CreateSupabasePetRepositoriesResult => {
+  const mediaAssetRepository: MediaAssetRepository = {
+    saveMediaAsset: async (insert, actor) => {
+      void actor;
+
+      const result = await client
+        .from('media_assets')
+        .insert(toMediaAssetInsertRow(insert))
+        .select('id')
+        .single();
+      const row = assertSupabaseResult<{ id: string }>(
+        result,
+        'Failed to save media asset',
+      );
+
+      return { mediaAssetId: row.id };
+    },
+  };
+
   const loadMediaAssets: PetDraftRepository['loadMediaAssets'] = async (mediaIds, shelterId) => {
     if (mediaIds.length === 0) {
       return [];
@@ -275,6 +311,7 @@ export const createSupabasePetRepositories = ({
   };
 
   return {
+    mediaAssetRepository,
     petDraftRepository,
     petPublishRepository,
   };

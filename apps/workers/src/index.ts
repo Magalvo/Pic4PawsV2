@@ -4,7 +4,11 @@ import {
   WorkerSupabaseWiringError,
   type WorkerRequestDependencies,
 } from './dependencies';
-import { createWorkerMediaUploadIntent } from './media-upload';
+import {
+  canPersistMediaUploadIntentForActor,
+  createWorkerMediaUploadIntent,
+  persistWorkerMediaUploadIntent,
+} from './media-upload';
 import {
   handleWorkerPetDraftRequest,
   matchWorkerPetDraftRoute,
@@ -56,8 +60,18 @@ export type {
   SupabaseSdkCreateClient,
 } from './supabase-sdk';
 
-export { createWorkerMediaUploadIntent } from './media-upload';
-export type { MediaUploadSigner, MediaUploadSignerInput } from './media-upload';
+export {
+  canPersistMediaUploadIntentForActor,
+  createWorkerMediaUploadIntent,
+  persistWorkerMediaUploadIntent,
+} from './media-upload';
+export type {
+  MediaAssetRepository,
+  MediaUploadSigner,
+  MediaUploadSignerInput,
+  PersistWorkerMediaUploadIntentInput,
+  PersistWorkerMediaUploadIntentResult,
+} from './media-upload';
 export { handleWorkerPetDraftRequest, matchWorkerPetDraftRoute } from './pet-drafts';
 export type { PetDraftRepository, PetPublishRepository, WorkerPetDraftAuthenticator } from './pet-drafts';
 export {
@@ -83,6 +97,55 @@ const parseJsonBody = async (request: Request): Promise<unknown | null> => {
   } catch {
     return null;
   }
+};
+
+const parseAuthorizationBearer = (request: Request): string | null => {
+  const authorizationHeader = request.headers.get('Authorization');
+
+  if (!authorizationHeader?.startsWith('Bearer ')) {
+    return null;
+  }
+
+  const bearerToken = authorizationHeader.slice('Bearer '.length).trim();
+
+  return bearerToken.length > 0 ? bearerToken : null;
+};
+
+const authenticateWorkerActor = async (
+  request: Request,
+  dependencies: WorkerRequestDependencies,
+) => {
+  const bearerToken = parseAuthorizationBearer(request);
+
+  if (!bearerToken) {
+    return {
+      ok: false as const,
+      response: jsonResponse({ status: 'unauthenticated' }, { status: 401 }),
+    };
+  }
+
+  if (!dependencies.petDraftAuthenticator) {
+    return {
+      ok: false as const,
+      response: jsonResponse({ status: 'auth_adapter_not_configured' }, { status: 501 }),
+    };
+  }
+
+  const authorizationHeader = request.headers.get('Authorization') ?? '';
+  const actor = await dependencies.petDraftAuthenticator({
+    request,
+    authorizationHeader,
+    bearerToken,
+  });
+
+  if (!actor) {
+    return {
+      ok: false as const,
+      response: jsonResponse({ status: 'unauthenticated' }, { status: 401 }),
+    };
+  }
+
+  return { ok: true as const, actor };
 };
 
 export const handleWorkerRequest = async (
@@ -163,6 +226,14 @@ export const handleWorkerRequest = async (
       return jsonResponse({ status: 'invalid_json' }, { status: 400 });
     }
 
+    const authenticated = dependencies.mediaAssetRepository
+      ? await authenticateWorkerActor(request, dependencies)
+      : null;
+
+    if (authenticated && !authenticated.ok) {
+      return authenticated.response;
+    }
+
     const uploadIntent = createWorkerMediaUploadIntent({
       payload,
       config,
@@ -178,6 +249,43 @@ export const handleWorkerRequest = async (
           reasons: resolvedUploadIntent.reasons,
         },
         { status: resolvedUploadIntent.status === 'upload_signer_failed' ? 502 : 400 },
+      );
+    }
+
+    if (dependencies.mediaAssetRepository && authenticated?.ok) {
+      if (!canPersistMediaUploadIntentForActor(authenticated.actor, resolvedUploadIntent.intent)) {
+        return jsonResponse(
+          {
+            status: 'actor_not_authorized',
+            reasons: ['actor_not_authorized'],
+          },
+          { status: 403 },
+        );
+      }
+
+      const persistedMedia = await persistWorkerMediaUploadIntent({
+        intent: resolvedUploadIntent.intent,
+        actor: authenticated.actor,
+        repository: dependencies.mediaAssetRepository,
+      });
+
+      if (!persistedMedia.ok) {
+        return jsonResponse(
+          {
+            status: persistedMedia.status,
+            reasons: persistedMedia.reasons,
+          },
+          { status: persistedMedia.status === 'media_asset_persistence_failed' ? 502 : 400 },
+        );
+      }
+
+      return jsonResponse(
+        {
+          ...resolvedUploadIntent.intent,
+          mediaAssetId: persistedMedia.mediaAssetId,
+          mediaAssetPersisted: true,
+        },
+        { status: 201 },
       );
     }
 
