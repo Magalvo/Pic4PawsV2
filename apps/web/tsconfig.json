@@ -11,6 +11,9 @@
       "@pic4paws/domain": [
         "../../packages/domain/src/index.ts"
       ],
+      "@pic4paws/client": [
+        "../../packages/client/src/index.ts"
+      ],
       "@pic4paws/ui": [
         "../../packages/ui/src/index.ts"
       ]
@@ -34,6 +37,9 @@
   "references": [
     {
       "path": "../../packages/domain"
+    },
+    {
+      "path": "../../packages/client"
     },
     {
       "path": "../../packages/ui"

@@ -66,6 +66,28 @@ p {
   padding-bottom: 48px;
 }
 
+.media-upload {
+  border-top: 1px solid #f1d8cd;
+  border-bottom: 1px solid #f1d8cd;
+  margin: 12px 0 28px;
+  padding: 26px 0;
+}
+
+.media-upload h2 {
+  margin: 0 0 8px;
+  font-size: 28px;
+}
+
+.media-upload p {
+  margin: 0 0 14px;
+}
+
+.media-upload span {
+  color: #2aa7a2;
+  font-size: 13px;
+  font-weight: 800;
+}
+
 .readiness-item {
   border: 1px solid #f1d8cd;
   border-radius: 8px;

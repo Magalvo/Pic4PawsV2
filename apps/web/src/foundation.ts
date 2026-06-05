@@ -1,3 +1,5 @@
+import { webMediaUploadContent, type WebMediaUploadContent } from './media-upload';
+
 export type WebFoundationStatus = 'contract-ready';
 
 export type WebFoundationContent = {
@@ -11,6 +13,7 @@ export type WebFoundationContent = {
     label: string;
     href: string | null;
   };
+  mediaUpload: Pick<WebMediaUploadContent, 'title' | 'description' | 'status'>;
   readiness: Array<{
     id: 'database' | 'auth' | 'pets' | 'payments' | 'media' | 'workers';
     label: string;
@@ -30,6 +33,11 @@ export const webFoundationContent: WebFoundationContent = {
   primaryAction: {
     label: 'Fundação técnica em curso',
     href: null,
+  },
+  mediaUpload: {
+    title: webMediaUploadContent.title,
+    description: webMediaUploadContent.description,
+    status: webMediaUploadContent.status,
   },
   readiness: [
     {
