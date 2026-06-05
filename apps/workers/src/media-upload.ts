@@ -4,7 +4,14 @@ import {
   type EnvironmentConfig,
 } from '@pic4paws/config';
 import {
+  createMediaAssetInsertFromUploadIntent,
+  type MediaAssetInsertContract,
+  type MediaAssetInsertRejectionReason,
+} from '@pic4paws/database';
+import {
+  canManageShelter,
   createMediaUploadContract,
+  type AuthenticatedActor,
   type MediaUploadPurpose,
   type MediaVisibility,
 } from '@pic4paws/domain';
@@ -55,6 +62,13 @@ export type MediaUploadSigner = (
   input: MediaUploadSignerInput,
 ) => Promise<MediaUploadSignerResult>;
 
+export type MediaAssetRepository = {
+  saveMediaAsset: (
+    insert: MediaAssetInsertContract,
+    actor: AuthenticatedActor,
+  ) => Promise<{ mediaAssetId: string }>;
+};
+
 export type WorkerMediaUploadIntentInput = {
   payload: unknown;
   config: EnvironmentConfig;
@@ -69,6 +83,20 @@ export type WorkerMediaUploadIntentResult =
       ok: false;
       status: 'invalid_upload_request' | 'upload_signer_failed';
       reasons: string[];
+    };
+
+export type PersistWorkerMediaUploadIntentInput = {
+  intent: WorkerMediaUploadIntent;
+  actor: AuthenticatedActor;
+  repository: MediaAssetRepository;
+};
+
+export type PersistWorkerMediaUploadIntentResult =
+  | { ok: true; mediaAssetId: string }
+  | {
+      ok: false;
+      status: 'invalid_media_asset_persistence' | 'media_asset_persistence_failed';
+      reasons: Array<MediaAssetInsertRejectionReason | 'media_asset_repository_unavailable'>;
     };
 
 const mediaUploadPurposes: MediaUploadPurpose[] = [
@@ -86,6 +114,21 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 
 const isNullableString = (value: unknown): value is string | null | undefined =>
   value === undefined || value === null || typeof value === 'string';
+
+export const canPersistMediaUploadIntentForActor = (
+  actor: AuthenticatedActor,
+  intent: WorkerMediaUploadIntent,
+): boolean => {
+  if (intent.shelterId) {
+    return canManageShelter(actor, intent.shelterId);
+  }
+
+  if (intent.ownerUserId) {
+    return actor.role === 'admin' || actor.id === intent.ownerUserId;
+  }
+
+  return false;
+};
 
 const parseWorkerMediaUploadPayload = (
   payload: unknown,
@@ -245,4 +288,35 @@ export const createWorkerMediaUploadIntent = async ({
       createdAt: mediaResult.contract.createdAt,
     },
   };
+};
+
+export const persistWorkerMediaUploadIntent = async ({
+  intent,
+  actor,
+  repository,
+}: PersistWorkerMediaUploadIntentInput): Promise<PersistWorkerMediaUploadIntentResult> => {
+  const insertResult = createMediaAssetInsertFromUploadIntent(intent);
+
+  if (!insertResult.ok) {
+    return {
+      ok: false,
+      status: 'invalid_media_asset_persistence',
+      reasons: insertResult.reasons,
+    };
+  }
+
+  try {
+    const result = await repository.saveMediaAsset(insertResult.insert, actor);
+
+    return {
+      ok: true,
+      mediaAssetId: result.mediaAssetId,
+    };
+  } catch {
+    return {
+      ok: false,
+      status: 'media_asset_persistence_failed',
+      reasons: ['media_asset_repository_unavailable'],
+    };
+  }
 };

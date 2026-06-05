@@ -14,4 +14,4 @@ Create the Pic4Paws V2 architecture foundation before continuing implementation.
 
 ## Current Focus
 
-`AUTH-SUPABASE-001`, `SEC-001`, `WORKER-SUPABASE-WIRING-001`, `WORKER-SUPABASE-SDK-001` and `R2-SIGNER-SDK-001` are completed. Recommended next foundation item: wire persisted media asset creation into the authenticated Worker flow, keeping signed URLs out of database state and preserving explicit repository injection in tests.
+`AUTH-SUPABASE-001`, `SEC-001`, `WORKER-SUPABASE-WIRING-001`, `WORKER-SUPABASE-SDK-001`, `R2-SIGNER-SDK-001` and `MEDIA-WORKER-PERSIST-001` are completed. Recommended next foundation item: define the first web/mobile upload client contract against the authenticated Worker media upload route, without introducing browser-side R2 credentials or Supabase service keys.

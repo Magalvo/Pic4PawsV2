@@ -4,7 +4,7 @@ import {
   type SupabaseAuthClientLike,
   type SupabaseAuthTableQueryLike,
 } from './auth-supabase';
-import { type MediaUploadSigner } from './media-upload';
+import { type MediaAssetRepository, type MediaUploadSigner } from './media-upload';
 import {
   createSupabasePetRepositories,
   type SupabaseClientLike,
@@ -34,6 +34,7 @@ export type WorkerSupabaseClientFactory = (
 
 export type WorkerRequestDependencies = {
   mediaUploadSigner?: MediaUploadSigner;
+  mediaAssetRepository?: MediaAssetRepository;
   petDraftAuthenticator?: WorkerPetDraftAuthenticator;
   petDraftRepository?: PetDraftRepository;
   petPublishRepository?: PetPublishRepository;
@@ -45,6 +46,7 @@ export type CreateWorkerSupabaseDependenciesInput = {
   config: EnvironmentConfig;
   supabaseClientFactory: WorkerSupabaseClientFactory;
   mediaUploadSigner?: MediaUploadSigner;
+  mediaAssetRepository?: MediaAssetRepository;
   now?: () => string;
 };
 
@@ -66,6 +68,7 @@ export const createWorkerSupabaseDependencies = ({
   config,
   supabaseClientFactory,
   mediaUploadSigner,
+  mediaAssetRepository,
   now,
 }: CreateWorkerSupabaseDependenciesInput): WorkerRequestDependencies => {
   try {
@@ -77,6 +80,7 @@ export const createWorkerSupabaseDependencies = ({
 
     return {
       mediaUploadSigner,
+      mediaAssetRepository: mediaAssetRepository ?? petRepositories.mediaAssetRepository,
       petDraftAuthenticator: createSupabaseAuthAdapter({ client }),
       petDraftRepository: petRepositories.petDraftRepository,
       petPublishRepository: petRepositories.petPublishRepository,
@@ -107,11 +111,14 @@ export const resolveWorkerRequestDependencies = ({
     config,
     supabaseClientFactory: dependencies.supabaseClientFactory,
     mediaUploadSigner: dependencies.mediaUploadSigner,
+    mediaAssetRepository: dependencies.mediaAssetRepository,
     now: dependencies.now,
   });
 
   return {
     ...dependencies,
+    mediaAssetRepository:
+      dependencies.mediaAssetRepository ?? supabaseDependencies.mediaAssetRepository,
     petDraftAuthenticator:
       dependencies.petDraftAuthenticator ?? supabaseDependencies.petDraftAuthenticator,
     petDraftRepository: dependencies.petDraftRepository ?? supabaseDependencies.petDraftRepository,

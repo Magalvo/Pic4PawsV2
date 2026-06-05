@@ -7,6 +7,7 @@ import {
   type SupabaseTableQueryLike,
 } from '../../apps/workers/src/index';
 import type {
+  MediaAssetInsertContract,
   PetDraftInsertContract,
   PetDraftUpdateContract,
 } from '../../packages/database/src/index';
@@ -156,6 +157,27 @@ const updateContract: PetDraftUpdateContract = {
   updatedAt: '2026-06-04T16:05:00.000Z',
 };
 
+const mediaAssetInsertContract: MediaAssetInsertContract = {
+  id: 'media-1',
+  ownerUserId: 'member-user',
+  shelterId: 'shelter-a',
+  r2ObjectKey: 'public/shelters/shelter-a/pet_public_image/media-1.jpg',
+  mimeType: 'image/jpeg',
+  visibility: 'public',
+  width: null,
+  height: null,
+  derivativeMetadata: {
+    byteSize: 1_200_000,
+    bucketName: 'pic4paws-public',
+    mediaKind: 'image',
+    uploadStatus: 'signed',
+    signedUrlPersisted: false,
+  },
+  createdAt: '2026-06-04T16:00:00.000Z',
+  updatedAt: '2026-06-04T16:00:00.000Z',
+  deletedAt: null,
+};
+
 const petRow = {
   id: 'pet-1',
   shelter_id: 'shelter-a',
@@ -183,6 +205,50 @@ const mediaRow = {
 };
 
 describe('Supabase pet repository adapters', () => {
+  it('persists media asset rows without signed upload URLs', async () => {
+    const { client, operations } = createFakeSupabaseClient({
+      'media_assets:single': { data: { id: 'media-1' }, error: null },
+    });
+    const { mediaAssetRepository } = createSupabasePetRepositories({ client });
+
+    await expect(
+      mediaAssetRepository.saveMediaAsset(mediaAssetInsertContract, actor),
+    ).resolves.toEqual({
+      mediaAssetId: 'media-1',
+    });
+
+    expect(operations).toEqual([
+      {
+        table: 'media_assets',
+        action: 'insert',
+        payload: {
+          id: 'media-1',
+          owner_user_id: 'member-user',
+          shelter_id: 'shelter-a',
+          r2_object_key: 'public/shelters/shelter-a/pet_public_image/media-1.jpg',
+          mime_type: 'image/jpeg',
+          visibility: 'public',
+          width: null,
+          height: null,
+          derivative_metadata: {
+            byteSize: 1_200_000,
+            bucketName: 'pic4paws-public',
+            mediaKind: 'image',
+            uploadStatus: 'signed',
+            signedUrlPersisted: false,
+          },
+          created_at: '2026-06-04T16:00:00.000Z',
+          updated_at: '2026-06-04T16:00:00.000Z',
+          deleted_at: null,
+        },
+        columns: 'id',
+        filters: [],
+        result: 'single',
+      },
+    ]);
+    expect(JSON.stringify(operations)).not.toContain('https://uploads.test');
+  });
+
   it('creates and updates pet draft rows through an injected Supabase-like client', async () => {
     const { client, operations } = createFakeSupabaseClient({
       'pets:single': { data: { id: 'pet-1' }, error: null },
