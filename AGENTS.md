@@ -22,6 +22,16 @@ Current required pipeline:
 
 Do not implement product features without a work item, work spec and failing test first.
 
+## Git Workflow
+
+- Do not work directly on `main`.
+- Use `codex/`-prefixed branches by default.
+- New implementation work should use one branch per work item, named from the work-item ID where practical, for example `codex/WORKER-SUPABASE-SDK-001`.
+- Existing accumulated foundation work can be stabilized on a batch branch such as `codex/foundation-sdd-batch`.
+- On a batch branch, keep commits separated by work item so review and rollback remain possible.
+- Prefer one commit per coherent work item, including its work item document, work spec, failing/passing tests, implementation and related documentation updates.
+- After the current foundation batch is merged, return to branch-per-work-item as the default.
+
 ## Legacy App Rule
 
 The legacy app under `reference/` is strictly functional reference. Use it to understand capabilities and business logic only. Do not copy its architecture, tech stack, UI stack or design patterns into V2.

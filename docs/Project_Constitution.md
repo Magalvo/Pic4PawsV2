@@ -31,7 +31,10 @@ You must use the following tools to autonomously validate your work in a self-he
 <!-- Security, data handling, naming, branch policy. Things that must never be broken[cite: 1]. -->
 - **Strict TDD:** You must first write a failing test (Red) that encodes the acceptance criterion, before writing the minimum amount of code to make it pass (Green)[cite: 1].
 - **Data Security:** Never hardcode API keys, secrets, or sensitive data. Always use environment variables.
-- **Branching Policy:** Never make changes directly to the `main` branch. Every feature must be developed in isolation on a branch created from the `work-item` ID.
+- **Branching Policy:** Never make changes directly to the `main` branch. New implementation work must be developed in isolation on a branch created from the `work-item` ID, using the `codex/` prefix by default.
+- **Batch Exception:** Existing accumulated foundation work may be stabilized on a batch branch such as `codex/foundation-sdd-batch`. Inside a batch branch, create one commit per work item so the history remains reviewable.
+- **Commit Policy:** Commits must map to the smallest coherent SDD unit. Prefer one commit per work item, including its work item, work spec, failing/passing tests, implementation and related documentation updates.
+- **Future Work Policy:** After the current foundation batch is merged, create a fresh branch per new work item before editing files.
 - **Database Protection:** You are strictly forbidden from deleting schemas, tables, or data volumes without written human confirmation.
 
 ## 6. References
