@@ -14,4 +14,4 @@ Create the Pic4Paws V2 architecture foundation before continuing implementation.
 
 ## Current Focus
 
-`AUTH-SUPABASE-001`, `SEC-001` and `WORKER-SUPABASE-WIRING-001` are completed. Recommended next item: `WORKER-SUPABASE-SDK-001`, adding the real server-side Supabase SDK client factory behind the existing injectable Worker wiring.
+`AUTH-SUPABASE-001`, `SEC-001`, `WORKER-SUPABASE-WIRING-001` and `WORKER-SUPABASE-SDK-001` are completed. Recommended next foundation item: define the next provider-backed adapter behind an existing boundary, such as an R2 upload signer factory, using the same work item -> work spec -> failing test -> implementation flow.

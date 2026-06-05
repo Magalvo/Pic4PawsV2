@@ -9,6 +9,7 @@ import {
   handleWorkerPetDraftRequest,
   matchWorkerPetDraftRoute,
 } from './pet-drafts';
+import { createSupabaseSdkWorkerDependencies } from './supabase-sdk';
 export {
   createSupabaseAuthAdapter,
   SupabaseAuthAdapterError,
@@ -43,6 +44,16 @@ export type {
   SupabaseQueryResult,
   SupabaseTableQueryLike,
 } from './pet-supabase';
+export {
+  createSupabaseSdkClientFactory,
+  createSupabaseSdkWorkerDependencies,
+  SupabaseSdkClientFactoryError,
+} from './supabase-sdk';
+export type {
+  CreateSupabaseSdkClientFactoryInput,
+  SupabaseSdkClientOptions,
+  SupabaseSdkCreateClient,
+} from './supabase-sdk';
 
 export { createWorkerMediaUploadIntent } from './media-upload';
 export type { MediaUploadSigner, MediaUploadSignerInput } from './media-upload';
@@ -201,6 +212,6 @@ export const handleWorkerRequest = async (
 
 export default {
   fetch(request: Request, env: WorkerEnv): Promise<Response> {
-    return handleWorkerRequest(request, env);
+    return handleWorkerRequest(request, env, createSupabaseSdkWorkerDependencies());
   },
 };
