@@ -33,7 +33,11 @@ You must use the following tools to autonomously validate your work in a self-he
 - **Data Security:** Never hardcode API keys, secrets, or sensitive data. Always use environment variables.
 - **Branching Policy:** Never make changes directly to the `main` branch. New implementation work must be developed in isolation on a branch created from the `work-item` ID, using the `codex/` prefix by default.
 - **Batch Exception:** Existing accumulated foundation work may be stabilized on a batch branch such as `codex/foundation-sdd-batch`. Inside a batch branch, create one commit per work item so the history remains reviewable.
+- **Git Safety Net:** Treat Git as the safety net for AI-assisted work. Commit working states often whenever the project reaches a coherent validated checkpoint.
 - **Commit Policy:** Commits must map to the smallest coherent SDD unit. Prefer one commit per work item, including its work item, work spec, failing/passing tests, implementation and related documentation updates.
+- **Experiment Policy:** Branch before experiments, risky refactors, or architectural spikes. Merge only after the approach works and validation passes.
+- **Review Policy:** Treat AI-generated output like a colleague's pull request. Review the diff, not only the final app behavior, before merge.
+- **Isolation Policy:** When multiple agents or parallel work streams are active, use isolated worktrees or separate working directories so agents cannot overwrite each other.
 - **Future Work Policy:** After the current foundation batch is merged, create a fresh branch per new work item before editing files.
 - **Database Protection:** You are strictly forbidden from deleting schemas, tables, or data volumes without written human confirmation.
 
