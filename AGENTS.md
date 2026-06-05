@@ -22,6 +22,20 @@ Current required pipeline:
 
 Do not implement product features without a work item, work spec and failing test first.
 
+## Git Workflow
+
+- Do not work directly on `main`.
+- Use `codex/`-prefixed branches by default.
+- New implementation work should use one branch per work item, named from the work-item ID where practical, for example `codex/WORKER-SUPABASE-SDK-001`.
+- Existing accumulated foundation work can be stabilized on a batch branch such as `codex/foundation-sdd-batch`.
+- Treat Git as the safety net when working with AI agents: commit working states often, as soon as the code and tests reach a coherent functional checkpoint.
+- On a batch branch, keep commits separated by work item so precise diff review, rollback and audit remain possible.
+- Prefer one commit per coherent work item, including its work item document, work spec, failing/passing tests, implementation and related documentation updates.
+- Branch before experiments or architectural spikes. Risky approaches must happen on an isolated branch and be merged only after review and validation pass.
+- Treat AI-generated changes like a human pull request: review the diff, not only the running result, before merge.
+- When multiple agents or parallel work streams are active, use isolated worktrees or separate working directories so agents cannot overwrite each other.
+- After the current foundation batch is merged, return to branch-per-work-item as the default.
+
 ## Legacy App Rule
 
 The legacy app under `reference/` is strictly functional reference. Use it to understand capabilities and business logic only. Do not copy its architecture, tech stack, UI stack or design patterns into V2.

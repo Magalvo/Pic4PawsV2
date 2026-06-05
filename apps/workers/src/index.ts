@@ -1,12 +1,39 @@
 import { appConfig, parseEnvironmentConfig, type EnvironmentRecord } from '@pic4paws/config';
-import { createWorkerMediaUploadIntent, type MediaUploadSigner } from './media-upload';
+import {
+  resolveWorkerRequestDependencies,
+  WorkerSupabaseWiringError,
+  type WorkerRequestDependencies,
+} from './dependencies';
+import { createWorkerMediaUploadIntent } from './media-upload';
 import {
   handleWorkerPetDraftRequest,
   matchWorkerPetDraftRoute,
-  type PetDraftRepository,
-  type PetPublishRepository,
-  type WorkerPetDraftAuthenticator,
 } from './pet-drafts';
+export {
+  createSupabaseAuthAdapter,
+  SupabaseAuthAdapterError,
+} from './auth-supabase';
+export type {
+  SupabaseAuthClientLike,
+  SupabaseAuthGetUserResult,
+  SupabaseAuthQueryResult,
+  SupabaseAuthTableQueryLike,
+  SupabaseAuthUserLike,
+} from './auth-supabase';
+export {
+  createWorkerSupabaseDependencies,
+  resolveWorkerRequestDependencies,
+  WorkerSupabaseWiringError,
+} from './dependencies';
+export type {
+  CreateWorkerSupabaseDependenciesInput,
+  ResolveWorkerRequestDependenciesInput,
+  WorkerRequestDependencies,
+  WorkerSupabaseClientFactory,
+  WorkerSupabaseClientFactoryInput,
+  WorkerSupabaseClientLike,
+  WorkerSupabaseTableQueryLike,
+} from './dependencies';
 export {
   createSupabasePetRepositories,
   SupabasePetRepositoryError,
@@ -23,13 +50,6 @@ export { handleWorkerPetDraftRequest, matchWorkerPetDraftRoute } from './pet-dra
 export type { PetDraftRepository, PetPublishRepository, WorkerPetDraftAuthenticator } from './pet-drafts';
 
 export type WorkerEnv = EnvironmentRecord;
-export type WorkerRequestDependencies = {
-  mediaUploadSigner?: MediaUploadSigner;
-  petDraftAuthenticator?: WorkerPetDraftAuthenticator;
-  petDraftRepository?: PetDraftRepository;
-  petPublishRepository?: PetPublishRepository;
-  now?: () => string;
-};
 
 const jsonResponse = (body: unknown, init?: ResponseInit): Response =>
   Response.json(body, init);
@@ -150,16 +170,28 @@ export const handleWorkerRequest = async (
       return jsonResponse({ status: 'invalid_json' }, { status: 400 });
     }
 
+    let resolvedDependencies: WorkerRequestDependencies;
+
+    try {
+      resolvedDependencies = resolveWorkerRequestDependencies({ config, dependencies });
+    } catch (error) {
+      if (error instanceof WorkerSupabaseWiringError) {
+        return jsonResponse({ status: 'dependency_configuration_error' }, { status: 500 });
+      }
+
+      throw error;
+    }
+
     return handleWorkerPetDraftRequest({
       request,
       config,
       payload,
       route: petDraftRoute,
       dependencies: {
-        petDraftAuthenticator: dependencies.petDraftAuthenticator,
-        petDraftRepository: dependencies.petDraftRepository,
-        petPublishRepository: dependencies.petPublishRepository,
-        now: dependencies.now,
+        petDraftAuthenticator: resolvedDependencies.petDraftAuthenticator,
+        petDraftRepository: resolvedDependencies.petDraftRepository,
+        petPublishRepository: resolvedDependencies.petPublishRepository,
+        now: resolvedDependencies.now,
       },
     });
   }

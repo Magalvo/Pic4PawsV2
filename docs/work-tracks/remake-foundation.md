@@ -14,4 +14,4 @@ Create the Pic4Paws V2 architecture foundation before continuing implementation.
 
 ## Current Focus
 
-Proceed with the next TDD work item. Recommended next item: `AUTH-SUPABASE-001`, defining an injectable Supabase auth adapter for resolving active users and shelter memberships at Worker boundaries without exposing service-role secrets to clients.
+`AUTH-SUPABASE-001`, `SEC-001` and `WORKER-SUPABASE-WIRING-001` are completed. Recommended next item: `WORKER-SUPABASE-SDK-001`, adding the real server-side Supabase SDK client factory behind the existing injectable Worker wiring.
