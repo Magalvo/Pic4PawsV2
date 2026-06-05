@@ -9,6 +9,7 @@ import {
   handleWorkerPetDraftRequest,
   matchWorkerPetDraftRoute,
 } from './pet-drafts';
+import { createR2UploadSignerWorkerDependencies } from './r2-signer';
 import { createSupabaseSdkWorkerDependencies } from './supabase-sdk';
 export {
   createSupabaseAuthAdapter,
@@ -59,6 +60,17 @@ export { createWorkerMediaUploadIntent } from './media-upload';
 export type { MediaUploadSigner, MediaUploadSignerInput } from './media-upload';
 export { handleWorkerPetDraftRequest, matchWorkerPetDraftRoute } from './pet-drafts';
 export type { PetDraftRepository, PetPublishRepository, WorkerPetDraftAuthenticator } from './pet-drafts';
+export {
+  createR2UploadSigner,
+  createR2UploadSignerWorkerDependencies,
+  R2UploadSignerFactoryError,
+} from './r2-signer';
+export type {
+  CreateR2UploadSignerInput,
+  R2UploadPresigner,
+  R2UploadPresignerInput,
+  R2UploadPresignerResult,
+} from './r2-signer';
 
 export type WorkerEnv = EnvironmentRecord;
 
@@ -212,6 +224,16 @@ export const handleWorkerRequest = async (
 
 export default {
   fetch(request: Request, env: WorkerEnv): Promise<Response> {
-    return handleWorkerRequest(request, env, createSupabaseSdkWorkerDependencies());
+    const parsedConfig = parseEnvironmentConfig(env);
+    const dependencies = createSupabaseSdkWorkerDependencies();
+
+    if (parsedConfig.ok) {
+      return handleWorkerRequest(request, env, {
+        ...dependencies,
+        ...createR2UploadSignerWorkerDependencies({ config: parsedConfig.config }),
+      });
+    }
+
+    return handleWorkerRequest(request, env, dependencies);
   },
 };
