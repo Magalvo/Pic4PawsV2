@@ -54,7 +54,7 @@ Required validation:
 
 ## 4. Current State As Of 2026-06-05
 
-Merged through `main` commit `5188687`.
+Merged through `main` commit `5188687` before `MEDIA-UPLOAD-CLIENT-001`.
 
 Completed foundation work:
 
@@ -64,6 +64,7 @@ Completed foundation work:
 - `WORKER-SUPABASE-SDK-001`
 - `R2-SIGNER-SDK-001`
 - `MEDIA-WORKER-PERSIST-001`
+- `MEDIA-UPLOAD-CLIENT-001` on branch `codex/MEDIA-UPLOAD-CLIENT-001`
 
 The Worker now has:
 
@@ -72,21 +73,29 @@ The Worker now has:
 - authenticated media upload persistence for signed intents
 - tests that keep Supabase and Cloudflare calls mocked/injected
 
+Web/Mobile now has:
+
+- a platform-neutral `@pic4paws/client` package
+- a tested media upload intent client with injected `fetch` and bearer token provider
+- safe Worker success/failure normalization
+- no client-side Supabase service-role keys or R2 credentials
+
 ## 5. Recommended Next Work Item
 
-Recommended next item: `MEDIA-UPLOAD-CLIENT-001`.
+Recommended next item: `MEDIA-UPLOAD-BINARY-CLIENT-001`.
 
-Goal: define the first web/mobile upload client contract against the authenticated Worker media upload route, without browser-side R2 credentials or Supabase service keys.
+Goal: define a browser/mobile-safe binary upload executor for signed media upload intents.
 
 Suggested scope:
 
 - create work item and work spec
-- add a TypeScript client contract that calls the Worker media upload route
-- inject `fetch` and bearer token providers in tests
-- map Worker responses such as `upload_ready`, `unauthenticated`, `actor_not_authorized`, `media_asset_persistence_failed`
-- assert the client never receives or stores R2 credentials, Supabase service-role keys or internal provider errors
+- add a TypeScript helper that accepts an upload intent, file/blob-like body, MIME type and byte size
+- inject `fetch` in tests
+- upload bytes to the signed URL using the method and headers returned by the Worker
+- normalize signed URL upload failures into safe client errors
+- assert the helper never receives or stores R2 credentials, Supabase service-role keys or internal provider errors
 - do not build UI yet
-- do not upload real files yet
+- do not persist media assets from the client
 
 ## 6. Handoff Prompt For Codex
 

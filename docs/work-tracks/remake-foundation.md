@@ -14,4 +14,8 @@ Create the Pic4Paws V2 architecture foundation before continuing implementation.
 
 ## Current Focus
 
-`AUTH-SUPABASE-001`, `SEC-001`, `WORKER-SUPABASE-WIRING-001`, `WORKER-SUPABASE-SDK-001`, `R2-SIGNER-SDK-001` and `MEDIA-WORKER-PERSIST-001` are completed. Recommended next foundation item: define the first web/mobile upload client contract against the authenticated Worker media upload route, without introducing browser-side R2 credentials or Supabase service keys.
+`AUTH-SUPABASE-001`, `SEC-001`, `WORKER-SUPABASE-WIRING-001`, `WORKER-SUPABASE-SDK-001`, `R2-SIGNER-SDK-001`, `MEDIA-WORKER-PERSIST-001` and `MEDIA-UPLOAD-CLIENT-001` are completed or ready for review on their work branches.
+
+Recommended next foundation item: `MEDIA-UPLOAD-BINARY-CLIENT-001`.
+
+Define the browser/mobile-safe binary upload executor that takes a signed upload intent from `@pic4paws/client` and uploads file bytes to the signed URL without exposing R2 credentials, Supabase service-role keys or persistence internals to Web/Mobile.
