@@ -1,4 +1,5 @@
 import { productName } from '@pic4paws/domain';
+import { mobileMediaUploadContent, type MobileMediaUploadContent } from './media-upload';
 
 export type MobileFoundationStatus = 'contract-ready';
 
@@ -13,6 +14,7 @@ export type MobileFoundationContent = {
     label: string;
     route: string | null;
   };
+  mediaUpload: Pick<MobileMediaUploadContent, 'title' | 'description' | 'status'>;
   readiness: Array<{
     id: 'database' | 'auth' | 'pets' | 'payments' | 'media' | 'workers';
     label: string;
@@ -32,6 +34,11 @@ export const mobileFoundationContent: MobileFoundationContent = {
   primaryAction: {
     label: 'Fundação técnica em curso',
     route: null,
+  },
+  mediaUpload: {
+    title: mobileMediaUploadContent.title,
+    description: mobileMediaUploadContent.description,
+    status: mobileMediaUploadContent.status,
   },
   readiness: [
     {

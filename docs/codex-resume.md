@@ -52,9 +52,9 @@ Required validation:
 - `npm run test`
 - `npm run build`
 
-## 4. Current State As Of 2026-06-05
+## 4. Current State As Of 2026-06-06
 
-Merged through `main` commit `5188687` before `MEDIA-UPLOAD-CLIENT-001`.
+Merged through `main` commit `b963de0` before `MOBILE-MEDIA-UPLOAD-001`.
 
 Completed foundation work:
 
@@ -68,6 +68,7 @@ Completed foundation work:
 - `MEDIA-UPLOAD-BINARY-CLIENT-001` on branch `codex/MEDIA-UPLOAD-BINARY-CLIENT-001`
 - `MEDIA-UPLOAD-FLOW-CLIENT-001` on branch `codex/MEDIA-UPLOAD-FLOW-CLIENT-001`
 - `WEB-MEDIA-UPLOAD-001` on branch `codex/WEB-MEDIA-UPLOAD-001`
+- `MOBILE-MEDIA-UPLOAD-001` on branch `codex/MOBILE-MEDIA-UPLOAD-001`
 
 The Worker now has:
 
@@ -83,24 +84,25 @@ Web/Mobile now has:
 - a tested signed URL binary upload executor with injected `fetch`
 - a tested composed media upload flow client with distinct intent and binary upload failure phases
 - a tested Web media upload boundary for public pet images with PT-PT states and injected dependencies
+- a tested Mobile media upload boundary for public pet images with PT-PT states and injected dependencies
 - safe Worker success/failure normalization
 - no client-side Supabase service-role keys or R2 credentials
 
 ## 5. Recommended Next Work Item
 
-Recommended next item: `MOBILE-MEDIA-UPLOAD-001`.
+Recommended next item: `PET-MEDIA-UPLOAD-UI-001`.
 
-Goal: integrate the composed media upload flow into the Portuguese-first Mobile foundation with fake/injected dependencies first.
+Goal: connect the safe Web/Mobile upload boundaries to the first pet media product UI flow with fake/injected dependencies first.
 
 Suggested scope:
 
 - create work item and work spec
-- add a small Mobile-facing upload adapter or provider boundary that calls `createMediaUploadFlowClient`
-- keep bearer token and `fetch` dependencies injectable in tests
-- expose PT-PT states for idle, uploading, uploaded, intent failure and binary upload failure
-- assert the Mobile layer never sends bearer tokens to signed URLs
-- do not use real Supabase or R2 credentials in Mobile tests
-- do not add post-upload confirmation or media processing yet
+- add a pet media upload UI/provider slice that consumes the existing safe Web and/or Mobile boundaries
+- keep file selection, auth token provider and `fetch` dependencies injectable in tests
+- expose PT-PT product copy for choose image, upload in progress, uploaded and failure states
+- assert product UI never receives signed URLs or provider credentials
+- do not call real Supabase, R2 or Worker services in tests
+- do not add image transforms, post-upload processing or production credential wiring yet
 
 ## 6. Handoff Prompt For Codex
 

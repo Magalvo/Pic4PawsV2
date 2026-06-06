@@ -5,9 +5,10 @@
     "jsx": "react-jsx",
     "outDir": "dist-types",
     "paths": {
+      "@pic4paws/client": ["../../packages/client/src/index.ts"],
       "@pic4paws/domain": ["../../packages/domain/src/index.ts"]
     }
   },
   "include": ["app/**/*.ts", "app/**/*.tsx", "src/**/*.ts", "src/**/*.tsx"],
-  "references": [{ "path": "../../packages/domain" }]
+  "references": [{ "path": "../../packages/client" }, { "path": "../../packages/domain" }]
 }
