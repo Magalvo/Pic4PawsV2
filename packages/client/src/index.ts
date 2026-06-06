@@ -150,6 +150,51 @@ export type MediaUploadFlowClient = {
   uploadMedia: (input: UploadMediaFlowInput) => Promise<UploadMediaFlowResult>;
 };
 
+export type PetMediaAttachClientRequest = {
+  petId: string;
+  mediaId: string;
+};
+
+export type PetMediaAttachClientSuccess = {
+  ok: true;
+  status: 'pet_media_attached';
+  petId: string;
+  mediaId: string;
+  mediaIds: string[];
+  heroMediaId: string | null;
+};
+
+export type PetMediaAttachClientFailureStatus =
+  | 'unauthenticated'
+  | 'actor_not_authorized'
+  | 'invalid_pet_media_attach_request'
+  | 'pet_media_attach_context_not_found'
+  | 'pet_media_attach_rejected'
+  | 'worker_request_failed';
+
+export type PetMediaAttachClientFailure = {
+  ok: false;
+  status: PetMediaAttachClientFailureStatus;
+  reasons: string[];
+};
+
+export type PetMediaAttachClientResult =
+  | PetMediaAttachClientSuccess
+  | PetMediaAttachClientFailure;
+
+export type CreatePetMediaAttachClientInput = {
+  workerBaseUrl: string;
+  petDraftsPath: `/${string}`;
+  getAccessToken: () => Promise<string | null>;
+  fetch: MediaUploadClientFetch;
+};
+
+export type PetMediaAttachClient = {
+  attachPetMedia: (
+    request: PetMediaAttachClientRequest,
+  ) => Promise<PetMediaAttachClientResult>;
+};
+
 const sanitizeMediaUploadPayload = (request: MediaUploadClientRequest): MediaUploadClientRequest => ({
   mediaId: request.mediaId,
   purpose: request.purpose,
@@ -165,6 +210,17 @@ const createWorkerUrl = (workerBaseUrl: string, mediaUploadPath: `/${string}`): 
   const normalizedBaseUrl = workerBaseUrl.endsWith('/') ? workerBaseUrl : `${workerBaseUrl}/`;
 
   return new URL(mediaUploadPath.slice(1), normalizedBaseUrl).toString();
+};
+
+const createWorkerSubUrl = (
+  workerBaseUrl: string,
+  basePath: `/${string}`,
+  ...pathParts: string[]
+): string => {
+  const normalizedBasePath = basePath.endsWith('/') ? basePath.slice(0, -1) : basePath;
+  const encodedPathParts = pathParts.map((part) => encodeURIComponent(part));
+
+  return createWorkerUrl(workerBaseUrl, `${normalizedBasePath}/${encodedPathParts.join('/')}` as `/${string}`);
 };
 
 const parseJsonResponse = async (response: Response): Promise<Record<string, unknown> | null> => {
@@ -187,6 +243,31 @@ const parseReasons = (body: Record<string, unknown> | null): string[] => {
   const reasons = body.reasons.filter((reason): reason is string => typeof reason === 'string');
 
   return reasons.length > 0 ? reasons : ['worker_request_failed'];
+};
+
+const unsafeClientReasonMarkers = [
+  'signedurl',
+  'signed_url',
+  'temporary=',
+  'service-role',
+  'service_role',
+  'r2-secret',
+  'r2_secret',
+  'r2-access',
+  'r2_access',
+  'user-access-token',
+  'user-token-marker',
+  'bearer ',
+];
+
+const sanitizeReasons = (reasons: string[], fallback: string): string[] => {
+  const safeReasons = reasons.filter((reason) => {
+    const normalizedReason = reason.toLowerCase();
+
+    return !unsafeClientReasonMarkers.some((marker) => normalizedReason.includes(marker));
+  });
+
+  return safeReasons.length > 0 ? safeReasons : [fallback];
 };
 
 const parseFailureStatus = (
@@ -215,6 +296,100 @@ const parseSuccessIntent = (body: Record<string, unknown> | null): MediaUploadCl
 
   return body as MediaUploadClientIntent;
 };
+
+const parsePetMediaAttachFailureStatus = (
+  body: Record<string, unknown> | null,
+): PetMediaAttachClientFailureStatus => {
+  const status = body?.status;
+
+  if (
+    status === 'unauthenticated' ||
+    status === 'actor_not_authorized' ||
+    status === 'invalid_pet_media_attach_request' ||
+    status === 'pet_media_attach_context_not_found' ||
+    status === 'pet_media_attach_rejected'
+  ) {
+    return status;
+  }
+
+  return 'worker_request_failed';
+};
+
+const parsePetMediaAttachSuccess = (
+  body: Record<string, unknown> | null,
+): PetMediaAttachClientSuccess | null => {
+  if (
+    body?.status !== 'pet_media_attached' ||
+    typeof body.petId !== 'string' ||
+    typeof body.mediaId !== 'string' ||
+    !Array.isArray(body.mediaIds) ||
+    !body.mediaIds.every((mediaId) => typeof mediaId === 'string') ||
+    (body.heroMediaId !== null && typeof body.heroMediaId !== 'string')
+  ) {
+    return null;
+  }
+
+  return {
+    ok: true,
+    status: 'pet_media_attached',
+    petId: body.petId,
+    mediaId: body.mediaId,
+    mediaIds: body.mediaIds,
+    heroMediaId: body.heroMediaId,
+  };
+};
+
+export const createPetMediaAttachClient = ({
+  workerBaseUrl,
+  petDraftsPath,
+  getAccessToken,
+  fetch,
+}: CreatePetMediaAttachClientInput): PetMediaAttachClient => ({
+  attachPetMedia: async ({ petId, mediaId }) => {
+    const accessToken = await getAccessToken();
+
+    if (!accessToken?.trim()) {
+      return {
+        ok: false,
+        status: 'unauthenticated',
+        reasons: ['missing_access_token'],
+      };
+    }
+
+    const response = await fetch(createWorkerSubUrl(workerBaseUrl, petDraftsPath, petId, 'media'), {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ mediaId }),
+    });
+    const body = await parseJsonResponse(response);
+
+    if (!response.ok) {
+      const status = parsePetMediaAttachFailureStatus(body);
+      const reasons = Array.isArray(body?.reasons) ? parseReasons(body) : [status];
+
+      return {
+        ok: false,
+        status,
+        reasons: sanitizeReasons(reasons, status),
+      };
+    }
+
+    const success = parsePetMediaAttachSuccess(body);
+
+    if (!success) {
+      return {
+        ok: false,
+        status: 'worker_request_failed',
+        reasons: ['invalid_worker_response'],
+      };
+    }
+
+    return success;
+  },
+});
 
 export const createMediaUploadClient = ({
   workerBaseUrl,
