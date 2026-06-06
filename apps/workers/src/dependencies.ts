@@ -12,6 +12,7 @@ import {
 } from './pet-supabase';
 import type {
   PetDraftRepository,
+  PetMediaAttachRepository,
   PetPublishRepository,
   WorkerPetDraftAuthenticator,
 } from './pet-drafts';
@@ -37,6 +38,7 @@ export type WorkerRequestDependencies = {
   mediaAssetRepository?: MediaAssetRepository;
   petDraftAuthenticator?: WorkerPetDraftAuthenticator;
   petDraftRepository?: PetDraftRepository;
+  petMediaAttachRepository?: PetMediaAttachRepository;
   petPublishRepository?: PetPublishRepository;
   supabaseClientFactory?: WorkerSupabaseClientFactory;
   now?: () => string;
@@ -83,6 +85,7 @@ export const createWorkerSupabaseDependencies = ({
       mediaAssetRepository: mediaAssetRepository ?? petRepositories.mediaAssetRepository,
       petDraftAuthenticator: createSupabaseAuthAdapter({ client }),
       petDraftRepository: petRepositories.petDraftRepository,
+      petMediaAttachRepository: petRepositories.petMediaAttachRepository,
       petPublishRepository: petRepositories.petPublishRepository,
       now,
     };
@@ -102,6 +105,7 @@ export const resolveWorkerRequestDependencies = ({
   if (
     dependencies.petDraftAuthenticator &&
     dependencies.petDraftRepository &&
+    dependencies.petMediaAttachRepository &&
     dependencies.petPublishRepository
   ) {
     return dependencies;
@@ -122,6 +126,8 @@ export const resolveWorkerRequestDependencies = ({
     petDraftAuthenticator:
       dependencies.petDraftAuthenticator ?? supabaseDependencies.petDraftAuthenticator,
     petDraftRepository: dependencies.petDraftRepository ?? supabaseDependencies.petDraftRepository,
+    petMediaAttachRepository:
+      dependencies.petMediaAttachRepository ?? supabaseDependencies.petMediaAttachRepository,
     petPublishRepository:
       dependencies.petPublishRepository ?? supabaseDependencies.petPublishRepository,
   };

@@ -384,6 +384,102 @@ describe('Supabase pet repository adapters', () => {
     ]);
   });
 
+  it('loads pet media attach context and persists attached media fields only', async () => {
+    const { client, operations } = createFakeSupabaseClient({
+      'pets:maybeSingle': { data: { ...petRow, media_ids: [], hero_media_id: null }, error: null },
+      'media_assets:maybeSingle': { data: mediaRow, error: null },
+      'pets:single': {
+        data: {
+          id: 'pet-1',
+          media_ids: ['media-1'],
+          hero_media_id: 'media-1',
+        },
+        error: null,
+      },
+    });
+    const { petMediaAttachRepository } = createSupabasePetRepositories({ client });
+
+    await expect(
+      petMediaAttachRepository.loadAttachContext('pet-1', 'media-1'),
+    ).resolves.toEqual({
+      pet: {
+        id: 'pet-1',
+        shelterId: 'shelter-a',
+        status: 'draft',
+        name: 'Becas',
+        species: 'dog',
+        locationLabel: 'Lisboa',
+        shortDescription: 'Calmo e sociavel.',
+        mediaIds: [],
+        heroMediaId: null,
+        medical: insertContract.medical,
+        publishedAt: null,
+      },
+      mediaAsset: {
+        id: 'media-1',
+        shelterId: 'shelter-a',
+        ownerUserId: 'member-user',
+        visibility: 'public',
+        mediaKind: 'image',
+        r2ObjectKey: 'public/shelters/shelter-a/pet_public_image/media-1.jpg',
+        deletedAt: null,
+      },
+    });
+    await expect(
+      petMediaAttachRepository.attachMediaToDraft(
+        'pet-1',
+        {
+          ...insertContract,
+          mediaIds: ['media-1'],
+          heroMediaId: 'media-1',
+        },
+        actor,
+        '2026-06-04T16:20:00.000Z',
+      ),
+    ).resolves.toEqual({
+      petId: 'pet-1',
+      mediaIds: ['media-1'],
+      heroMediaId: 'media-1',
+    });
+
+    expect(operations).toEqual([
+      {
+        table: 'pets',
+        action: 'select',
+        columns:
+          'id,shelter_id,status,name,species,location_label,short_description,media_ids,hero_media_id,medical,published_at',
+        filters: [{ kind: 'eq', column: 'id', value: 'pet-1' }],
+        result: 'maybeSingle',
+      },
+      {
+        table: 'media_assets',
+        action: 'select',
+        columns:
+          'id,shelter_id,owner_user_id,visibility,r2_object_key,derivative_metadata,deleted_at',
+        filters: [{ kind: 'eq', column: 'id', value: 'media-1' }],
+        result: 'maybeSingle',
+      },
+      {
+        table: 'pets',
+        action: 'update',
+        payload: {
+          media_ids: ['media-1'],
+          hero_media_id: 'media-1',
+          updated_at: '2026-06-04T16:20:00.000Z',
+        },
+        columns: 'id,media_ids,hero_media_id',
+        filters: [
+          { kind: 'eq', column: 'id', value: 'pet-1' },
+          { kind: 'eq', column: 'status', value: 'draft' },
+        ],
+        result: 'single',
+      },
+    ]);
+    expect(JSON.stringify(operations)).not.toContain('signedUrl');
+    expect(JSON.stringify(operations)).not.toContain('service-role-secret');
+    expect(JSON.stringify(operations)).not.toContain('r2-secret-key');
+  });
+
   it('persists published pet state without trusting client supplied values', async () => {
     const { client, operations } = createFakeSupabaseClient({
       'pets:single': {

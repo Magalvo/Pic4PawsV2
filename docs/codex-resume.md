@@ -54,7 +54,7 @@ Required validation:
 
 ## 4. Current State As Of 2026-06-06
 
-Merged through `main` commit `b963de0` before `MOBILE-MEDIA-UPLOAD-001`.
+Merged through `main` commit `263a274` before `PET-MEDIA-ATTACH-WORKER-001`.
 
 Completed foundation work:
 
@@ -70,12 +70,14 @@ Completed foundation work:
 - `WEB-MEDIA-UPLOAD-001` on branch `codex/WEB-MEDIA-UPLOAD-001`
 - `MOBILE-MEDIA-UPLOAD-001` on branch `codex/MOBILE-MEDIA-UPLOAD-001`
 - `PET-MEDIA-UPLOAD-UI-001` on branch `codex/PET-MEDIA-UPLOAD-UI-001`, stacked on `codex/MOBILE-MEDIA-UPLOAD-001`
+- `PET-MEDIA-ATTACH-WORKER-001` on branch `codex/PET-MEDIA-ATTACH-WORKER-001`
 
 The Worker now has:
 
 - server-side Supabase SDK dependency composition
 - server-side R2/S3-compatible upload signer factory
 - authenticated media upload persistence for signed intents
+- authenticated pet media attachment for persisted public image assets
 - tests that keep Supabase and Cloudflare calls mocked/injected
 
 Web/Mobile now has:
@@ -92,19 +94,19 @@ Web/Mobile now has:
 
 ## 5. Recommended Next Work Item
 
-Recommended next item: `PET-MEDIA-ATTACH-WORKER-001`.
+Recommended next item: `PET-MEDIA-ATTACH-CLIENT-001`.
 
-Goal: create an authenticated Worker boundary that attaches a persisted public image media asset to a pet draft after upload.
+Goal: create a shared Web/Mobile client for calling the authenticated pet media attach Worker route after upload.
 
 Suggested scope:
 
 - create work item and work spec
-- add an authenticated Worker boundary for attaching media to pet drafts
-- reuse `attachMediaAssetToPetDraft` from `@pic4paws/domain`
-- keep pet draft repository, media asset repository and actor resolution injected in tests
-- reject unauthorized actors, non-draft pets, private/deleted/cross-shelter media and duplicate attachments
-- return safe PT-PT/API-friendly statuses without signed URLs or provider credentials
-- do not implement real UI wiring, image transforms or post-upload processing yet
+- add a client function in `@pic4paws/client` for `POST /pets/drafts/:petId/media`
+- keep `fetch` and bearer token provider injectable in tests
+- normalize success, unauthenticated, unauthorized, not-found, validation and rejected attachment responses
+- assert bearer tokens are only sent to the Worker route
+- assert client results never expose signed URLs, Supabase service-role keys, R2 keys or bearer tokens
+- do not wire real Web/Mobile UI yet
 
 ## 6. Handoff Prompt For Codex
 
