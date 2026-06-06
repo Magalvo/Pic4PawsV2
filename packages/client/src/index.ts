@@ -195,6 +195,45 @@ export type PetMediaAttachClient = {
   ) => Promise<PetMediaAttachClientResult>;
 };
 
+export type PetPublishClientRequest = {
+  petId: string;
+};
+
+export type PetPublishClientSuccess = {
+  ok: true;
+  status: 'pet_published';
+  petId: string;
+  publishedAt: string;
+};
+
+export type PetPublishClientFailureStatus =
+  | 'unauthenticated'
+  | 'actor_not_authorized'
+  | 'pet_draft_not_found'
+  | 'pet_publish_rejected'
+  | 'auth_adapter_not_configured'
+  | 'pet_publish_repository_not_configured'
+  | 'worker_request_failed';
+
+export type PetPublishClientFailure = {
+  ok: false;
+  status: PetPublishClientFailureStatus;
+  reasons: string[];
+};
+
+export type PetPublishClientResult = PetPublishClientSuccess | PetPublishClientFailure;
+
+export type CreatePetPublishClientInput = {
+  workerBaseUrl: string;
+  petDraftsPath: `/${string}`;
+  getAccessToken: () => Promise<string | null>;
+  fetch: MediaUploadClientFetch;
+};
+
+export type PetPublishClient = {
+  publishPetDraft: (request: PetPublishClientRequest) => Promise<PetPublishClientResult>;
+};
+
 export type PetMediaUploadAttachFlowFileInput = {
   name: string;
   type: string;
@@ -413,6 +452,96 @@ const parsePetMediaAttachSuccess = (
     heroMediaId: body.heroMediaId,
   };
 };
+
+const parsePetPublishFailureStatus = (
+  body: Record<string, unknown> | null,
+): PetPublishClientFailureStatus => {
+  const status = body?.status;
+
+  if (
+    status === 'unauthenticated' ||
+    status === 'actor_not_authorized' ||
+    status === 'pet_draft_not_found' ||
+    status === 'pet_publish_rejected' ||
+    status === 'auth_adapter_not_configured' ||
+    status === 'pet_publish_repository_not_configured'
+  ) {
+    return status;
+  }
+
+  return 'worker_request_failed';
+};
+
+const parsePetPublishSuccess = (
+  body: Record<string, unknown> | null,
+): PetPublishClientSuccess | null => {
+  if (
+    body?.status !== 'pet_published' ||
+    typeof body.petId !== 'string' ||
+    typeof body.publishedAt !== 'string'
+  ) {
+    return null;
+  }
+
+  return {
+    ok: true,
+    status: 'pet_published',
+    petId: body.petId,
+    publishedAt: body.publishedAt,
+  };
+};
+
+export const createPetPublishClient = ({
+  workerBaseUrl,
+  petDraftsPath,
+  getAccessToken,
+  fetch,
+}: CreatePetPublishClientInput): PetPublishClient => ({
+  publishPetDraft: async ({ petId }) => {
+    const accessToken = await getAccessToken();
+
+    if (!accessToken?.trim()) {
+      return {
+        ok: false,
+        status: 'unauthenticated',
+        reasons: ['missing_access_token'],
+      };
+    }
+
+    const response = await fetch(createWorkerSubUrl(workerBaseUrl, petDraftsPath, petId, 'publish'), {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({}),
+    });
+    const body = await parseJsonResponse(response);
+
+    if (!response.ok) {
+      const status = parsePetPublishFailureStatus(body);
+      const reasons = Array.isArray(body?.reasons) ? parseReasons(body) : [status];
+
+      return {
+        ok: false,
+        status,
+        reasons: sanitizeReasons(reasons, status),
+      };
+    }
+
+    const success = parsePetPublishSuccess(body);
+
+    if (!success) {
+      return {
+        ok: false,
+        status: 'worker_request_failed',
+        reasons: ['invalid_worker_response'],
+      };
+    }
+
+    return success;
+  },
+});
 
 export const createPetMediaAttachClient = ({
   workerBaseUrl,
