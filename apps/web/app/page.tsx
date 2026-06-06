@@ -2,7 +2,7 @@ import { brandTokens } from '@pic4paws/ui';
 import { webFoundationContent } from '../src/foundation';
 
 export default function HomePage() {
-  const { hero, primaryAction, mediaUpload, readiness } = webFoundationContent;
+  const { hero, primaryAction, mediaUpload, petMediaUpload, readiness } = webFoundationContent;
 
   return (
     <main className="shell">
@@ -20,6 +20,17 @@ export default function HomePage() {
         <h2>{mediaUpload.title}</h2>
         <p>{mediaUpload.description}</p>
         <span>{mediaUpload.status === 'contract-ready' ? 'Contrato pronto' : mediaUpload.status}</span>
+      </section>
+
+      <section className="media-upload" aria-label="Imagem do animal">
+        <p className="eyebrow">Produto</p>
+        <h2>{petMediaUpload.title}</h2>
+        <p>{petMediaUpload.description}</p>
+        <span>
+          {petMediaUpload.status === 'product-flow-ready'
+            ? 'Fluxo de produto pronto'
+            : petMediaUpload.status}
+        </span>
       </section>
 
       <section className="readiness" aria-label="Estado da fundação técnica">

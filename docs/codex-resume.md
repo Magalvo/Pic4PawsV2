@@ -69,6 +69,7 @@ Completed foundation work:
 - `MEDIA-UPLOAD-FLOW-CLIENT-001` on branch `codex/MEDIA-UPLOAD-FLOW-CLIENT-001`
 - `WEB-MEDIA-UPLOAD-001` on branch `codex/WEB-MEDIA-UPLOAD-001`
 - `MOBILE-MEDIA-UPLOAD-001` on branch `codex/MOBILE-MEDIA-UPLOAD-001`
+- `PET-MEDIA-UPLOAD-UI-001` on branch `codex/PET-MEDIA-UPLOAD-UI-001`, stacked on `codex/MOBILE-MEDIA-UPLOAD-001`
 
 The Worker now has:
 
@@ -85,24 +86,25 @@ Web/Mobile now has:
 - a tested composed media upload flow client with distinct intent and binary upload failure phases
 - a tested Web media upload boundary for public pet images with PT-PT states and injected dependencies
 - a tested Mobile media upload boundary for public pet images with PT-PT states and injected dependencies
+- tested Web and Mobile pet media product UI flows with deterministic media IDs, MIME guards and safe PT-PT view models
 - safe Worker success/failure normalization
 - no client-side Supabase service-role keys or R2 credentials
 
 ## 5. Recommended Next Work Item
 
-Recommended next item: `PET-MEDIA-UPLOAD-UI-001`.
+Recommended next item: `PET-MEDIA-ATTACH-WORKER-001`.
 
-Goal: connect the safe Web/Mobile upload boundaries to the first pet media product UI flow with fake/injected dependencies first.
+Goal: create an authenticated Worker boundary that attaches a persisted public image media asset to a pet draft after upload.
 
 Suggested scope:
 
 - create work item and work spec
-- add a pet media upload UI/provider slice that consumes the existing safe Web and/or Mobile boundaries
-- keep file selection, auth token provider and `fetch` dependencies injectable in tests
-- expose PT-PT product copy for choose image, upload in progress, uploaded and failure states
-- assert product UI never receives signed URLs or provider credentials
-- do not call real Supabase, R2 or Worker services in tests
-- do not add image transforms, post-upload processing or production credential wiring yet
+- add an authenticated Worker boundary for attaching media to pet drafts
+- reuse `attachMediaAssetToPetDraft` from `@pic4paws/domain`
+- keep pet draft repository, media asset repository and actor resolution injected in tests
+- reject unauthorized actors, non-draft pets, private/deleted/cross-shelter media and duplicate attachments
+- return safe PT-PT/API-friendly statuses without signed URLs or provider credentials
+- do not implement real UI wiring, image transforms or post-upload processing yet
 
 ## 6. Handoff Prompt For Codex
 

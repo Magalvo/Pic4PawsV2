@@ -2,7 +2,7 @@ import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { mobileFoundationContent } from '../src/foundation';
 
 export default function IndexScreen() {
-  const { hero, primaryAction, mediaUpload, readiness } = mobileFoundationContent;
+  const { hero, primaryAction, mediaUpload, petMediaUpload, readiness } = mobileFoundationContent;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -20,6 +20,17 @@ export default function IndexScreen() {
           <Text style={styles.mediaUploadDescription}>{mediaUpload.description}</Text>
           <Text style={styles.mediaUploadStatus}>
             {mediaUpload.status === 'contract-ready' ? 'Contrato pronto' : mediaUpload.status}
+          </Text>
+        </View>
+
+        <View accessibilityLabel="Imagem do animal" style={styles.mediaUpload}>
+          <Text style={styles.eyebrow}>Produto</Text>
+          <Text style={styles.mediaUploadTitle}>{petMediaUpload.title}</Text>
+          <Text style={styles.mediaUploadDescription}>{petMediaUpload.description}</Text>
+          <Text style={styles.mediaUploadStatus}>
+            {petMediaUpload.status === 'product-flow-ready'
+              ? 'Fluxo de produto pronto'
+              : petMediaUpload.status}
           </Text>
         </View>
 

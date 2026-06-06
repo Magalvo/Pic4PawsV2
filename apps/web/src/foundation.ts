@@ -1,4 +1,8 @@
 import { webMediaUploadContent, type WebMediaUploadContent } from './media-upload';
+import {
+  webPetMediaUploadUiContent,
+  type WebPetMediaUploadUiContent,
+} from './pet-media-upload';
 
 export type WebFoundationStatus = 'contract-ready';
 
@@ -14,6 +18,7 @@ export type WebFoundationContent = {
     href: string | null;
   };
   mediaUpload: Pick<WebMediaUploadContent, 'title' | 'description' | 'status'>;
+  petMediaUpload: Pick<WebPetMediaUploadUiContent, 'title' | 'description' | 'status'>;
   readiness: Array<{
     id: 'database' | 'auth' | 'pets' | 'payments' | 'media' | 'workers';
     label: string;
@@ -38,6 +43,11 @@ export const webFoundationContent: WebFoundationContent = {
     title: webMediaUploadContent.title,
     description: webMediaUploadContent.description,
     status: webMediaUploadContent.status,
+  },
+  petMediaUpload: {
+    title: webPetMediaUploadUiContent.title,
+    description: webPetMediaUploadUiContent.description,
+    status: webPetMediaUploadUiContent.status,
   },
   readiness: [
     {
