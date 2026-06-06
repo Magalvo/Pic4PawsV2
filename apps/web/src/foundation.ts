@@ -3,6 +3,7 @@ import {
   webPetMediaUploadUiContent,
   type WebPetMediaUploadUiContent,
 } from './pet-media-upload';
+import { webPetPublishUiContent, type WebPetPublishUiContent } from './pet-publish';
 
 export type WebFoundationStatus = 'contract-ready';
 
@@ -19,6 +20,7 @@ export type WebFoundationContent = {
   };
   mediaUpload: Pick<WebMediaUploadContent, 'title' | 'description' | 'status'>;
   petMediaUpload: Pick<WebPetMediaUploadUiContent, 'title' | 'description' | 'status'>;
+  petPublish: Pick<WebPetPublishUiContent, 'title' | 'description' | 'status'>;
   readiness: Array<{
     id: 'database' | 'auth' | 'pets' | 'payments' | 'media' | 'workers';
     label: string;
@@ -48,6 +50,11 @@ export const webFoundationContent: WebFoundationContent = {
     title: webPetMediaUploadUiContent.title,
     description: webPetMediaUploadUiContent.description,
     status: webPetMediaUploadUiContent.status,
+  },
+  petPublish: {
+    title: webPetPublishUiContent.title,
+    description: webPetPublishUiContent.description,
+    status: webPetPublishUiContent.status,
   },
   readiness: [
     {
