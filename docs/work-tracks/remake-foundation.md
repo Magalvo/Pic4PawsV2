@@ -14,8 +14,8 @@ Create the Pic4Paws V2 architecture foundation before continuing implementation.
 
 ## Current Focus
 
-`AUTH-SUPABASE-001`, `SEC-001`, `WORKER-SUPABASE-WIRING-001`, `WORKER-SUPABASE-SDK-001`, `R2-SIGNER-SDK-001`, `MEDIA-WORKER-PERSIST-001`, `MEDIA-UPLOAD-CLIENT-001`, `MEDIA-UPLOAD-BINARY-CLIENT-001`, `MEDIA-UPLOAD-FLOW-CLIENT-001`, `WEB-MEDIA-UPLOAD-001`, `MOBILE-MEDIA-UPLOAD-001`, `PET-MEDIA-UPLOAD-UI-001`, `PET-MEDIA-ATTACH-WORKER-001` and `PET-MEDIA-ATTACH-CLIENT-001` are completed or ready for review on their work branches.
+`AUTH-SUPABASE-001`, `SEC-001`, `WORKER-SUPABASE-WIRING-001`, `WORKER-SUPABASE-SDK-001`, `R2-SIGNER-SDK-001`, `MEDIA-WORKER-PERSIST-001`, `MEDIA-UPLOAD-CLIENT-001`, `MEDIA-UPLOAD-BINARY-CLIENT-001`, `MEDIA-UPLOAD-FLOW-CLIENT-001`, `WEB-MEDIA-UPLOAD-001`, `MOBILE-MEDIA-UPLOAD-001`, `PET-MEDIA-UPLOAD-UI-001`, `PET-MEDIA-ATTACH-WORKER-001`, `PET-MEDIA-ATTACH-CLIENT-001` and `PET-MEDIA-UPLOAD-ATTACH-FLOW-001` are completed or ready for review on their work branches.
 
-Recommended next foundation item: `PET-MEDIA-UPLOAD-ATTACH-FLOW-001`.
+Recommended next foundation item: `WEB-PET-MEDIA-UPLOAD-ATTACH-001`.
 
-Compose upload and attach into one Web/Mobile-safe pet media flow that uploads a public pet image and then attaches the persisted media asset to the draft through injected clients, preserving safe failure phases.
+Wire the composed pet media upload+attach flow into the Web product boundary/view model with fake/injected dependencies first, replacing the previous upload-only next action while still avoiding real sessions or production services.
