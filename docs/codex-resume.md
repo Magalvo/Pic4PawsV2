@@ -54,7 +54,7 @@ Required validation:
 
 ## 4. Current State As Of 2026-06-06
 
-Merged through `main` commit `6bea5f7` before `WEB-PET-PUBLISH-001`.
+Merged through `main` commit `f0a2c31` before `MOBILE-PET-PUBLISH-001`.
 
 Completed foundation work:
 
@@ -77,6 +77,7 @@ Completed foundation work:
 - `MOBILE-PET-MEDIA-UPLOAD-ATTACH-001` on branch `codex/MOBILE-PET-MEDIA-UPLOAD-ATTACH-001`
 - `PET-PUBLISH-CLIENT-001` on branch `codex/PET-PUBLISH-CLIENT-001`
 - `WEB-PET-PUBLISH-001` on branch `codex/WEB-PET-PUBLISH-001`
+- `MOBILE-PET-PUBLISH-001` on branch `codex/MOBILE-PET-PUBLISH-001`
 
 The Worker now has:
 
@@ -101,23 +102,25 @@ Web/Mobile now has:
 - a tested Mobile pet media product boundary that consumes the composed upload+attach flow and returns attached draft media state
 - a tested shared pet publish client for Web/Mobile that calls the authenticated Worker publish route without sending client-side publish claims
 - a tested Web pet publish product boundary that consumes the shared publish client and exposes safe PT-PT publish states
+- a tested Mobile pet publish product boundary that consumes the shared publish client and exposes safe PT-PT publish states
 - safe Worker success/failure normalization
 - no client-side Supabase service-role keys or R2 credentials
 
 ## 5. Recommended Next Work Item
 
-Recommended next item: `MOBILE-PET-PUBLISH-001`.
+Recommended next item: `PET-DRAFT-CLIENT-001`.
 
-Goal: wire the shared pet publish client into the Mobile product boundary/view model with fake/injected dependencies first.
+Goal: add a Web/Mobile-safe client for the authenticated pet draft create/update Worker routes with injected `fetch` and bearer token provider.
 
 Suggested scope:
 
 - create work item and work spec
-- create a Mobile product boundary around an injected `publishPetDraft` dependency
-- expose PT-PT ready, publishing, published and failed states
-- map unauthenticated, unauthorized, missing draft, rejected publish and worker failures to safe Mobile copy
-- assert UI-facing results never expose bearer tokens, Supabase service-role keys or R2 keys
-- do not wire real native navigation, production auth/session state or live Worker calls yet
+- add `createPetDraftClient` or similarly named client API to `@pic4paws/client`
+- call `POST /pets/drafts` for create and `PATCH /pets/drafts/:petId` for update under the configured pet drafts path
+- inject `fetch`, Worker base URL, path and bearer token provider
+- normalize unauthenticated, unauthorized, invalid draft, missing adapter and server failures into safe client results
+- assert client-facing results never expose bearer tokens, Supabase service-role keys or R2 keys
+- do not wire Web/Mobile product UI or production sessions yet
 
 ## 6. Handoff Prompt For Codex
 
