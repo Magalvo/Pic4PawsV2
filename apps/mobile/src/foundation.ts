@@ -1,5 +1,9 @@
 import { productName } from '@pic4paws/domain';
 import { mobileMediaUploadContent, type MobileMediaUploadContent } from './media-upload';
+import {
+  mobilePetMediaUploadUiContent,
+  type MobilePetMediaUploadUiContent,
+} from './pet-media-upload';
 
 export type MobileFoundationStatus = 'contract-ready';
 
@@ -15,6 +19,7 @@ export type MobileFoundationContent = {
     route: string | null;
   };
   mediaUpload: Pick<MobileMediaUploadContent, 'title' | 'description' | 'status'>;
+  petMediaUpload: Pick<MobilePetMediaUploadUiContent, 'title' | 'description' | 'status'>;
   readiness: Array<{
     id: 'database' | 'auth' | 'pets' | 'payments' | 'media' | 'workers';
     label: string;
@@ -39,6 +44,11 @@ export const mobileFoundationContent: MobileFoundationContent = {
     title: mobileMediaUploadContent.title,
     description: mobileMediaUploadContent.description,
     status: mobileMediaUploadContent.status,
+  },
+  petMediaUpload: {
+    title: mobilePetMediaUploadUiContent.title,
+    description: mobilePetMediaUploadUiContent.description,
+    status: mobilePetMediaUploadUiContent.status,
   },
   readiness: [
     {
