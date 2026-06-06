@@ -54,7 +54,7 @@ Required validation:
 
 ## 4. Current State As Of 2026-06-06
 
-Merged through `main` commit `772ccdb` before `WEB-PET-MEDIA-UPLOAD-ATTACH-001`.
+Merged through `main` commit `a25e469` before `MOBILE-PET-MEDIA-UPLOAD-ATTACH-001`.
 
 Completed foundation work:
 
@@ -74,6 +74,7 @@ Completed foundation work:
 - `PET-MEDIA-ATTACH-CLIENT-001` on branch `codex/PET-MEDIA-ATTACH-CLIENT-001`
 - `PET-MEDIA-UPLOAD-ATTACH-FLOW-001` on branch `codex/PET-MEDIA-UPLOAD-ATTACH-FLOW-001`, stacked on `codex/PET-MEDIA-ATTACH-CLIENT-001`
 - `WEB-PET-MEDIA-UPLOAD-ATTACH-001` on branch `codex/WEB-PET-MEDIA-UPLOAD-ATTACH-001`
+- `MOBILE-PET-MEDIA-UPLOAD-ATTACH-001` on branch `codex/MOBILE-PET-MEDIA-UPLOAD-ATTACH-001`
 
 The Worker now has:
 
@@ -95,24 +96,25 @@ Web/Mobile now has:
 - a tested Mobile media upload boundary for public pet images with PT-PT states and injected dependencies
 - tested Web and Mobile pet media product UI flows with deterministic media IDs, MIME guards and safe PT-PT view models
 - a tested Web pet media product boundary that consumes the composed upload+attach flow and returns attached draft media state
+- a tested Mobile pet media product boundary that consumes the composed upload+attach flow and returns attached draft media state
 - safe Worker success/failure normalization
 - no client-side Supabase service-role keys or R2 credentials
 
 ## 5. Recommended Next Work Item
 
-Recommended next item: `MOBILE-PET-MEDIA-UPLOAD-ATTACH-001`.
+Recommended next item: `PET-PUBLISH-CLIENT-001`.
 
-Goal: wire the composed pet media upload+attach flow into the Mobile product boundary/view model with fake/injected dependencies first.
+Goal: add a Web/Mobile-safe client for the authenticated pet draft publish Worker route with injected `fetch` and bearer token provider.
 
 Suggested scope:
 
 - create work item and work spec
-- update the Mobile pet media product flow to consume `createPetMediaUploadAttachFlowClient` or an injected structural equivalent
-- keep file input, flow client and ID/session dependencies injectable in tests
-- replace upload-only success copy with upload+attach success copy
-- map upload intent, binary upload and attach failures to PT-PT product states
-- assert UI-facing results never expose signed URLs, Supabase service-role keys, R2 keys or bearer tokens
-- do not wire real native file pickers, mobile auth/session state or production services yet
+- add `createPetPublishClient` or similarly named client API to `@pic4paws/client`
+- call `POST /pets/drafts/:petId/publish` under the configured pet drafts path
+- inject `fetch`, Worker base URL, path and bearer token provider
+- normalize unauthenticated, forbidden, invalid draft and server failures into safe client results
+- assert client-facing results never expose bearer tokens, Supabase service-role keys or R2 keys
+- do not wire Web/Mobile product UI or production sessions yet
 
 ## 6. Handoff Prompt For Codex
 

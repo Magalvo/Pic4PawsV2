@@ -1,12 +1,16 @@
 import type {
-  MobileMediaUploadBoundary,
-  MobilePetPublicImageUploadInput,
-  MobileUploadFileInput,
-} from './media-upload';
+  PetMediaUploadAttachFlowClient,
+  PetMediaUploadAttachFlowFailure,
+  PetMediaUploadAttachFlowFileInput,
+} from '@pic4paws/client';
 
 export type MobilePetMediaUploadUiState = 'ready' | 'choosing' | 'uploading' | 'uploaded' | 'failed';
 
 export type MobilePetMediaUploadSupportedMimeType = 'image/jpeg' | 'image/png' | 'image/webp';
+
+export type MobilePetMediaUploadUiFailurePhase =
+  | 'validation'
+  | PetMediaUploadAttachFlowFailure['phase'];
 
 export type MobilePetMediaUploadUiStateCopy = {
   state: MobilePetMediaUploadUiState;
@@ -51,7 +55,10 @@ export type MobilePetMediaUploadResultViewModel =
         mediaId: string;
         objectKey: string;
       };
-      nextAction: string;
+      draftMedia: {
+        mediaIds: string[];
+        heroMediaId: string | null;
+      };
     }
   | {
       state: 'failed';
@@ -59,20 +66,20 @@ export type MobilePetMediaUploadResultViewModel =
       message: string;
       petId: string;
       petName: string;
+      phase: MobilePetMediaUploadUiFailurePhase;
       reasons: string[];
       canRetry: true;
     };
 
 export type CreateMobilePetMediaUploadUiInput = {
-  uploadBoundary: Pick<MobileMediaUploadBoundary, 'uploadPetPublicImage'>;
-  generateMediaId: () => string;
+  uploadAttachFlow: Pick<PetMediaUploadAttachFlowClient, 'uploadAndAttachPetMedia'>;
 };
 
 export type MobilePetMediaUploadUi = {
   getInitialState: (pet: MobilePetMediaUploadContext) => MobilePetMediaUploadReadyViewModel;
   uploadSelectedImage: (input: {
     pet: MobilePetMediaUploadContext;
-    file: MobileUploadFileInput;
+    file: PetMediaUploadAttachFlowFileInput;
   }) => Promise<MobilePetMediaUploadResultViewModel>;
 };
 
@@ -100,7 +107,7 @@ export const mobilePetMediaUploadUiContent: MobilePetMediaUploadUiContent = {
   locale: 'pt-PT',
   title: 'Imagem do animal',
   description:
-    'Fluxo mobile para escolher uma imagem pública do animal e enviá-la pelo boundary seguro antes de a associar ao rascunho.',
+    'Fluxo mobile para escolher uma imagem pública do animal, enviá-la pelo boundary seguro e associá-la ao rascunho.',
   status: 'product-flow-ready',
   acceptedMimeTypes,
   states: [
@@ -121,8 +128,8 @@ export const mobilePetMediaUploadUiContent: MobilePetMediaUploadUiContent = {
     },
     {
       state: 'uploaded',
-      title: 'Imagem adicionada ao rascunho',
-      message: 'A imagem foi carregada e está pronta para ser associada ao perfil.',
+      title: 'Imagem carregada e associada',
+      message: 'A imagem foi carregada e associada ao rascunho.',
     },
     {
       state: 'failed',
@@ -132,7 +139,7 @@ export const mobilePetMediaUploadUiContent: MobilePetMediaUploadUiContent = {
   ],
 };
 
-const isSupportedImage = (file: MobileUploadFileInput): boolean =>
+const isSupportedImage = (file: PetMediaUploadAttachFlowFileInput): boolean =>
   acceptedMimeTypes.includes(file.type as MobilePetMediaUploadSupportedMimeType);
 
 const isSafeReason = (reason: string): boolean => {
@@ -155,24 +162,31 @@ const createUnsupportedFileResult = (
   message: 'Usa JPEG, PNG ou WebP para imagens públicas de animais.',
   petId: pet.petId,
   petName: pet.petName,
+  phase: 'validation',
   reasons: ['unsupported_mime_type'],
   canRetry: true,
 });
 
-const buildUploadInput = (
-  pet: MobilePetMediaUploadContext,
-  file: MobileUploadFileInput,
-  mediaId: string,
-): MobilePetPublicImageUploadInput => ({
-  mediaId,
-  shelterId: pet.shelterId,
-  ownerUserId: pet.ownerUserId ?? null,
-  file,
-});
+const failureCopyByPhase: Record<
+  PetMediaUploadAttachFlowFailure['phase'],
+  { title: string; message: string }
+> = {
+  upload_intent: {
+    title: 'Não foi possível preparar o carregamento',
+    message: 'Confirma as permissões e tenta novamente.',
+  },
+  binary_upload: {
+    title: 'Não foi possível adicionar a imagem',
+    message: 'O pedido foi preparado, mas o envio do ficheiro falhou.',
+  },
+  attach: {
+    title: 'Não foi possível associar a imagem',
+    message: 'A imagem foi enviada, mas não ficou associada ao rascunho.',
+  },
+};
 
 export const createMobilePetMediaUploadUi = ({
-  uploadBoundary,
-  generateMediaId,
+  uploadAttachFlow,
 }: CreateMobilePetMediaUploadUiInput): MobilePetMediaUploadUi => ({
   getInitialState: (pet) => ({
     state: 'ready',
@@ -188,31 +202,40 @@ export const createMobilePetMediaUploadUi = ({
       return createUnsupportedFileResult(pet);
     }
 
-    const result = await uploadBoundary.uploadPetPublicImage(
-      buildUploadInput(pet, file, generateMediaId()),
-    );
+    const result = await uploadAttachFlow.uploadAndAttachPetMedia({
+      petId: pet.petId,
+      shelterId: pet.shelterId,
+      ownerUserId: pet.ownerUserId ?? null,
+      file,
+    });
 
-    if (result.state === 'uploaded') {
+    if (result.ok) {
       return {
         state: 'uploaded',
-        title: 'Imagem adicionada ao rascunho',
-        message: `A imagem de ${pet.petName} foi carregada e está pronta para ser associada ao perfil.`,
+        title: 'Imagem carregada e associada',
+        message: `A imagem de ${pet.petName} foi carregada e associada ao rascunho.`,
         petId: pet.petId,
         petName: pet.petName,
         media: {
           mediaId: result.mediaId,
           objectKey: result.objectKey,
         },
-        nextAction: 'Associar imagem ao rascunho',
+        draftMedia: {
+          mediaIds: result.mediaIds,
+          heroMediaId: result.heroMediaId,
+        },
       };
     }
 
+    const copy = failureCopyByPhase[result.phase];
+
     return {
       state: 'failed',
-      title: 'Não foi possível adicionar a imagem',
-      message: result.message,
+      title: copy.title,
+      message: copy.message,
       petId: pet.petId,
       petName: pet.petName,
+      phase: result.phase,
       reasons: sanitizeReasons(result.reasons),
       canRetry: true,
     };
