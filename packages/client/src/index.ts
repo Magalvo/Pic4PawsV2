@@ -195,6 +195,81 @@ export type PetMediaAttachClient = {
   ) => Promise<PetMediaAttachClientResult>;
 };
 
+export type PetMediaUploadAttachFlowFileInput = {
+  name: string;
+  type: string;
+  size: number;
+  body: BodyInit;
+};
+
+export type PetMediaUploadAttachFlowInput = {
+  petId: string;
+  shelterId: string;
+  ownerUserId?: string | null;
+  file: PetMediaUploadAttachFlowFileInput;
+};
+
+export type PetMediaUploadAttachFlowSuccess = {
+  ok: true;
+  status: 'pet_media_uploaded_and_attached';
+  petId: string;
+  mediaId: string;
+  objectKey: string;
+  mediaIds: string[];
+  heroMediaId: string | null;
+  upload: {
+    mediaId: string;
+    objectKey: string;
+    responseStatus: number;
+  };
+  attach: {
+    mediaId: string;
+    mediaIds: string[];
+    heroMediaId: string | null;
+  };
+};
+
+export type PetMediaUploadAttachFlowFailure =
+  | {
+      ok: false;
+      phase: 'upload_intent';
+      status: MediaUploadClientFailureStatus;
+      reasons: string[];
+    }
+  | {
+      ok: false;
+      phase: 'binary_upload';
+      status: MediaUploadBinaryFailureStatus;
+      reasons: string[];
+      responseStatus?: number;
+      mediaId: string;
+      objectKey: string;
+    }
+  | {
+      ok: false;
+      phase: 'attach';
+      status: PetMediaAttachClientFailureStatus;
+      reasons: string[];
+      mediaId: string;
+      objectKey: string;
+    };
+
+export type PetMediaUploadAttachFlowResult =
+  | PetMediaUploadAttachFlowSuccess
+  | PetMediaUploadAttachFlowFailure;
+
+export type CreatePetMediaUploadAttachFlowClientInput = {
+  uploadClient: Pick<MediaUploadFlowClient, 'uploadMedia'>;
+  attachClient: Pick<PetMediaAttachClient, 'attachPetMedia'>;
+  generateMediaId: () => string;
+};
+
+export type PetMediaUploadAttachFlowClient = {
+  uploadAndAttachPetMedia: (
+    input: PetMediaUploadAttachFlowInput,
+  ) => Promise<PetMediaUploadAttachFlowResult>;
+};
+
 const sanitizeMediaUploadPayload = (request: MediaUploadClientRequest): MediaUploadClientRequest => ({
   mediaId: request.mediaId,
   purpose: request.purpose,
@@ -388,6 +463,87 @@ export const createPetMediaAttachClient = ({
     }
 
     return success;
+  },
+});
+
+export const createPetMediaUploadAttachFlowClient = ({
+  uploadClient,
+  attachClient,
+  generateMediaId,
+}: CreatePetMediaUploadAttachFlowClientInput): PetMediaUploadAttachFlowClient => ({
+  uploadAndAttachPetMedia: async ({ petId, shelterId, ownerUserId = null, file }) => {
+    const mediaId = generateMediaId();
+    const uploadResult = await uploadClient.uploadMedia({
+      request: {
+        mediaId,
+        purpose: 'pet_public_image',
+        requestedVisibility: 'public',
+        mimeType: file.type,
+        byteSize: file.size,
+        ownerUserId,
+        shelterId,
+        originalFilename: file.name,
+      },
+      body: file.body,
+    });
+
+    if (!uploadResult.ok && uploadResult.phase === 'intent') {
+      return {
+        ok: false,
+        phase: 'upload_intent',
+        status: uploadResult.status,
+        reasons: sanitizeReasons(uploadResult.reasons, uploadResult.status),
+      };
+    }
+
+    if (!uploadResult.ok) {
+      return {
+        ok: false,
+        phase: 'binary_upload',
+        status: uploadResult.status,
+        reasons: sanitizeReasons(uploadResult.reasons, uploadResult.status),
+        responseStatus: uploadResult.responseStatus,
+        mediaId: uploadResult.mediaId,
+        objectKey: uploadResult.objectKey,
+      };
+    }
+
+    const attachMediaId = uploadResult.intent.mediaAssetId ?? uploadResult.mediaId;
+    const attachResult = await attachClient.attachPetMedia({
+      petId,
+      mediaId: attachMediaId,
+    });
+
+    if (!attachResult.ok) {
+      return {
+        ok: false,
+        phase: 'attach',
+        status: attachResult.status,
+        reasons: sanitizeReasons(attachResult.reasons, attachResult.status),
+        mediaId: attachMediaId,
+        objectKey: uploadResult.objectKey,
+      };
+    }
+
+    return {
+      ok: true,
+      status: 'pet_media_uploaded_and_attached',
+      petId: attachResult.petId,
+      mediaId: attachResult.mediaId,
+      objectKey: uploadResult.objectKey,
+      mediaIds: attachResult.mediaIds,
+      heroMediaId: attachResult.heroMediaId,
+      upload: {
+        mediaId: uploadResult.mediaId,
+        objectKey: uploadResult.objectKey,
+        responseStatus: uploadResult.responseStatus,
+      },
+      attach: {
+        mediaId: attachResult.mediaId,
+        mediaIds: attachResult.mediaIds,
+        heroMediaId: attachResult.heroMediaId,
+      },
+    };
   },
 });
 
