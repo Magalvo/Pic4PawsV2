@@ -2,7 +2,7 @@ import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { mobileFoundationContent } from '../src/foundation';
 
 export default function IndexScreen() {
-  const { hero, primaryAction, readiness } = mobileFoundationContent;
+  const { hero, primaryAction, mediaUpload, readiness } = mobileFoundationContent;
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -12,6 +12,15 @@ export default function IndexScreen() {
           <Text style={styles.title}>{hero.title}</Text>
           <Text style={styles.lead}>{hero.body}</Text>
           <Text style={styles.statusPill}>{primaryAction.label}</Text>
+        </View>
+
+        <View accessibilityLabel="Upload seguro de imagens" style={styles.mediaUpload}>
+          <Text style={styles.eyebrow}>Media</Text>
+          <Text style={styles.mediaUploadTitle}>{mediaUpload.title}</Text>
+          <Text style={styles.mediaUploadDescription}>{mediaUpload.description}</Text>
+          <Text style={styles.mediaUploadStatus}>
+            {mediaUpload.status === 'contract-ready' ? 'Contrato pronto' : mediaUpload.status}
+          </Text>
         </View>
 
         <View accessibilityLabel="Estado da fundação técnica mobile" style={styles.readinessList}>
@@ -76,6 +85,30 @@ const styles = StyleSheet.create({
   },
   readinessList: {
     gap: 12,
+  },
+  mediaUpload: {
+    borderBottomColor: '#f1d8cd',
+    borderBottomWidth: 1,
+    borderTopColor: '#f1d8cd',
+    borderTopWidth: 1,
+    gap: 8,
+    paddingVertical: 20,
+  },
+  mediaUploadTitle: {
+    color: '#0f172a',
+    fontSize: 24,
+    fontWeight: '800',
+  },
+  mediaUploadDescription: {
+    color: '#475569',
+    fontSize: 15,
+    lineHeight: 22,
+  },
+  mediaUploadStatus: {
+    alignSelf: 'flex-start',
+    color: '#0f766e',
+    fontSize: 13,
+    fontWeight: '700',
   },
   readinessItem: {
     backgroundColor: '#ffffff',
