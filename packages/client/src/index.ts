@@ -99,6 +99,57 @@ export type MediaUploadBinaryClient = {
   uploadMediaBinary: (input: UploadMediaBinaryInput) => Promise<UploadMediaBinaryResult>;
 };
 
+export type SafeMediaUploadIntentMetadata = {
+  mediaId: string;
+  objectKey: string;
+  contentType: string;
+  byteSize: number;
+  visibility: MediaVisibility;
+  mediaKind: 'image' | 'document';
+  ownerUserId: string | null;
+  shelterId: string | null;
+  expiresAt?: string;
+  createdAt: string;
+  mediaAssetId?: string;
+  mediaAssetPersisted?: boolean;
+};
+
+export type UploadMediaFlowInput = {
+  request: MediaUploadClientRequest;
+  body: BodyInit;
+};
+
+export type UploadMediaFlowResult =
+  | {
+      ok: true;
+      status: 'uploaded';
+      mediaId: string;
+      objectKey: string;
+      responseStatus: number;
+      intent: SafeMediaUploadIntentMetadata;
+    }
+  | {
+      ok: false;
+      phase: 'intent';
+      status: MediaUploadClientFailureStatus;
+      reasons: string[];
+    }
+  | {
+      ok: false;
+      phase: 'binary_upload';
+      status: MediaUploadBinaryFailureStatus;
+      reasons: string[];
+      responseStatus?: number;
+      mediaId: string;
+      objectKey: string;
+    };
+
+export type CreateMediaUploadFlowClientInput = CreateMediaUploadClientInput;
+
+export type MediaUploadFlowClient = {
+  uploadMedia: (input: UploadMediaFlowInput) => Promise<UploadMediaFlowResult>;
+};
+
 const sanitizeMediaUploadPayload = (request: MediaUploadClientRequest): MediaUploadClientRequest => ({
   mediaId: request.mediaId,
   purpose: request.purpose,
@@ -343,3 +394,70 @@ export const createMediaUploadBinaryClient = ({
     }
   },
 });
+
+const createSafeMediaUploadIntentMetadata = (
+  intent: MediaUploadClientIntent,
+): SafeMediaUploadIntentMetadata => ({
+  mediaId: intent.mediaId,
+  objectKey: intent.objectKey,
+  contentType: intent.contentType,
+  byteSize: intent.byteSize,
+  visibility: intent.visibility,
+  mediaKind: intent.mediaKind,
+  ownerUserId: intent.ownerUserId,
+  shelterId: intent.shelterId,
+  expiresAt: intent.expiresAt,
+  createdAt: intent.createdAt,
+  mediaAssetId: intent.mediaAssetId,
+  mediaAssetPersisted: intent.mediaAssetPersisted,
+});
+
+export const createMediaUploadFlowClient = (
+  input: CreateMediaUploadFlowClientInput,
+): MediaUploadFlowClient => {
+  const intentClient = createMediaUploadClient(input);
+  const binaryClient = createMediaUploadBinaryClient({ fetch: input.fetch });
+
+  return {
+    uploadMedia: async ({ request, body }) => {
+      const intentResult = await intentClient.requestMediaUploadIntent(request);
+
+      if (!intentResult.ok) {
+        return {
+          ok: false,
+          phase: 'intent',
+          status: intentResult.status,
+          reasons: intentResult.reasons,
+        };
+      }
+
+      const binaryResult = await binaryClient.uploadMediaBinary({
+        intent: intentResult.intent,
+        body,
+        contentType: request.mimeType,
+        byteSize: request.byteSize,
+      });
+
+      if (!binaryResult.ok) {
+        return {
+          ok: false,
+          phase: 'binary_upload',
+          status: binaryResult.status,
+          reasons: binaryResult.reasons,
+          responseStatus: binaryResult.responseStatus,
+          mediaId: intentResult.intent.mediaId,
+          objectKey: intentResult.intent.objectKey,
+        };
+      }
+
+      return {
+        ok: true,
+        status: 'uploaded',
+        mediaId: binaryResult.mediaId,
+        objectKey: binaryResult.objectKey,
+        responseStatus: binaryResult.responseStatus,
+        intent: createSafeMediaUploadIntentMetadata(intentResult.intent),
+      };
+    },
+  };
+};
