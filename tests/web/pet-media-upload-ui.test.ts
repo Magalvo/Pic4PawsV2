@@ -3,8 +3,11 @@ import {
   createWebPetMediaUploadUi,
   webPetMediaUploadUiContent,
 } from '../../apps/web/src/pet-media-upload';
-import type { WebMediaUploadBoundary, WebPetPublicImageUploadInput } from '../../apps/web/src/media-upload';
 import { webFoundationContent } from '../../apps/web/src/foundation';
+import type {
+  PetMediaUploadAttachFlowClient,
+  PetMediaUploadAttachFlowInput,
+} from '../../packages/client/src/index';
 
 const petContext = {
   petId: 'pet-1',
@@ -23,12 +26,11 @@ const validFile = {
 describe('web pet media upload UI flow', () => {
   it('exposes a PT-PT ready state for a pet draft image upload', () => {
     const ui = createWebPetMediaUploadUi({
-      uploadBoundary: {
-        uploadPetPublicImage: async () => {
-          throw new Error('Upload should not be called for ready state');
+      uploadAttachFlow: {
+        uploadAndAttachPetMedia: async () => {
+          throw new Error('Flow should not be called for ready state');
         },
       },
-      generateMediaId: () => 'media-web-1',
     });
 
     expect(ui.getInitialState(petContext)).toEqual({
@@ -50,41 +52,53 @@ describe('web pet media upload UI flow', () => {
     ]);
   });
 
-  it('uploads a selected public pet image through the Web boundary and returns a safe product view model', async () => {
-    const calls: WebPetPublicImageUploadInput[] = [];
-    const uploadBoundary: WebMediaUploadBoundary = {
-      uploadPetPublicImage: async (input) => {
+  it('uploads and attaches a selected public pet image through the composed Web flow', async () => {
+    const calls: PetMediaUploadAttachFlowInput[] = [];
+    const uploadAttachFlow: PetMediaUploadAttachFlowClient = {
+      uploadAndAttachPetMedia: async (input) => {
         calls.push(input);
 
         return {
-          state: 'uploaded',
-          title: 'Imagem carregada',
-          message: 'A imagem do animal ficou pronta para validação.',
-          mediaId: input.mediaId,
-          objectKey: `public/shelters/${input.shelterId}/pet_public_image/${input.mediaId}.jpg`,
+          ok: true,
+          status: 'pet_media_uploaded_and_attached',
+          petId: input.petId,
+          mediaId: 'media-web-1',
+          objectKey: 'public/shelters/shelter-a/pet_public_image/media-web-1.jpg',
+          mediaIds: ['media-web-1'],
+          heroMediaId: 'media-web-1',
+          upload: {
+            mediaId: 'media-web-1',
+            objectKey: 'public/shelters/shelter-a/pet_public_image/media-web-1.jpg',
+            responseStatus: 200,
+          },
+          attach: {
+            mediaId: 'media-web-1',
+            mediaIds: ['media-web-1'],
+            heroMediaId: 'media-web-1',
+          },
         };
       },
     };
-    const ui = createWebPetMediaUploadUi({
-      uploadBoundary,
-      generateMediaId: () => 'media-web-1',
-    });
+    const ui = createWebPetMediaUploadUi({ uploadAttachFlow });
 
     await expect(ui.uploadSelectedImage({ pet: petContext, file: validFile })).resolves.toEqual({
       state: 'uploaded',
-      title: 'Imagem adicionada ao rascunho',
-      message: 'A imagem de Becas foi carregada e está pronta para ser associada ao perfil.',
+      title: 'Imagem carregada e associada',
+      message: 'A imagem de Becas foi carregada e associada ao rascunho.',
       petId: 'pet-1',
       petName: 'Becas',
       media: {
         mediaId: 'media-web-1',
         objectKey: 'public/shelters/shelter-a/pet_public_image/media-web-1.jpg',
       },
-      nextAction: 'Associar imagem ao rascunho',
+      draftMedia: {
+        mediaIds: ['media-web-1'],
+        heroMediaId: 'media-web-1',
+      },
     });
     expect(calls).toEqual([
       {
-        mediaId: 'media-web-1',
+        petId: 'pet-1',
         shelterId: 'shelter-a',
         ownerUserId: 'member-user',
         file: validFile,
@@ -92,16 +106,15 @@ describe('web pet media upload UI flow', () => {
     ]);
   });
 
-  it('rejects unsupported files before calling the Web upload boundary', async () => {
-    let uploadCalled = false;
+  it('rejects unsupported files before calling the Web upload attach flow', async () => {
+    let flowCalled = false;
     const ui = createWebPetMediaUploadUi({
-      uploadBoundary: {
-        uploadPetPublicImage: async () => {
-          uploadCalled = true;
-          throw new Error('Unsupported files should not reach upload boundary');
+      uploadAttachFlow: {
+        uploadAndAttachPetMedia: async () => {
+          flowCalled = true;
+          throw new Error('Unsupported files should not reach upload attach flow');
         },
       },
-      generateMediaId: () => 'media-web-1',
     });
 
     await expect(
@@ -120,25 +133,53 @@ describe('web pet media upload UI flow', () => {
       message: 'Usa JPEG, PNG ou WebP para imagens públicas de animais.',
       petId: 'pet-1',
       petName: 'Becas',
+      phase: 'validation',
       reasons: ['unsupported_mime_type'],
       canRetry: true,
     });
-    expect(uploadCalled).toBe(false);
+    expect(flowCalled).toBe(false);
   });
 
-  it('maps Web boundary failures without leaking signed URLs or credentials into UI state', async () => {
+  it('maps upload intent failures without leaking provider credentials into UI state', async () => {
     const ui = createWebPetMediaUploadUi({
-      uploadBoundary: {
-        uploadPetPublicImage: async () => ({
-          state: 'binary_upload_failed',
-          title: 'Falha ao enviar a imagem',
-          message: 'O pedido foi preparado, mas o envio do ficheiro falhou.',
+      uploadAttachFlow: {
+        uploadAndAttachPetMedia: async () => ({
+          ok: false,
+          phase: 'upload_intent',
+          status: 'upload_intent_rejected',
+          reasons: ['not_shelter_member', 'r2-secret-key', 'bearer user-token-marker'],
+        }),
+      },
+    });
+
+    const result = await ui.uploadSelectedImage({ pet: petContext, file: validFile });
+
+    expect(result).toEqual({
+      state: 'failed',
+      title: 'Não foi possível preparar o carregamento',
+      message: 'Confirma as permissões e tenta novamente.',
+      petId: 'pet-1',
+      petName: 'Becas',
+      phase: 'upload_intent',
+      reasons: ['not_shelter_member'],
+      canRetry: true,
+    });
+    expect(JSON.stringify(result)).not.toContain('r2-secret-key');
+    expect(JSON.stringify(result)).not.toContain('user-token-marker');
+  });
+
+  it('maps binary upload failures without leaking signed URLs or credentials into UI state', async () => {
+    const ui = createWebPetMediaUploadUi({
+      uploadAttachFlow: {
+        uploadAndAttachPetMedia: async () => ({
+          ok: false,
+          phase: 'binary_upload',
+          status: 'signed_upload_failed',
           reasons: ['signed_upload_rejected', 'temporary=opaque', 'service-role-secret'],
           mediaId: 'media-web-1',
           objectKey: 'public/shelters/shelter-a/pet_public_image/media-web-1.jpg',
         }),
       },
-      generateMediaId: () => 'media-web-1',
     });
 
     const result = await ui.uploadSelectedImage({ pet: petContext, file: validFile });
@@ -149,12 +190,43 @@ describe('web pet media upload UI flow', () => {
       message: 'O pedido foi preparado, mas o envio do ficheiro falhou.',
       petId: 'pet-1',
       petName: 'Becas',
+      phase: 'binary_upload',
       reasons: ['signed_upload_rejected'],
       canRetry: true,
     });
     expect(JSON.stringify(result)).not.toContain('temporary=opaque');
     expect(JSON.stringify(result)).not.toContain('service-role-secret');
     expect(JSON.stringify(result)).not.toContain('signedUrl');
+  });
+
+  it('maps attach failures as a distinct safe Web product phase', async () => {
+    const ui = createWebPetMediaUploadUi({
+      uploadAttachFlow: {
+        uploadAndAttachPetMedia: async () => ({
+          ok: false,
+          phase: 'attach',
+          status: 'pet_media_attach_rejected',
+          reasons: ['media_not_public_image', 'signedUrl=https://uploads.test', 'user-access-token'],
+          mediaId: 'media-web-1',
+          objectKey: 'public/shelters/shelter-a/pet_public_image/media-web-1.jpg',
+        }),
+      },
+    });
+
+    const result = await ui.uploadSelectedImage({ pet: petContext, file: validFile });
+
+    expect(result).toEqual({
+      state: 'failed',
+      title: 'Não foi possível associar a imagem',
+      message: 'A imagem foi enviada, mas não ficou associada ao rascunho.',
+      petId: 'pet-1',
+      petName: 'Becas',
+      phase: 'attach',
+      reasons: ['media_not_public_image'],
+      canRetry: true,
+    });
+    expect(JSON.stringify(result)).not.toContain('signedUrl');
+    expect(JSON.stringify(result)).not.toContain('user-access-token');
   });
 
   it('surfaces the pet media product flow on the Web foundation content', () => {

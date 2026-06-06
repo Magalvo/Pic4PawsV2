@@ -54,7 +54,7 @@ Required validation:
 
 ## 4. Current State As Of 2026-06-06
 
-Merged through `main` commit `0120361` before `PET-MEDIA-ATTACH-CLIENT-001`.
+Merged through `main` commit `772ccdb` before `WEB-PET-MEDIA-UPLOAD-ATTACH-001`.
 
 Completed foundation work:
 
@@ -73,6 +73,7 @@ Completed foundation work:
 - `PET-MEDIA-ATTACH-WORKER-001` on branch `codex/PET-MEDIA-ATTACH-WORKER-001`
 - `PET-MEDIA-ATTACH-CLIENT-001` on branch `codex/PET-MEDIA-ATTACH-CLIENT-001`
 - `PET-MEDIA-UPLOAD-ATTACH-FLOW-001` on branch `codex/PET-MEDIA-UPLOAD-ATTACH-FLOW-001`, stacked on `codex/PET-MEDIA-ATTACH-CLIENT-001`
+- `WEB-PET-MEDIA-UPLOAD-ATTACH-001` on branch `codex/WEB-PET-MEDIA-UPLOAD-ATTACH-001`
 
 The Worker now has:
 
@@ -93,24 +94,25 @@ Web/Mobile now has:
 - a tested Web media upload boundary for public pet images with PT-PT states and injected dependencies
 - a tested Mobile media upload boundary for public pet images with PT-PT states and injected dependencies
 - tested Web and Mobile pet media product UI flows with deterministic media IDs, MIME guards and safe PT-PT view models
+- a tested Web pet media product boundary that consumes the composed upload+attach flow and returns attached draft media state
 - safe Worker success/failure normalization
 - no client-side Supabase service-role keys or R2 credentials
 
 ## 5. Recommended Next Work Item
 
-Recommended next item: `WEB-PET-MEDIA-UPLOAD-ATTACH-001`.
+Recommended next item: `MOBILE-PET-MEDIA-UPLOAD-ATTACH-001`.
 
-Goal: wire the composed pet media upload+attach flow into the Web product boundary/view model with fake/injected dependencies first.
+Goal: wire the composed pet media upload+attach flow into the Mobile product boundary/view model with fake/injected dependencies first.
 
 Suggested scope:
 
 - create work item and work spec
-- update the Web pet media product flow to consume `createPetMediaUploadAttachFlowClient` or an injected structural equivalent
+- update the Mobile pet media product flow to consume `createPetMediaUploadAttachFlowClient` or an injected structural equivalent
 - keep file input, flow client and ID/session dependencies injectable in tests
 - replace upload-only success copy with upload+attach success copy
 - map upload intent, binary upload and attach failures to PT-PT product states
 - assert UI-facing results never expose signed URLs, Supabase service-role keys, R2 keys or bearer tokens
-- do not wire real browser file inputs or production sessions yet
+- do not wire real native file pickers, mobile auth/session state or production services yet
 
 ## 6. Handoff Prompt For Codex
 
