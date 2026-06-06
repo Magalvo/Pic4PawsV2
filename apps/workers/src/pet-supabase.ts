@@ -1,5 +1,9 @@
 import type { MediaAssetRepository } from './media-upload';
-import type { PetDraftRepository, PetPublishRepository } from './pet-drafts';
+import type {
+  PetDraftRepository,
+  PetMediaAttachRepository,
+  PetPublishRepository,
+} from './pet-drafts';
 import type {
   PetDraftRecord,
   PetLifecycleSpecies,
@@ -50,6 +54,7 @@ export type CreateSupabasePetRepositoriesInput = {
 export type CreateSupabasePetRepositoriesResult = {
   mediaAssetRepository: MediaAssetRepository;
   petDraftRepository: PetDraftRepository;
+  petMediaAttachRepository: PetMediaAttachRepository;
   petPublishRepository: PetPublishRepository;
 };
 
@@ -150,6 +155,12 @@ const toPublishedPetUpdateRow = (pet: PetDraftRecord & { status: 'published'; pu
   status: pet.status,
   published_at: pet.publishedAt,
   updated_at: pet.publishedAt,
+});
+
+const toAttachedMediaUpdateRow = (pet: PetDraftRecord, now: string): Partial<PetRow> => ({
+  media_ids: pet.mediaIds,
+  hero_media_id: pet.heroMediaId ?? null,
+  updated_at: now,
 });
 
 const assertSupabaseResult = <TData>(
@@ -310,9 +321,65 @@ export const createSupabasePetRepositories = ({
     },
   };
 
+  const petMediaAttachRepository: PetMediaAttachRepository = {
+    loadAttachContext: async (petId, mediaId) => {
+      const petResult = await client.from('pets').select(petColumns).eq('id', petId).maybeSingle();
+      const petRow = assertSupabaseResult<PetRow | null>(
+        petResult,
+        'Failed to load pet media attach context',
+      );
+
+      if (!petRow) {
+        return null;
+      }
+
+      const mediaResult = await client
+        .from('media_assets')
+        .select(mediaColumns)
+        .eq('id', mediaId)
+        .maybeSingle();
+      const mediaRow = assertSupabaseResult<MediaAssetRow | null>(
+        mediaResult,
+        'Failed to load pet media attach context',
+      );
+
+      if (!mediaRow) {
+        return null;
+      }
+
+      return {
+        pet: toPetDraftRecord(petRow),
+        mediaAsset: toMediaAssetRecord(mediaRow),
+      };
+    },
+    attachMediaToDraft: async (petId, pet, actor, now) => {
+      void actor;
+
+      const result = await client
+        .from('pets')
+        .update(toAttachedMediaUpdateRow(pet, now))
+        .eq('id', petId)
+        .eq('status', 'draft')
+        .select('id,media_ids,hero_media_id')
+        .single();
+      const row = assertSupabaseResult<{
+        id: string;
+        media_ids: string[];
+        hero_media_id: string | null;
+      }>(result, 'Failed to attach media to pet draft');
+
+      return {
+        petId: row.id,
+        mediaIds: row.media_ids,
+        heroMediaId: row.hero_media_id,
+      };
+    },
+  };
+
   return {
     mediaAssetRepository,
     petDraftRepository,
+    petMediaAttachRepository,
     petPublishRepository,
   };
 };

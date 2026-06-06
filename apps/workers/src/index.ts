@@ -73,7 +73,12 @@ export type {
   PersistWorkerMediaUploadIntentResult,
 } from './media-upload';
 export { handleWorkerPetDraftRequest, matchWorkerPetDraftRoute } from './pet-drafts';
-export type { PetDraftRepository, PetPublishRepository, WorkerPetDraftAuthenticator } from './pet-drafts';
+export type {
+  PetDraftRepository,
+  PetMediaAttachRepository,
+  PetPublishRepository,
+  WorkerPetDraftAuthenticator,
+} from './pet-drafts';
 export {
   createR2UploadSigner,
   createR2UploadSignerWorkerDependencies,
@@ -321,6 +326,7 @@ export const handleWorkerRequest = async (
       dependencies: {
         petDraftAuthenticator: resolvedDependencies.petDraftAuthenticator,
         petDraftRepository: resolvedDependencies.petDraftRepository,
+        petMediaAttachRepository: resolvedDependencies.petMediaAttachRepository,
         petPublishRepository: resolvedDependencies.petPublishRepository,
         now: resolvedDependencies.now,
       },

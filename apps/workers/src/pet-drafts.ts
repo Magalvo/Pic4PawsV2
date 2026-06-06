@@ -1,7 +1,9 @@
 import {
+  attachMediaAssetToPetDraft,
   canManageShelter,
   publishPetDraft,
   type AuthenticatedActor,
+  type AttachPetMediaBlockReason,
   type PetDraftRecord,
   type PetPublishBlockReason,
 } from '@pic4paws/domain';
@@ -65,10 +67,26 @@ export type PetPublishRepository = {
   ) => Promise<{ petId: string; publishedAt: string }>;
 };
 
+export type PetMediaAttachContext = {
+  pet: PetDraftRecord;
+  mediaAsset: PetMediaAssetRecord;
+};
+
+export type PetMediaAttachRepository = {
+  loadAttachContext: (petId: string, mediaId: string) => Promise<PetMediaAttachContext | null>;
+  attachMediaToDraft: (
+    petId: string,
+    pet: PetDraftRecord,
+    actor: AuthenticatedActor,
+    now: string,
+  ) => Promise<{ petId: string; mediaIds: string[]; heroMediaId: string | null }>;
+};
+
 export type WorkerPetDraftDependencies = {
   petDraftAuthenticator?: WorkerPetDraftAuthenticator;
   petDraftRepository?: PetDraftRepository;
   petPublishRepository?: PetPublishRepository;
+  petMediaAttachRepository?: PetMediaAttachRepository;
   now?: () => string;
 };
 
@@ -76,7 +94,8 @@ export type WorkerPetDraftRouteMatch =
   | { matched: false }
   | { matched: true; operation: 'create'; petId: null }
   | { matched: true; operation: 'update'; petId: string }
-  | { matched: true; operation: 'publish'; petId: string };
+  | { matched: true; operation: 'publish'; petId: string }
+  | { matched: true; operation: 'attach_media'; petId: string };
 
 type ParsedPetDraftPayload = {
   petId: string;
@@ -92,6 +111,10 @@ type ParsedPetDraftPayload = {
 
 type ParsePetDraftPayloadResult =
   | { ok: true; payload: ParsedPetDraftPayload }
+  | { ok: false; reasons: string[] };
+
+type ParsePetMediaAttachPayloadResult =
+  | { ok: true; mediaId: string }
   | { ok: false; reasons: string[] };
 
 export type HandleWorkerPetDraftRequestInput = {
@@ -215,6 +238,18 @@ const parsePetDraftPayload = (
   };
 };
 
+const parsePetMediaAttachPayload = (payload: unknown): ParsePetMediaAttachPayloadResult => {
+  if (!isRecord(payload)) {
+    return { ok: false, reasons: ['invalid_payload_shape'] };
+  }
+
+  if (typeof payload.mediaId !== 'string' || payload.mediaId.trim().length === 0) {
+    return { ok: false, reasons: ['invalid_media_id'] };
+  }
+
+  return { ok: true, mediaId: payload.mediaId.trim() };
+};
+
 const toPetDraftRecord = (payload: ParsedPetDraftPayload): PetDraftRecord => ({
   id: payload.petId,
   shelterId: payload.shelterId,
@@ -249,6 +284,10 @@ export const matchWorkerPetDraftRoute = (
       return { matched: true, operation: 'publish', petId: pathParts[0] };
     }
 
+    if (pathParts.length === 2 && pathParts[0] && pathParts[1] === 'media') {
+      return { matched: true, operation: 'attach_media', petId: pathParts[0] };
+    }
+
     if (pathParts.length === 1 && pathParts[0]) {
       return { matched: true, operation: 'update', petId: pathParts[0] };
     }
@@ -270,6 +309,15 @@ const rejectedPublishResponse = (reasons: PetPublishBlockReason[]): Response =>
   jsonResponse(
     {
       status: 'pet_publish_rejected',
+      reasons,
+    },
+    { status: 400 },
+  );
+
+const rejectedMediaAttachResponse = (reasons: AttachPetMediaBlockReason[]): Response =>
+  jsonResponse(
+    {
+      status: 'pet_media_attach_rejected',
       reasons,
     },
     { status: 400 },
@@ -352,6 +400,89 @@ export const handleWorkerPetDraftRequest = async ({
         headers: { Allow: 'POST' },
       },
     );
+  }
+
+  if (route.operation === 'attach_media' && request.method !== 'POST') {
+    return jsonResponse(
+      {
+        status: 'method_not_allowed',
+        allowedMethods: ['POST'],
+      },
+      {
+        status: 405,
+        headers: { Allow: 'POST' },
+      },
+    );
+  }
+
+  if (route.operation === 'attach_media') {
+    const parsedPayload = parsePetMediaAttachPayload(payload);
+
+    if (!parsedPayload.ok) {
+      return jsonResponse(
+        {
+          status: 'invalid_pet_media_attach_request',
+          reasons: parsedPayload.reasons,
+        },
+        { status: 400 },
+      );
+    }
+
+    const authenticated = await authenticatePetDraftActor(request, dependencies);
+
+    if (!authenticated.ok) {
+      return authenticated.response;
+    }
+
+    if (!dependencies.petMediaAttachRepository) {
+      return jsonResponse(
+        { status: 'pet_media_attach_repository_not_configured' },
+        { status: 501 },
+      );
+    }
+
+    const context = await dependencies.petMediaAttachRepository.loadAttachContext(
+      route.petId,
+      parsedPayload.mediaId,
+    );
+
+    if (!context) {
+      return jsonResponse({ status: 'pet_media_attach_context_not_found' }, { status: 404 });
+    }
+
+    if (!canManageShelter(authenticated.actor, context.pet.shelterId)) {
+      return jsonResponse(
+        {
+          status: 'actor_not_authorized',
+          reasons: ['actor_not_authorized'],
+        },
+        { status: 403 },
+      );
+    }
+
+    const attachResult = attachMediaAssetToPetDraft({
+      pet: context.pet,
+      mediaAsset: context.mediaAsset,
+    });
+
+    if (!attachResult.ok) {
+      return rejectedMediaAttachResponse(attachResult.reasons);
+    }
+
+    const persisted = await dependencies.petMediaAttachRepository.attachMediaToDraft(
+      route.petId,
+      attachResult.pet,
+      authenticated.actor,
+      dependencies.now?.() ?? new Date().toISOString(),
+    );
+
+    return jsonResponse({
+      status: 'pet_media_attached',
+      petId: persisted.petId,
+      mediaId: parsedPayload.mediaId,
+      mediaIds: persisted.mediaIds,
+      heroMediaId: persisted.heroMediaId,
+    });
   }
 
   if (route.operation === 'publish') {
