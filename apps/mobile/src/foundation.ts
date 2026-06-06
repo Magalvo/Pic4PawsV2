@@ -4,6 +4,10 @@ import {
   mobilePetMediaUploadUiContent,
   type MobilePetMediaUploadUiContent,
 } from './pet-media-upload';
+import {
+  mobilePetPublishUiContent,
+  type MobilePetPublishUiContent,
+} from './pet-publish';
 
 export type MobileFoundationStatus = 'contract-ready';
 
@@ -20,6 +24,7 @@ export type MobileFoundationContent = {
   };
   mediaUpload: Pick<MobileMediaUploadContent, 'title' | 'description' | 'status'>;
   petMediaUpload: Pick<MobilePetMediaUploadUiContent, 'title' | 'description' | 'status'>;
+  petPublish: Pick<MobilePetPublishUiContent, 'title' | 'description' | 'status'>;
   readiness: Array<{
     id: 'database' | 'auth' | 'pets' | 'payments' | 'media' | 'workers';
     label: string;
@@ -49,6 +54,11 @@ export const mobileFoundationContent: MobileFoundationContent = {
     title: mobilePetMediaUploadUiContent.title,
     description: mobilePetMediaUploadUiContent.description,
     status: mobilePetMediaUploadUiContent.status,
+  },
+  petPublish: {
+    title: mobilePetPublishUiContent.title,
+    description: mobilePetPublishUiContent.description,
+    status: mobilePetPublishUiContent.status,
   },
   readiness: [
     {
