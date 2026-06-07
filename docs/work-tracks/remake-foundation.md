@@ -30,19 +30,31 @@ Read path (Worker + client + Web/Mobile):
 `PET-PROFILE-WORKER-001`, `PET-PROFILE-CLIENT-001`, `WEB-PET-PROFILE-001`, `MOBILE-PET-PROFILE-001`,
 `SHELTER-PROFILE-WORKER-001`, `SHELTER-PROFILE-CLIENT-001`, `WEB-SHELTER-PROFILE-001`, `MOBILE-SHELTER-PROFILE-001`.
 
+Adopter write path (Worker + client + Web/Mobile):
+`ADOPTION-WORKER-001`, `ADOPTION-CLIENT-001`, `WEB-ADOPTION-001`, `MOBILE-ADOPTION-001`.
+
 ## Current Focus
 
-All items above are merged. The adopter discovery loop (feed → pet profile → shelter profile)
-is fully wired at the product boundary layer.
+All items above are merged. The adopter end-to-end adoption application flow is complete:
+feed → pet profile → shelter profile → submit adoption application.
 
-Recommended next slice — adopter write path (each on its own `agent/<WORK-ITEM-ID>` branch):
+Recommended next slice — shelter-side adoption review (each on its own `agent/<WORK-ITEM-ID>` branch):
 
-1. `ADOPTION-WORKER-001` — authenticated `POST /adoptions` Worker route
-2. `ADOPTION-CLIENT-001` — `createAdoptionApplicationClient` in `@pic4paws/client`
-3. `WEB-ADOPTION-001` — Web adoption application product boundary
-4. `MOBILE-ADOPTION-001` — Mobile adoption application product boundary
+1. `ADOPTION-LIST-WORKER-001` — authenticated `GET /shelters/:shelterId/adoptions` Worker route
+   (shelter members list pending applications for their shelter)
+2. `ADOPTION-LIST-CLIENT-001` — `createAdoptionListClient` in `@pic4paws/client`
+3. `WEB-ADOPTION-LIST-001` — Web adoption list product boundary
+4. `MOBILE-ADOPTION-LIST-001` — Mobile adoption list product boundary
 
-The `adoptionApplications` table is already defined in `packages/database/src/schema.ts`.
+Alternatively, the donation/sponsorship slice can be pursued if the adoption review flow
+is not a priority right now:
+
+- `DONATION-WORKER-001` — `POST /donations` Worker route (payment initiation)
+- `DONATION-CLIENT-001` — `createDonationClient` in `@pic4paws/client`
+- `WEB-DONATION-001` / `MOBILE-DONATION-001` — Web/Mobile donation boundaries
+
+The `donationTransactions` and `adoptionApplications` tables are already defined in
+`packages/database/src/schema.ts`.
 
 ## Branching Convention
 
