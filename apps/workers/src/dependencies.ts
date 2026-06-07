@@ -10,6 +10,7 @@ import {
   type SupabaseClientLike,
   type SupabaseTableQueryLike,
 } from './pet-supabase';
+import type { PetFeedRepository } from './pet-feed';
 import type {
   PetDraftRepository,
   PetMediaAttachRepository,
@@ -40,6 +41,7 @@ export type WorkerRequestDependencies = {
   petDraftRepository?: PetDraftRepository;
   petMediaAttachRepository?: PetMediaAttachRepository;
   petPublishRepository?: PetPublishRepository;
+  petFeedRepository?: PetFeedRepository;
   supabaseClientFactory?: WorkerSupabaseClientFactory;
   now?: () => string;
 };
@@ -87,6 +89,7 @@ export const createWorkerSupabaseDependencies = ({
       petDraftRepository: petRepositories.petDraftRepository,
       petMediaAttachRepository: petRepositories.petMediaAttachRepository,
       petPublishRepository: petRepositories.petPublishRepository,
+      petFeedRepository: petRepositories.petFeedRepository,
       now,
     };
   } catch {
@@ -130,5 +133,7 @@ export const resolveWorkerRequestDependencies = ({
       dependencies.petMediaAttachRepository ?? supabaseDependencies.petMediaAttachRepository,
     petPublishRepository:
       dependencies.petPublishRepository ?? supabaseDependencies.petPublishRepository,
+    petFeedRepository:
+      dependencies.petFeedRepository ?? supabaseDependencies.petFeedRepository,
   };
 };

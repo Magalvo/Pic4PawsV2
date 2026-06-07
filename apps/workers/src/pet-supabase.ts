@@ -1,4 +1,5 @@
 import type { MediaAssetRepository } from './media-upload';
+import type { PetFeedRepository } from './pet-feed';
 import type {
   PetDraftRepository,
   PetMediaAttachRepository,
@@ -10,6 +11,7 @@ import type {
   PetLifecycleStatus,
   PetMediaAssetRecord,
 } from '@pic4paws/domain';
+import type { PublishedPetSummary } from './pet-feed';
 import type {
   PetDraftInsertContract,
   MediaAssetInsertContract,
@@ -24,14 +26,18 @@ type SupabaseErrorLike = {
 export type SupabaseQueryResult<TData> = {
   data: TData | null;
   error: SupabaseErrorLike | null;
+  count?: number | null;
 };
 
 export type SupabaseTableQueryLike = PromiseLike<SupabaseQueryResult<unknown>> & {
-  select: (columns?: string) => SupabaseTableQueryLike;
+  select: (columns?: string, options?: { count?: 'exact' }) => SupabaseTableQueryLike;
   insert: (payload: unknown) => SupabaseTableQueryLike;
   update: (payload: unknown) => SupabaseTableQueryLike;
   eq: (column: string, value: unknown) => SupabaseTableQueryLike;
   in: (column: string, value: unknown[]) => SupabaseTableQueryLike;
+  is: (column: string, value: unknown) => SupabaseTableQueryLike;
+  order: (column: string, options?: { ascending?: boolean }) => SupabaseTableQueryLike;
+  range: (from: number, to: number) => SupabaseTableQueryLike;
   single: () => Promise<SupabaseQueryResult<unknown>>;
   maybeSingle: () => Promise<SupabaseQueryResult<unknown>>;
 };
@@ -56,6 +62,7 @@ export type CreateSupabasePetRepositoriesResult = {
   petDraftRepository: PetDraftRepository;
   petMediaAttachRepository: PetMediaAttachRepository;
   petPublishRepository: PetPublishRepository;
+  petFeedRepository: PetFeedRepository;
 };
 
 type PetRow = {
@@ -376,10 +383,74 @@ export const createSupabasePetRepositories = ({
     },
   };
 
+  const feedColumns =
+    'id,shelter_id,name,species,location_label,short_description,hero_media_id,media_ids,published_at';
+
+  type FeedRow = {
+    id: string;
+    shelter_id: string;
+    name: string | null;
+    species: PetLifecycleSpecies | null;
+    location_label: string | null;
+    short_description: string | null;
+    hero_media_id: string | null;
+    media_ids: string[];
+    published_at: string;
+  };
+
+  const toPublishedPetSummary = (row: FeedRow): PublishedPetSummary => ({
+    id: row.id,
+    shelterId: row.shelter_id,
+    name: row.name,
+    species: row.species,
+    locationLabel: row.location_label,
+    shortDescription: row.short_description,
+    heroMediaId: row.hero_media_id,
+    mediaIds: row.media_ids,
+    publishedAt: row.published_at,
+  });
+
+  const petFeedRepository: PetFeedRepository = {
+    loadPublishedPets: async (query) => {
+      let countQuery = client
+        .from('pets')
+        .select('id', { count: 'exact' })
+        .eq('status', 'published')
+        .is('deleted_at', null);
+
+      if (query.species) {
+        countQuery = countQuery.eq('species', query.species);
+      }
+
+      const countResult = await countQuery;
+      assertSupabaseResult(countResult, 'Failed to count published pets');
+      const total = countResult.count ?? 0;
+
+      let dataQuery = client
+        .from('pets')
+        .select(feedColumns)
+        .eq('status', 'published')
+        .is('deleted_at', null);
+
+      if (query.species) {
+        dataQuery = dataQuery.eq('species', query.species);
+      }
+
+      const dataResult = await dataQuery
+        .order('published_at', { ascending: false })
+        .range(query.offset, query.offset + query.limit - 1);
+      const rows =
+        assertSupabaseResult<FeedRow[]>(dataResult, 'Failed to load published pets') ?? [];
+
+      return { pets: rows.map(toPublishedPetSummary), total };
+    },
+  };
+
   return {
     mediaAssetRepository,
     petDraftRepository,
     petMediaAttachRepository,
     petPublishRepository,
+    petFeedRepository,
   };
 };

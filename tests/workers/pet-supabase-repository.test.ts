@@ -18,7 +18,7 @@ type Operation = {
   action: 'select' | 'insert' | 'update';
   payload?: unknown;
   columns?: string;
-  filters: Array<{ kind: 'eq' | 'in'; column: string; value: unknown }>;
+  filters: Array<{ kind: 'eq' | 'in' | 'is'; column: string; value: unknown }>;
   result: 'single' | 'maybeSingle' | 'many';
 };
 
@@ -66,6 +66,20 @@ class FakeSupabaseQuery implements SupabaseTableQueryLike {
   in(column: string, value: unknown[]): SupabaseTableQueryLike {
     this.filters.push({ kind: 'in', column, value });
 
+    return this;
+  }
+
+  is(column: string, value: unknown): SupabaseTableQueryLike {
+    this.filters.push({ kind: 'is', column, value });
+
+    return this;
+  }
+
+  order(): SupabaseTableQueryLike {
+    return this;
+  }
+
+  range(): SupabaseTableQueryLike {
     return this;
   }
 

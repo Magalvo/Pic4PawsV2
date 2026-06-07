@@ -43,6 +43,7 @@ describe('parseEnvironmentConfig', () => {
           paymentWebhookPath: '/webhooks/payments',
           mediaUploadPath: '/uploads/media',
           petDraftsPath: '/pets/drafts',
+          petFeedPath: '/pets',
         },
         payments: {
           primaryProvider: 'eupago',
