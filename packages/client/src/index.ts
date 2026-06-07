@@ -1221,6 +1221,118 @@ const createSafeMediaUploadIntentMetadata = (
   mediaAssetPersisted: intent.mediaAssetPersisted,
 });
 
+export type PetFeedPet = {
+  id: string;
+  shelterId: string;
+  name: string | null;
+  species: PetLifecycleSpecies | null;
+  locationLabel: string | null;
+  shortDescription: string | null;
+  heroMediaId: string | null;
+  mediaIds: string[];
+  publishedAt: string;
+};
+
+export type PetFeedClientQuery = {
+  species?: PetLifecycleSpecies | null;
+  limit?: number | null;
+  offset?: number | null;
+};
+
+export type PetFeedClientSuccess = {
+  ok: true;
+  status: 'ok';
+  pets: PetFeedPet[];
+  total: number;
+};
+
+export type PetFeedClientFailureStatus = 'worker_request_failed' | 'worker_response_invalid';
+
+export type PetFeedClientFailure = {
+  ok: false;
+  status: PetFeedClientFailureStatus;
+  reasons: string[];
+};
+
+export type PetFeedClientResult = PetFeedClientSuccess | PetFeedClientFailure;
+
+export type CreatePetFeedClientInput = {
+  workerBaseUrl: string;
+  petFeedPath: `/${string}`;
+  fetch: MediaUploadClientFetch;
+};
+
+export type PetFeedClient = {
+  loadFeed: (query: PetFeedClientQuery) => Promise<PetFeedClientResult>;
+};
+
+const parsePetFeedSuccess = (
+  body: Record<string, unknown> | null,
+): PetFeedClientSuccess | null => {
+  if (
+    !body ||
+    body.status !== 'ok' ||
+    !Array.isArray(body.pets) ||
+    typeof body.total !== 'number'
+  ) {
+    return null;
+  }
+
+  return {
+    ok: true,
+    status: 'ok',
+    pets: body.pets as PetFeedPet[],
+    total: body.total,
+  };
+};
+
+export const createPetFeedClient = ({
+  workerBaseUrl,
+  petFeedPath,
+  fetch,
+}: CreatePetFeedClientInput): PetFeedClient => ({
+  loadFeed: async (query) => {
+    const base = createWorkerUrl(workerBaseUrl, petFeedPath);
+    const url = new URL(base);
+
+    if (query.species != null) url.searchParams.set('species', query.species);
+    if (query.limit != null) url.searchParams.set('limit', String(query.limit));
+    if (query.offset != null) url.searchParams.set('offset', String(query.offset));
+
+    let response: Response;
+
+    try {
+      response = await fetch(url.toString());
+    } catch {
+      return { ok: false, status: 'worker_request_failed', reasons: ['network_error'] };
+    }
+
+    const body = await parseJsonResponse(response);
+
+    if (!response.ok) {
+      const reasons = Array.isArray(body?.reasons) ? parseReasons(body) : ['worker_request_failed'];
+
+      return {
+        ok: false,
+        status: 'worker_request_failed',
+        reasons: sanitizeReasons(reasons, 'worker_request_failed'),
+      };
+    }
+
+    const success = parsePetFeedSuccess(body);
+
+    if (!success) {
+      return {
+        ok: false,
+        status: 'worker_response_invalid',
+        reasons: ['invalid_worker_response'],
+      };
+    }
+
+    return success;
+  },
+});
+
 export const createMediaUploadFlowClient = (
   input: CreateMediaUploadFlowClientInput,
 ): MediaUploadFlowClient => {

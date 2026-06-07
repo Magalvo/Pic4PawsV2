@@ -9,6 +9,7 @@ import {
   webPetDraftSaveFlowUiContent,
   type WebPetDraftSaveFlowUiContent,
 } from './pet-draft-save-flow';
+import { webPetFeedUiContent, type WebPetFeedUiContent } from './pet-feed';
 
 export type WebFoundationStatus = 'contract-ready';
 
@@ -28,6 +29,7 @@ export type WebFoundationContent = {
   petMediaUpload: Pick<WebPetMediaUploadUiContent, 'title' | 'description' | 'status'>;
   petPublish: Pick<WebPetPublishUiContent, 'title' | 'description' | 'status'>;
   petDraftSaveFlow: Pick<WebPetDraftSaveFlowUiContent, 'title' | 'description' | 'status'>;
+  petFeed: Pick<WebPetFeedUiContent, 'title' | 'description' | 'status'>;
   readiness: Array<{
     id: 'database' | 'auth' | 'pets' | 'payments' | 'media' | 'workers';
     label: string;
@@ -72,6 +74,11 @@ export const webFoundationContent: WebFoundationContent = {
     title: webPetDraftSaveFlowUiContent.title,
     description: webPetDraftSaveFlowUiContent.description,
     status: webPetDraftSaveFlowUiContent.status,
+  },
+  petFeed: {
+    title: webPetFeedUiContent.title,
+    description: webPetFeedUiContent.description,
+    status: webPetFeedUiContent.status,
   },
   readiness: [
     {
