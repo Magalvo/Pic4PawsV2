@@ -1,6 +1,6 @@
-# Codex Resume Guide
+# Agent Resume Guide
 
-Use this guide when continuing Pic4Paws V2 from another computer or another Codex thread.
+Use this guide when continuing Pic4Paws V2 from another computer or another AI agent session.
 
 ## 1. Fresh Machine Setup
 
@@ -36,7 +36,7 @@ For each new work item:
 
 1. `git switch main`
 2. `git pull --ff-only origin main`
-3. `git switch -c codex/<WORK-ITEM-ID>`
+3. `git switch -c agent/<WORK-ITEM-ID>`
 4. create or update the work item in `docs/work-items/`
 5. create or update the work spec in `docs/work-specs/`
 6. write the failing test first

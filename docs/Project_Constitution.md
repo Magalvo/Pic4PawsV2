@@ -31,8 +31,8 @@ You must use the following tools to autonomously validate your work in a self-he
 <!-- Security, data handling, naming, branch policy. Things that must never be broken[cite: 1]. -->
 - **Strict TDD:** You must first write a failing test (Red) that encodes the acceptance criterion, before writing the minimum amount of code to make it pass (Green)[cite: 1].
 - **Data Security:** Never hardcode API keys, secrets, or sensitive data. Always use environment variables.
-- **Branching Policy:** Never make changes directly to the `main` branch. New implementation work must be developed in isolation on a branch created from the `work-item` ID, using the `codex/` prefix by default.
-- **Batch Exception:** Existing accumulated foundation work may be stabilized on a batch branch such as `codex/foundation-sdd-batch`. Inside a batch branch, create one commit per work item so the history remains reviewable.
+- **Branching Policy:** Never make changes directly to the `main` branch. New implementation work must be developed in isolation on a branch created from the `work-item` ID, using the `agent/` prefix by default.
+- **Batch Exception:** Existing accumulated foundation work may be stabilized on a batch branch such as `agent/foundation-sdd-batch`. Inside a batch branch, create one commit per work item so the history remains reviewable.
 - **Git Safety Net:** Treat Git as the safety net for AI-assisted work. Commit working states often whenever the project reaches a coherent validated checkpoint.
 - **Commit Policy:** Commits must map to the smallest coherent SDD unit. Prefer one commit per work item, including its work item, work spec, failing/passing tests, implementation and related documentation updates.
 - **Experiment Policy:** Branch before experiments, risky refactors, or architectural spikes. Merge only after the approach works and validation passes.

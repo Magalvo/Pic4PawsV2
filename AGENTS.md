@@ -25,9 +25,9 @@ Do not implement product features without a work item, work spec and failing tes
 ## Git Workflow
 
 - Do not work directly on `main`.
-- Use `codex/`-prefixed branches by default.
-- New implementation work should use one branch per work item, named from the work-item ID where practical, for example `codex/WORKER-SUPABASE-SDK-001`.
-- Existing accumulated foundation work can be stabilized on a batch branch such as `codex/foundation-sdd-batch`.
+- Use `agent/`-prefixed branches by default.
+- New implementation work should use one branch per work item, named from the work-item ID where practical, for example `agent/WORKER-SUPABASE-SDK-001`.
+- Existing accumulated foundation work can be stabilized on a batch branch such as `agent/foundation-sdd-batch`.
 - Treat Git as the safety net when working with AI agents: commit working states often, as soon as the code and tests reach a coherent functional checkpoint.
 - On a batch branch, keep commits separated by work item so precise diff review, rollback and audit remain possible.
 - Prefer one commit per coherent work item, including its work item document, work spec, failing/passing tests, implementation and related documentation updates.
