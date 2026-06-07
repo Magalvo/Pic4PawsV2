@@ -23,6 +23,7 @@ const environmentSchema = z
     WORKER_PAYMENT_WEBHOOK_PATH: z.string().startsWith('/').default('/webhooks/payments'),
     WORKER_MEDIA_UPLOAD_PATH: z.string().startsWith('/').default('/uploads/media'),
     WORKER_PET_DRAFTS_PATH: z.string().startsWith('/').default('/pets/drafts'),
+    WORKER_PET_FEED_PATH: z.string().startsWith('/').default('/pets'),
     PAYMENT_PRIMARY_PROVIDER: z.enum(['eupago', 'ifthenpay', 'stripe']),
     EUPAGO_API_KEY: optionalSecret,
     EUPAGO_WEBHOOK_SECRET: optionalSecret,
@@ -73,6 +74,7 @@ export type EnvironmentConfig = {
     paymentWebhookPath: string;
     mediaUploadPath: string;
     petDraftsPath: string;
+    petFeedPath: string;
   };
   payments: {
     primaryProvider: PrimaryPaymentProvider;
@@ -140,6 +142,7 @@ export const parseEnvironmentConfig = (
         paymentWebhookPath: env.WORKER_PAYMENT_WEBHOOK_PATH,
         mediaUploadPath: env.WORKER_MEDIA_UPLOAD_PATH,
         petDraftsPath: env.WORKER_PET_DRAFTS_PATH,
+        petFeedPath: env.WORKER_PET_FEED_PATH,
       },
       payments: {
         primaryProvider: env.PAYMENT_PRIMARY_PROVIDER,

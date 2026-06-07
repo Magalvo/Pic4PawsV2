@@ -9,6 +9,7 @@ import {
   createWorkerMediaUploadIntent,
   persistWorkerMediaUploadIntent,
 } from './media-upload';
+import { handleWorkerPetFeedRequest } from './pet-feed';
 import {
   handleWorkerPetDraftRequest,
   matchWorkerPetDraftRoute,
@@ -79,6 +80,13 @@ export type {
   PetPublishRepository,
   WorkerPetDraftAuthenticator,
 } from './pet-drafts';
+export { handleWorkerPetFeedRequest } from './pet-feed';
+export type {
+  PetFeedQuery,
+  PetFeedRepository,
+  PetFeedResult,
+  PublishedPetSummary,
+} from './pet-feed';
 export {
   createR2UploadSigner,
   createR2UploadSignerWorkerDependencies,
@@ -296,6 +304,13 @@ export const handleWorkerRequest = async (
 
     return jsonResponse(resolvedUploadIntent.intent, {
       status: resolvedUploadIntent.intent.status === 'upload_ready' ? 200 : 501,
+    });
+  }
+
+  if (url.pathname === config.workers.petFeedPath) {
+    return handleWorkerPetFeedRequest({
+      request,
+      petFeedRepository: dependencies.petFeedRepository,
     });
   }
 
