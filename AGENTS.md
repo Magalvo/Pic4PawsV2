@@ -26,15 +26,36 @@ Do not implement product features without a work item, work spec and failing tes
 
 - Do not work directly on `main`.
 - Use `agent/`-prefixed branches by default.
-- New implementation work should use one branch per work item, named from the work-item ID where practical, for example `agent/WORKER-SUPABASE-SDK-001`.
-- Existing accumulated foundation work can be stabilized on a batch branch such as `agent/foundation-sdd-batch`.
+
+### Default: one branch per work item
+
+Create a dedicated branch for each work item, named from the work-item ID:
+
+```
+git switch main
+git pull --ff-only origin main
+git switch -c agent/<WORK-ITEM-ID>
+```
+
+This is the default for all work. Do not deviate from it without an explicit reason.
+
+### Exception: batch branch
+
+A batch branch (`agent/<FEATURE>-batch`) is acceptable only when **all** of the following are true:
+
+1. All items in the batch are **entirely new** — no item can be merged or reviewed independently because it has no production value without the others.
+2. The items are **tightly coupled by type contract** — e.g. a new Worker route, its `@pic4paws/client` wrapper, and both Web and Mobile boundaries are all being introduced together for the first time.
+3. The batch is named descriptively and each work item is a **separate commit** within it.
+
+Do not use a batch branch simply because items are thematically related. Web and Mobile boundaries for an existing client should be separate branches. A new client wrapping an existing Worker route should be a separate branch.
+
+### General rules
+
 - Treat Git as the safety net when working with AI agents: commit working states often, as soon as the code and tests reach a coherent functional checkpoint.
-- On a batch branch, keep commits separated by work item so precise diff review, rollback and audit remain possible.
 - Prefer one commit per coherent work item, including its work item document, work spec, failing/passing tests, implementation and related documentation updates.
 - Branch before experiments or architectural spikes. Risky approaches must happen on an isolated branch and be merged only after review and validation pass.
 - Treat AI-generated changes like a human pull request: review the diff, not only the running result, before merge.
 - When multiple agents or parallel work streams are active, use isolated worktrees or separate working directories so agents cannot overwrite each other.
-- After the current foundation batch is merged, return to branch-per-work-item as the default.
 
 ## Legacy App Rule
 

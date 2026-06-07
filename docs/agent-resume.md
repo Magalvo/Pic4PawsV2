@@ -32,6 +32,8 @@ The legacy app under `reference/` is functional reference only. Do not copy its 
 
 Do not work directly on `main`.
 
+### Default: one branch per work item
+
 For each new work item:
 
 1. `git switch main`
@@ -45,7 +47,13 @@ For each new work item:
 9. commit one coherent checkpoint
 10. push branch and open PR
 
-Required validation:
+### Exception: batch branch
+
+Use `agent/<FEATURE>-batch` only when all items are **entirely new** (none has production value without the others) and are **tightly coupled by type contract** (e.g. a brand-new Worker route + its client + both boundaries introduced for the first time together). Each work item must still be a separate commit within the batch. This is an exception, not the default.
+
+Do not batch items that can be reviewed or merged independently.
+
+### Required validation before every commit
 
 - `npm run typecheck`
 - `npm run lint`
@@ -54,9 +62,9 @@ Required validation:
 
 ## 4. Current State As Of 2026-06-07
 
-Merged through `main` commit `00b0be1` before `MOBILE-PET-DRAFT-001`.
+All foundation work merged into `main`. Latest merged commit is the `agent/PET-FEED-CLIENT-001-batch` PR.
 
-Completed foundation work:
+Completed foundation items (all merged to `main`):
 
 - `AUTH-SUPABASE-001`
 - `SEC-001`
@@ -64,26 +72,30 @@ Completed foundation work:
 - `WORKER-SUPABASE-SDK-001`
 - `R2-SIGNER-SDK-001`
 - `MEDIA-WORKER-PERSIST-001`
-- `MEDIA-UPLOAD-CLIENT-001` on branch `codex/MEDIA-UPLOAD-CLIENT-001`
-- `MEDIA-UPLOAD-BINARY-CLIENT-001` on branch `codex/MEDIA-UPLOAD-BINARY-CLIENT-001`
-- `MEDIA-UPLOAD-FLOW-CLIENT-001` on branch `codex/MEDIA-UPLOAD-FLOW-CLIENT-001`
-- `WEB-MEDIA-UPLOAD-001` on branch `codex/WEB-MEDIA-UPLOAD-001`
-- `MOBILE-MEDIA-UPLOAD-001` on branch `codex/MOBILE-MEDIA-UPLOAD-001`
-- `PET-MEDIA-UPLOAD-UI-001` on branch `codex/PET-MEDIA-UPLOAD-UI-001`, stacked on `codex/MOBILE-MEDIA-UPLOAD-001`
-- `PET-MEDIA-ATTACH-WORKER-001` on branch `codex/PET-MEDIA-ATTACH-WORKER-001`
-- `PET-MEDIA-ATTACH-CLIENT-001` on branch `codex/PET-MEDIA-ATTACH-CLIENT-001`
-- `PET-MEDIA-UPLOAD-ATTACH-FLOW-001` on branch `codex/PET-MEDIA-UPLOAD-ATTACH-FLOW-001`, stacked on `codex/PET-MEDIA-ATTACH-CLIENT-001`
-- `WEB-PET-MEDIA-UPLOAD-ATTACH-001` on branch `codex/WEB-PET-MEDIA-UPLOAD-ATTACH-001`
-- `MOBILE-PET-MEDIA-UPLOAD-ATTACH-001` on branch `codex/MOBILE-PET-MEDIA-UPLOAD-ATTACH-001`
-- `PET-PUBLISH-CLIENT-001` on branch `codex/PET-PUBLISH-CLIENT-001`
-- `WEB-PET-PUBLISH-001` on branch `codex/WEB-PET-PUBLISH-001`
-- `MOBILE-PET-PUBLISH-001` on branch `codex/MOBILE-PET-PUBLISH-001`
-- `PET-DRAFT-CLIENT-001` on branch `codex/PET-DRAFT-CLIENT-001`
-- `WEB-PET-DRAFT-001` on branch `codex/WEB-PET-DRAFT-001`
-- `MOBILE-PET-DRAFT-001` on branch `codex/MOBILE-PET-DRAFT-001`
-- `PET-DRAFT-SAVE-FLOW-CLIENT-001` on branch `agent/foundation-sdd-batch`
-- `WEB-PET-DRAFT-SAVE-FLOW-001` on branch `agent/foundation-sdd-batch`
-- `MOBILE-PET-DRAFT-SAVE-FLOW-001` on branch `agent/foundation-sdd-batch`
+- `MEDIA-UPLOAD-CLIENT-001`
+- `MEDIA-UPLOAD-BINARY-CLIENT-001`
+- `MEDIA-UPLOAD-FLOW-CLIENT-001`
+- `WEB-MEDIA-UPLOAD-001`
+- `MOBILE-MEDIA-UPLOAD-001`
+- `PET-MEDIA-UPLOAD-UI-001`
+- `PET-MEDIA-ATTACH-WORKER-001`
+- `PET-MEDIA-ATTACH-CLIENT-001`
+- `PET-MEDIA-UPLOAD-ATTACH-FLOW-001`
+- `WEB-PET-MEDIA-UPLOAD-ATTACH-001`
+- `MOBILE-PET-MEDIA-UPLOAD-ATTACH-001`
+- `PET-PUBLISH-CLIENT-001`
+- `WEB-PET-PUBLISH-001`
+- `MOBILE-PET-PUBLISH-001`
+- `PET-DRAFT-CLIENT-001`
+- `WEB-PET-DRAFT-001`
+- `MOBILE-PET-DRAFT-001`
+- `PET-DRAFT-SAVE-FLOW-CLIENT-001`
+- `WEB-PET-DRAFT-SAVE-FLOW-001`
+- `MOBILE-PET-DRAFT-SAVE-FLOW-001`
+- `PET-FEED-WORKER-001` — public `GET /pets` Worker route with pagination
+- `PET-FEED-CLIENT-001` — `createPetFeedClient` in `@pic4paws/client`
+- `WEB-PET-FEED-001` — Web pet feed product boundary with PT-PT states
+- `MOBILE-PET-FEED-001` — Mobile pet feed product boundary with PT-PT states
 
 The Worker now has:
 
@@ -91,37 +103,32 @@ The Worker now has:
 - server-side R2/S3-compatible upload signer factory
 - authenticated media upload persistence for signed intents
 - authenticated pet media attachment for persisted public image assets
+- authenticated pet draft create, update, and publish routes
+- public paginated pet feed (`GET /pets`) with `PetFeedRepository` interface
+- `SupabaseTableQueryLike` supports `.is()`, `.order()`, `.range()`
 - tests that keep Supabase and Cloudflare calls mocked/injected
 
-Web/Mobile now has:
+`@pic4paws/client` now has:
 
-- a platform-neutral `@pic4paws/client` package
-- a tested media upload intent client with injected `fetch` and bearer token provider
-- a tested signed URL binary upload executor with injected `fetch`
-- a tested composed media upload flow client with distinct intent and binary upload failure phases
-- a tested pet media attach client for the authenticated Worker route with injected `fetch` and bearer token provider
-- a tested composed pet media upload+attach flow with distinct upload intent, binary upload and attach failure phases
-- a tested Web media upload boundary for public pet images with PT-PT states and injected dependencies
-- a tested Mobile media upload boundary for public pet images with PT-PT states and injected dependencies
-- tested Web and Mobile pet media product UI flows with deterministic media IDs, MIME guards and safe PT-PT view models
-- a tested Web pet media product boundary that consumes the composed upload+attach flow and returns attached draft media state
-- a tested Mobile pet media product boundary that consumes the composed upload+attach flow and returns attached draft media state
-- a tested shared pet publish client for Web/Mobile that calls the authenticated Worker publish route without sending client-side publish claims
-- a tested Web pet publish product boundary that consumes the shared publish client and exposes safe PT-PT publish states
-- a tested Mobile pet publish product boundary that consumes the shared publish client and exposes safe PT-PT publish states
-- a tested shared pet draft client for Web/Mobile that creates and updates drafts through authenticated Worker routes with sanitized payloads
-- a tested Web pet draft product boundary that consumes the shared draft client and exposes safe PT-PT create/update states
-- a tested Mobile pet draft product boundary that consumes the shared draft client and exposes safe PT-PT create/update states
-- safe Worker success/failure normalization
+- `MediaUploadClient`, `MediaUploadBinaryClient`, `MediaUploadFlowClient`
+- `PetMediaAttachClient`, `PetMediaUploadAttachFlowClient`
+- `PetPublishClient`
+- `PetDraftClient`
+- `PetDraftSaveFlowClient` (composed draft save + media upload flow)
+- `PetFeedClient` (public read, no auth)
 - no client-side Supabase service-role keys or R2 credentials
+
+Web/Mobile now have tested product boundaries for: media upload, pet media upload+attach, pet publish, pet draft, pet draft save flow, pet feed.
 
 ## 5. Recommended Next Work Item
 
-Recommended next item: `PET-DRAFT-SAVE-FLOW-WORKER-001` or a batch branch merge PR.
+The public read path is partially complete (`GET /pets` exists). Likely candidates:
 
-Option A — implement the Worker route that persists the draft save flow result server-side.
+- `PET-PROFILE-WORKER-001` — public `GET /pets/:petId` single-pet route
+- `PET-PROFILE-CLIENT-001` — client wrapper for the single-pet route
+- `WEB-PET-PROFILE-001` / `MOBILE-PET-PROFILE-001` — product boundaries for the pet profile view
 
-Option B — open a PR to merge `agent/foundation-sdd-batch` into `main`, then start the next item on a fresh branch.
+Start each on its own `agent/<WORK-ITEM-ID>` branch per the convention in Section 3.
 
 ## 6. Handoff Prompt For Codex
 

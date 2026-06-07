@@ -12,10 +12,33 @@ Create the Pic4Paws V2 architecture foundation before continuing implementation.
 4. Define pet, shelter, adoption, sponsorship and payment database contracts. Completed through `DB-001`.
 5. Rebuild features through strict TDD cycles. In progress.
 
+## Completed Items (all merged to `main`)
+
+Write path (Worker + client + Web/Mobile):
+`AUTH-SUPABASE-001`, `SEC-001`, `WORKER-SUPABASE-WIRING-001`, `WORKER-SUPABASE-SDK-001`,
+`R2-SIGNER-SDK-001`, `MEDIA-WORKER-PERSIST-001`,
+`MEDIA-UPLOAD-CLIENT-001`, `MEDIA-UPLOAD-BINARY-CLIENT-001`, `MEDIA-UPLOAD-FLOW-CLIENT-001`,
+`WEB-MEDIA-UPLOAD-001`, `MOBILE-MEDIA-UPLOAD-001`, `PET-MEDIA-UPLOAD-UI-001`,
+`PET-MEDIA-ATTACH-WORKER-001`, `PET-MEDIA-ATTACH-CLIENT-001`, `PET-MEDIA-UPLOAD-ATTACH-FLOW-001`,
+`WEB-PET-MEDIA-UPLOAD-ATTACH-001`, `MOBILE-PET-MEDIA-UPLOAD-ATTACH-001`,
+`PET-PUBLISH-CLIENT-001`, `WEB-PET-PUBLISH-001`, `MOBILE-PET-PUBLISH-001`,
+`PET-DRAFT-CLIENT-001`, `WEB-PET-DRAFT-001`, `MOBILE-PET-DRAFT-001`,
+`PET-DRAFT-SAVE-FLOW-CLIENT-001`, `WEB-PET-DRAFT-SAVE-FLOW-001`, `MOBILE-PET-DRAFT-SAVE-FLOW-001`.
+
+Read path (Worker + client + Web/Mobile):
+`PET-FEED-WORKER-001`, `PET-FEED-CLIENT-001`, `WEB-PET-FEED-001`, `MOBILE-PET-FEED-001`.
+
 ## Current Focus
 
-`AUTH-SUPABASE-001`, `SEC-001`, `WORKER-SUPABASE-WIRING-001`, `WORKER-SUPABASE-SDK-001`, `R2-SIGNER-SDK-001`, `MEDIA-WORKER-PERSIST-001`, `MEDIA-UPLOAD-CLIENT-001`, `MEDIA-UPLOAD-BINARY-CLIENT-001`, `MEDIA-UPLOAD-FLOW-CLIENT-001`, `WEB-MEDIA-UPLOAD-001`, `MOBILE-MEDIA-UPLOAD-001`, `PET-MEDIA-UPLOAD-UI-001`, `PET-MEDIA-ATTACH-WORKER-001`, `PET-MEDIA-ATTACH-CLIENT-001`, `PET-MEDIA-UPLOAD-ATTACH-FLOW-001`, `WEB-PET-MEDIA-UPLOAD-ATTACH-001`, `MOBILE-PET-MEDIA-UPLOAD-ATTACH-001`, `PET-PUBLISH-CLIENT-001`, `WEB-PET-PUBLISH-001`, `MOBILE-PET-PUBLISH-001`, `PET-DRAFT-CLIENT-001`, `WEB-PET-DRAFT-001` and `MOBILE-PET-DRAFT-001` are completed or ready for review on their work branches.
+All items above are merged. The read path is partially built (feed list exists, single-pet profile does not).
 
-`PET-DRAFT-SAVE-FLOW-CLIENT-001`, `WEB-PET-DRAFT-SAVE-FLOW-001` and `MOBILE-PET-DRAFT-SAVE-FLOW-001` completed on `agent/foundation-sdd-batch`.
+Recommended next items (each on its own `agent/<WORK-ITEM-ID>` branch):
 
-Recommended next foundation item: `PET-DRAFT-SAVE-FLOW-WORKER-001` — add the Worker route that the draft save flow targets, or alternatively a cross-cutting checkpoint PR to merge the batch branch into `main`.
+1. `PET-PROFILE-WORKER-001` — public `GET /pets/:petId` route
+2. `PET-PROFILE-CLIENT-001` — `createPetProfileClient` in `@pic4paws/client`
+3. `WEB-PET-PROFILE-001` — Web pet profile product boundary
+4. `MOBILE-PET-PROFILE-001` — Mobile pet profile product boundary
+
+## Branching Convention
+
+The default is **one branch per work item** (`agent/<WORK-ITEM-ID>`). See `AGENTS.md` §Git Workflow for the full rule and the narrow batch-branch exception.
