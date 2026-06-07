@@ -52,9 +52,9 @@ Required validation:
 - `npm run test`
 - `npm run build`
 
-## 4. Current State As Of 2026-06-06
+## 4. Current State As Of 2026-06-07
 
-Merged through `main` commit `5f0403c` before `WEB-PET-DRAFT-001`.
+Merged through `main` commit `00b0be1` before `MOBILE-PET-DRAFT-001`.
 
 Completed foundation work:
 
@@ -80,6 +80,7 @@ Completed foundation work:
 - `MOBILE-PET-PUBLISH-001` on branch `codex/MOBILE-PET-PUBLISH-001`
 - `PET-DRAFT-CLIENT-001` on branch `codex/PET-DRAFT-CLIENT-001`
 - `WEB-PET-DRAFT-001` on branch `codex/WEB-PET-DRAFT-001`
+- `MOBILE-PET-DRAFT-001` on branch `codex/MOBILE-PET-DRAFT-001`
 
 The Worker now has:
 
@@ -107,23 +108,24 @@ Web/Mobile now has:
 - a tested Mobile pet publish product boundary that consumes the shared publish client and exposes safe PT-PT publish states
 - a tested shared pet draft client for Web/Mobile that creates and updates drafts through authenticated Worker routes with sanitized payloads
 - a tested Web pet draft product boundary that consumes the shared draft client and exposes safe PT-PT create/update states
+- a tested Mobile pet draft product boundary that consumes the shared draft client and exposes safe PT-PT create/update states
 - safe Worker success/failure normalization
 - no client-side Supabase service-role keys or R2 credentials
 
 ## 5. Recommended Next Work Item
 
-Recommended next item: `MOBILE-PET-DRAFT-001`.
+Recommended next item: `PET-DRAFT-SAVE-FLOW-CLIENT-001`.
 
-Goal: wire the shared pet draft client into the Mobile product boundary/view model with fake/injected dependencies first.
+Goal: compose the shared pet draft client with the existing pet media upload/attach flow behind a platform-neutral draft save flow with fake/injected dependencies first.
 
 Suggested scope:
 
 - create work item and work spec
-- create a Mobile product boundary around injected `createPetDraft` and `updatePetDraft` dependencies
-- expose PT-PT ready, saving, saved and failed states for draft editing
-- map unauthenticated, unauthorized, invalid draft, adapter and worker failures to safe Mobile copy
-- assert UI-facing results never expose bearer tokens, Supabase service-role keys or R2 keys
-- do not wire real native navigation/forms, production auth/session state or live Worker calls yet
+- create a shared draft save flow around injected `createPetDraft`, `updatePetDraft` and pet media upload/attach dependencies
+- support create and update operations with already-attached media IDs and optional newly uploaded public pet image files
+- return distinct safe phases for media upload/attach failures and draft save failures
+- assert flow-facing results never expose bearer tokens, Supabase service-role keys or R2 keys
+- do not wire real Web/Mobile forms, production auth/session state or live Worker calls yet
 
 ## 6. Handoff Prompt For Codex
 
