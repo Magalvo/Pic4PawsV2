@@ -10,6 +10,7 @@ import {
   persistWorkerMediaUploadIntent,
 } from './media-upload';
 import { handleWorkerPetFeedRequest } from './pet-feed';
+import { handleWorkerPetProfileRequest, matchWorkerPetProfileId } from './pet-profile';
 import {
   handleWorkerPetDraftRequest,
   matchWorkerPetDraftRoute,
@@ -87,6 +88,12 @@ export type {
   PetFeedResult,
   PublishedPetSummary,
 } from './pet-feed';
+export { handleWorkerPetProfileRequest, matchWorkerPetProfileId } from './pet-profile';
+export type {
+  PetProfileQuery,
+  PetProfileRepository,
+  PublishedPetProfile,
+} from './pet-profile';
 export {
   createR2UploadSigner,
   createR2UploadSignerWorkerDependencies,
@@ -345,6 +352,16 @@ export const handleWorkerRequest = async (
         petPublishRepository: resolvedDependencies.petPublishRepository,
         now: resolvedDependencies.now,
       },
+    });
+  }
+
+  const profilePetId = matchWorkerPetProfileId(url.pathname, config.workers.petFeedPath);
+
+  if (profilePetId !== null) {
+    return handleWorkerPetProfileRequest({
+      request,
+      petId: profilePetId,
+      petProfileRepository: dependencies.petProfileRepository,
     });
   }
 
