@@ -14,6 +14,8 @@ import type { PetFeedRepository } from './pet-feed';
 import type { PetProfileRepository } from './pet-profile';
 import type { ShelterProfileRepository } from './shelter-profile';
 import { createSupabaseShelterRepositories } from './shelter-supabase';
+import type { AdoptionApplicationRepository } from './adoption';
+import { createSupabaseAdoptionRepositories } from './adoption-supabase';
 import type {
   PetDraftRepository,
   PetMediaAttachRepository,
@@ -47,6 +49,7 @@ export type WorkerRequestDependencies = {
   petFeedRepository?: PetFeedRepository;
   petProfileRepository?: PetProfileRepository;
   shelterProfileRepository?: ShelterProfileRepository;
+  adoptionRepository?: AdoptionApplicationRepository;
   supabaseClientFactory?: WorkerSupabaseClientFactory;
   now?: () => string;
 };
@@ -87,6 +90,7 @@ export const createWorkerSupabaseDependencies = ({
     });
     const petRepositories = createSupabasePetRepositories({ client });
     const shelterRepositories = createSupabaseShelterRepositories({ client });
+    const adoptionRepositories = createSupabaseAdoptionRepositories({ client });
 
     return {
       mediaUploadSigner,
@@ -98,6 +102,7 @@ export const createWorkerSupabaseDependencies = ({
       petFeedRepository: petRepositories.petFeedRepository,
       petProfileRepository: petRepositories.petProfileRepository,
       shelterProfileRepository: shelterRepositories.shelterProfileRepository,
+      adoptionRepository: adoptionRepositories.adoptionRepository,
       now,
     };
   } catch {
@@ -147,5 +152,7 @@ export const resolveWorkerRequestDependencies = ({
       dependencies.petProfileRepository ?? supabaseDependencies.petProfileRepository,
     shelterProfileRepository:
       dependencies.shelterProfileRepository ?? supabaseDependencies.shelterProfileRepository,
+    adoptionRepository:
+      dependencies.adoptionRepository ?? supabaseDependencies.adoptionRepository,
   };
 };
