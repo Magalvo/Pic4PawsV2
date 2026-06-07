@@ -44,6 +44,7 @@ describe('parseEnvironmentConfig', () => {
           mediaUploadPath: '/uploads/media',
           petDraftsPath: '/pets/drafts',
           petFeedPath: '/pets',
+          shelterPath: '/shelters',
         },
         payments: {
           primaryProvider: 'eupago',
