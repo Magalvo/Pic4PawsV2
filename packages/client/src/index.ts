@@ -1,4 +1,9 @@
-import type { MediaUploadPurpose, MediaVisibility } from '@pic4paws/domain';
+import type {
+  MediaUploadPurpose,
+  MediaVisibility,
+  PetLifecycleSpecies,
+  PublicPetMedicalStatus,
+} from '@pic4paws/domain';
 
 export type MediaUploadClientRequest = {
   mediaId: string;
@@ -61,6 +66,54 @@ export type MediaUploadClient = {
   requestMediaUploadIntent: (
     request: MediaUploadClientRequest,
   ) => Promise<RequestMediaUploadIntentResult>;
+};
+
+export type PetDraftClientDraftInput = {
+  petId: string;
+  shelterId: string;
+  name?: string | null;
+  species?: PetLifecycleSpecies | null;
+  locationLabel?: string | null;
+  shortDescription?: string | null;
+  mediaIds: string[];
+  heroMediaId?: string | null;
+  medical: PublicPetMedicalStatus;
+};
+
+export type PetDraftClientSuccessStatus = 'pet_draft_created' | 'pet_draft_updated';
+
+export type PetDraftClientSuccess = {
+  ok: true;
+  status: PetDraftClientSuccessStatus;
+  petId: string;
+};
+
+export type PetDraftClientFailureStatus =
+  | 'unauthenticated'
+  | 'actor_not_authorized'
+  | 'invalid_pet_draft'
+  | 'auth_adapter_not_configured'
+  | 'pet_draft_repository_not_configured'
+  | 'worker_request_failed';
+
+export type PetDraftClientFailure = {
+  ok: false;
+  status: PetDraftClientFailureStatus;
+  reasons: string[];
+};
+
+export type PetDraftClientResult = PetDraftClientSuccess | PetDraftClientFailure;
+
+export type CreatePetDraftClientInput = {
+  workerBaseUrl: string;
+  petDraftsPath: `/${string}`;
+  getAccessToken: () => Promise<string | null>;
+  fetch: MediaUploadClientFetch;
+};
+
+export type PetDraftClient = {
+  createPetDraft: (draft: PetDraftClientDraftInput) => Promise<PetDraftClientResult>;
+  updatePetDraft: (draft: PetDraftClientDraftInput) => Promise<PetDraftClientResult>;
 };
 
 export type MediaUploadBinaryFailureStatus =
@@ -450,6 +503,125 @@ const parsePetMediaAttachSuccess = (
     mediaId: body.mediaId,
     mediaIds: body.mediaIds,
     heroMediaId: body.heroMediaId,
+  };
+};
+
+const sanitizePetDraftPayload = (draft: PetDraftClientDraftInput): PetDraftClientDraftInput => ({
+  petId: draft.petId,
+  shelterId: draft.shelterId,
+  name: draft.name ?? null,
+  species: draft.species ?? null,
+  locationLabel: draft.locationLabel ?? null,
+  shortDescription: draft.shortDescription ?? null,
+  mediaIds: [...draft.mediaIds],
+  heroMediaId: draft.heroMediaId ?? null,
+  medical: draft.medical,
+});
+
+const parsePetDraftFailureStatus = (
+  body: Record<string, unknown> | null,
+): PetDraftClientFailureStatus => {
+  const status = body?.status;
+
+  if (
+    status === 'unauthenticated' ||
+    status === 'actor_not_authorized' ||
+    status === 'invalid_pet_draft' ||
+    status === 'auth_adapter_not_configured' ||
+    status === 'pet_draft_repository_not_configured'
+  ) {
+    return status;
+  }
+
+  return 'worker_request_failed';
+};
+
+const parsePetDraftSuccess = (
+  body: Record<string, unknown> | null,
+  expectedStatus: PetDraftClientSuccessStatus,
+): PetDraftClientSuccess | null => {
+  if (body?.status !== expectedStatus || typeof body.petId !== 'string') {
+    return null;
+  }
+
+  return {
+    ok: true,
+    status: expectedStatus,
+    petId: body.petId,
+  };
+};
+
+const createPetDraftFailure = (
+  body: Record<string, unknown> | null,
+): PetDraftClientFailure => {
+  const status = parsePetDraftFailureStatus(body);
+  const reasons = Array.isArray(body?.reasons) ? parseReasons(body) : [status];
+
+  return {
+    ok: false,
+    status,
+    reasons: sanitizeReasons(reasons, status),
+  };
+};
+
+export const createPetDraftClient = ({
+  workerBaseUrl,
+  petDraftsPath,
+  getAccessToken,
+  fetch,
+}: CreatePetDraftClientInput): PetDraftClient => {
+  const submitDraft = async (
+    draft: PetDraftClientDraftInput,
+    operation: 'create' | 'update',
+  ): Promise<PetDraftClientResult> => {
+    const accessToken = await getAccessToken();
+
+    if (!accessToken?.trim()) {
+      return {
+        ok: false,
+        status: 'unauthenticated',
+        reasons: ['missing_access_token'],
+      };
+    }
+
+    const response = await fetch(
+      operation === 'create'
+        ? createWorkerUrl(workerBaseUrl, petDraftsPath)
+        : createWorkerSubUrl(workerBaseUrl, petDraftsPath, draft.petId),
+      {
+        method: operation === 'create' ? 'POST' : 'PATCH',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(sanitizePetDraftPayload(draft)),
+      },
+    );
+    const body = await parseJsonResponse(response);
+
+    if (!response.ok) {
+      return createPetDraftFailure(body);
+    }
+
+    const success = parsePetDraftSuccess(
+      body,
+      operation === 'create' ? 'pet_draft_created' : 'pet_draft_updated',
+    );
+
+    if (!success) {
+      return {
+        ok: false,
+        status: 'worker_request_failed',
+        reasons: ['invalid_worker_response'],
+      };
+    }
+
+    return success;
+  };
+
+  return {
+    createPetDraft: (draft) => submitDraft(draft, 'create'),
+    updatePetDraft: (draft) => submitDraft(draft, 'update'),
   };
 };
 
