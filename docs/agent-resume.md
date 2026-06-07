@@ -104,6 +104,10 @@ Completed foundation items (all merged to `main`):
 - `SHELTER-PROFILE-CLIENT-001` — `createShelterProfileClient` in `@pic4paws/client`
 - `WEB-SHELTER-PROFILE-001` — Web shelter profile product boundary with PT-PT states
 - `MOBILE-SHELTER-PROFILE-001` — Mobile shelter profile product boundary with PT-PT states
+- `ADOPTION-WORKER-001` — authenticated `POST /adoptions` Worker route
+- `ADOPTION-CLIENT-001` — `createAdoptionApplicationClient` in `@pic4paws/client`
+- `WEB-ADOPTION-001` — Web adoption application product boundary with PT-PT states
+- `MOBILE-ADOPTION-001` — Mobile adoption application product boundary with PT-PT states
 
 The Worker now has:
 
@@ -115,8 +119,11 @@ The Worker now has:
 - public paginated pet feed (`GET /pets`) with `PetFeedRepository` interface
 - public single-pet profile (`GET /pets/:petId`) with `PetProfileRepository` interface
 - public shelter profile (`GET /shelters/:shelterId`) with `ShelterProfileRepository` interface
+- authenticated adoption application (`POST /adoptions`) with `AdoptionApplicationRepository`
+  interface — `shelterId` derived server-side, GDPR consent gate, status `submitted`
 - `SupabaseTableQueryLike` supports `.is()`, `.order()`, `.range()`
 - `WORKER_SHELTER_PATH` config (default `/shelters`)
+- `WORKER_ADOPTIONS_PATH` config (default `/adoptions`)
 - private shelter fields (taxId, registrationNumber, precise address, paymentAccountStatus)
   deliberately excluded from the public shelter profile response
 - tests that keep Supabase and Cloudflare calls mocked/injected
@@ -131,29 +138,37 @@ The Worker now has:
 - `PetFeedClient` (public read, no auth)
 - `PetProfileClient` (public read, no auth)
 - `ShelterProfileClient` (public read, no auth)
+- `AdoptionApplicationClient` (authenticated write — `submitApplication`)
 - no client-side Supabase service-role keys or R2 credentials
 
 Web/Mobile now have tested product boundaries for: media upload, pet media upload+attach,
-pet publish, pet draft, pet draft save flow, pet feed, pet profile, shelter profile.
+pet publish, pet draft, pet draft save flow, pet feed, pet profile, shelter profile,
+adoption application.
 
-The adopter discovery loop is fully wired at the boundary layer:
-**feed → pet profile → shelter profile**.
+The adopter end-to-end flow is fully wired at the boundary layer:
+**feed → pet profile → shelter profile → submit adoption application**.
 
 ## 5. Recommended Next Work Item
 
-The public read path is complete. The next logical step is the adopter write path:
-submitting an adoption application.
+The adopter end-to-end flow is complete (feed → pet profile → shelter profile →
+submit adoption application).
 
-Recommended slice (each on its own `agent/<WORK-ITEM-ID>` branch):
+Recommended next slice — shelter-side adoption review (each on its own `agent/<WORK-ITEM-ID>` branch):
 
-1. `ADOPTION-WORKER-001` — authenticated `POST /adoptions` Worker route
-2. `ADOPTION-CLIENT-001` — `createAdoptionApplicationClient` in `@pic4paws/client`
-3. `WEB-ADOPTION-001` — Web adoption application product boundary
-4. `MOBILE-ADOPTION-001` — Mobile adoption application product boundary
+1. `ADOPTION-LIST-WORKER-001` — authenticated `GET /shelters/:shelterId/adoptions` Worker route
+   (shelter members list pending applications for their shelter; requires shelter membership check)
+2. `ADOPTION-LIST-CLIENT-001` — `createAdoptionListClient` in `@pic4paws/client`
+3. `WEB-ADOPTION-LIST-001` — Web adoption list product boundary
+4. `MOBILE-ADOPTION-LIST-001` — Mobile adoption list product boundary
 
-The adoption application schema is already defined in `packages/database/src/schema.ts`
-(`adoptionApplications` table). All required fields — applicant contact, housing, consent,
-motivation — are present.
+Alternatively, pursue the donation/sponsorship slice if the review flow is lower priority:
+
+1. `DONATION-WORKER-001` — `POST /donations` Worker route (payment intent initiation)
+2. `DONATION-CLIENT-001` — `createDonationClient` in `@pic4paws/client`
+3. `WEB-DONATION-001` / `MOBILE-DONATION-001` — Web/Mobile donation boundaries
+
+The `donationTransactions` and `adoptionApplications` tables are already defined in
+`packages/database/src/schema.ts`.
 
 Start each on its own `agent/<WORK-ITEM-ID>` branch per the convention in Section 3.
 
