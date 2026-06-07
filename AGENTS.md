@@ -66,3 +66,9 @@ The legacy app under `reference/` is strictly functional reference. Use it to un
 - Paid services must be justified by security, stability, compliance or core product needs.
 - Payment state must be driven by verified server-side webhook/API confirmation, never client claims.
 - GDPR/privacy requirements must be designed before collecting personal data.
+
+## Reasoning Configuration
+
+For composition-heavy work-items (those combining ≥2 clients):
+- Use extended thinking with 5000 token budget
+- Reason through phase transitions and failure combinations

@@ -81,6 +81,9 @@ Completed foundation work:
 - `PET-DRAFT-CLIENT-001` on branch `codex/PET-DRAFT-CLIENT-001`
 - `WEB-PET-DRAFT-001` on branch `codex/WEB-PET-DRAFT-001`
 - `MOBILE-PET-DRAFT-001` on branch `codex/MOBILE-PET-DRAFT-001`
+- `PET-DRAFT-SAVE-FLOW-CLIENT-001` on branch `agent/foundation-sdd-batch`
+- `WEB-PET-DRAFT-SAVE-FLOW-001` on branch `agent/foundation-sdd-batch`
+- `MOBILE-PET-DRAFT-SAVE-FLOW-001` on branch `agent/foundation-sdd-batch`
 
 The Worker now has:
 
@@ -114,18 +117,11 @@ Web/Mobile now has:
 
 ## 5. Recommended Next Work Item
 
-Recommended next item: `PET-DRAFT-SAVE-FLOW-CLIENT-001`.
+Recommended next item: `PET-DRAFT-SAVE-FLOW-WORKER-001` or a batch branch merge PR.
 
-Goal: compose the shared pet draft client with the existing pet media upload/attach flow behind a platform-neutral draft save flow with fake/injected dependencies first.
+Option A — implement the Worker route that persists the draft save flow result server-side.
 
-Suggested scope:
-
-- create work item and work spec
-- create a shared draft save flow around injected `createPetDraft`, `updatePetDraft` and pet media upload/attach dependencies
-- support create and update operations with already-attached media IDs and optional newly uploaded public pet image files
-- return distinct safe phases for media upload/attach failures and draft save failures
-- assert flow-facing results never expose bearer tokens, Supabase service-role keys or R2 keys
-- do not wire real Web/Mobile forms, production auth/session state or live Worker calls yet
+Option B — open a PR to merge `agent/foundation-sdd-batch` into `main`, then start the next item on a fresh branch.
 
 ## 6. Handoff Prompt For Codex
 

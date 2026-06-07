@@ -5,6 +5,10 @@ import {
 } from './pet-media-upload';
 import { webPetPublishUiContent, type WebPetPublishUiContent } from './pet-publish';
 import { webPetDraftUiContent, type WebPetDraftUiContent } from './pet-draft';
+import {
+  webPetDraftSaveFlowUiContent,
+  type WebPetDraftSaveFlowUiContent,
+} from './pet-draft-save-flow';
 
 export type WebFoundationStatus = 'contract-ready';
 
@@ -23,6 +27,7 @@ export type WebFoundationContent = {
   petDraft: Pick<WebPetDraftUiContent, 'title' | 'description' | 'status'>;
   petMediaUpload: Pick<WebPetMediaUploadUiContent, 'title' | 'description' | 'status'>;
   petPublish: Pick<WebPetPublishUiContent, 'title' | 'description' | 'status'>;
+  petDraftSaveFlow: Pick<WebPetDraftSaveFlowUiContent, 'title' | 'description' | 'status'>;
   readiness: Array<{
     id: 'database' | 'auth' | 'pets' | 'payments' | 'media' | 'workers';
     label: string;
@@ -62,6 +67,11 @@ export const webFoundationContent: WebFoundationContent = {
     title: webPetPublishUiContent.title,
     description: webPetPublishUiContent.description,
     status: webPetPublishUiContent.status,
+  },
+  petDraftSaveFlow: {
+    title: webPetDraftSaveFlowUiContent.title,
+    description: webPetDraftSaveFlowUiContent.description,
+    status: webPetDraftSaveFlowUiContent.status,
   },
   readiness: [
     {

@@ -767,6 +767,183 @@ export const createPetMediaAttachClient = ({
   },
 });
 
+export type PetDraftSaveFlowFileInput = {
+  name: string;
+  type: string;
+  size: number;
+  body: BodyInit;
+};
+
+export type PetDraftSaveFlowInput = {
+  operation: 'create' | 'update';
+  petId: string;
+  shelterId: string;
+  ownerUserId?: string | null;
+  name?: string | null;
+  species?: PetLifecycleSpecies | null;
+  locationLabel?: string | null;
+  shortDescription?: string | null;
+  existingMediaIds: string[];
+  heroMediaId?: string | null;
+  medical: PublicPetMedicalStatus;
+  newFiles?: PetDraftSaveFlowFileInput[];
+};
+
+export type PetDraftSaveFlowUploadedMedia = {
+  mediaId: string;
+  objectKey: string;
+  mediaIds: string[];
+  heroMediaId: string | null;
+};
+
+export type PetDraftSaveFlowSuccess = {
+  ok: true;
+  status: 'pet_draft_saved';
+  petId: string;
+  operation: 'create' | 'update';
+  uploadedMedia: PetDraftSaveFlowUploadedMedia[];
+};
+
+export type PetDraftSaveFlowFailure =
+  | {
+      ok: false;
+      phase: 'draft_save';
+      status: PetDraftClientFailureStatus;
+      reasons: string[];
+    }
+  | {
+      ok: false;
+      phase: 'media_upload';
+      subPhase: 'upload_intent';
+      status: MediaUploadClientFailureStatus;
+      reasons: string[];
+    }
+  | {
+      ok: false;
+      phase: 'media_upload';
+      subPhase: 'binary_upload';
+      status: MediaUploadBinaryFailureStatus;
+      reasons: string[];
+      responseStatus?: number;
+      mediaId: string;
+      objectKey: string;
+    }
+  | {
+      ok: false;
+      phase: 'media_upload';
+      subPhase: 'attach';
+      status: PetMediaAttachClientFailureStatus;
+      reasons: string[];
+      mediaId: string;
+      objectKey: string;
+    };
+
+export type PetDraftSaveFlowResult = PetDraftSaveFlowSuccess | PetDraftSaveFlowFailure;
+
+export type CreatePetDraftSaveFlowClientInput = {
+  draftClient: Pick<PetDraftClient, 'createPetDraft' | 'updatePetDraft'>;
+  uploadAttachClient: Pick<PetMediaUploadAttachFlowClient, 'uploadAndAttachPetMedia'>;
+};
+
+export type PetDraftSaveFlowClient = {
+  savePetDraft: (input: PetDraftSaveFlowInput) => Promise<PetDraftSaveFlowResult>;
+};
+
+export const createPetDraftSaveFlowClient = ({
+  draftClient,
+  uploadAttachClient,
+}: CreatePetDraftSaveFlowClientInput): PetDraftSaveFlowClient => ({
+  savePetDraft: async (input) => {
+    const draftInput: PetDraftClientDraftInput = {
+      petId: input.petId,
+      shelterId: input.shelterId,
+      name: input.name ?? null,
+      species: input.species ?? null,
+      locationLabel: input.locationLabel ?? null,
+      shortDescription: input.shortDescription ?? null,
+      mediaIds: [...input.existingMediaIds],
+      heroMediaId: input.heroMediaId ?? null,
+      medical: input.medical,
+    };
+
+    const draftResult =
+      input.operation === 'create'
+        ? await draftClient.createPetDraft(draftInput)
+        : await draftClient.updatePetDraft(draftInput);
+
+    if (!draftResult.ok) {
+      return {
+        ok: false,
+        phase: 'draft_save',
+        status: draftResult.status,
+        reasons: sanitizeReasons(draftResult.reasons, draftResult.status),
+      };
+    }
+
+    const { petId } = draftResult;
+    const uploadedMedia: PetDraftSaveFlowUploadedMedia[] = [];
+
+    for (const file of input.newFiles ?? []) {
+      const uploadResult = await uploadAttachClient.uploadAndAttachPetMedia({
+        petId,
+        shelterId: input.shelterId,
+        ownerUserId: input.ownerUserId ?? null,
+        file,
+      });
+
+      if (!uploadResult.ok) {
+        if (uploadResult.phase === 'upload_intent') {
+          return {
+            ok: false,
+            phase: 'media_upload',
+            subPhase: 'upload_intent',
+            status: uploadResult.status,
+            reasons: sanitizeReasons(uploadResult.reasons, uploadResult.status),
+          };
+        }
+
+        if (uploadResult.phase === 'binary_upload') {
+          return {
+            ok: false,
+            phase: 'media_upload',
+            subPhase: 'binary_upload',
+            status: uploadResult.status,
+            reasons: sanitizeReasons(uploadResult.reasons, uploadResult.status),
+            responseStatus: uploadResult.responseStatus,
+            mediaId: uploadResult.mediaId,
+            objectKey: uploadResult.objectKey,
+          };
+        }
+
+        return {
+          ok: false,
+          phase: 'media_upload',
+          subPhase: 'attach',
+          status: uploadResult.status,
+          reasons: sanitizeReasons(uploadResult.reasons, uploadResult.status),
+          mediaId: uploadResult.mediaId,
+          objectKey: uploadResult.objectKey,
+        };
+      }
+
+      uploadedMedia.push({
+        mediaId: uploadResult.mediaId,
+        objectKey: uploadResult.objectKey,
+        mediaIds: uploadResult.mediaIds,
+        heroMediaId: uploadResult.heroMediaId,
+      });
+    }
+
+    return {
+      ok: true,
+      status: 'pet_draft_saved',
+      petId,
+      operation: input.operation,
+      uploadedMedia,
+    };
+  },
+});
+
 export const createPetMediaUploadAttachFlowClient = ({
   uploadClient,
   attachClient,
