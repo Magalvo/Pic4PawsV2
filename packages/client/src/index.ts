@@ -1333,6 +1333,116 @@ export const createPetFeedClient = ({
   },
 });
 
+export type PetProfilePet = {
+  id: string;
+  shelterId: string;
+  name: string | null;
+  species: PetLifecycleSpecies | null;
+  locationLabel: string | null;
+  shortDescription: string | null;
+  heroMediaId: string | null;
+  mediaIds: string[];
+  publishedAt: string;
+  medical: PublicPetMedicalStatus;
+};
+
+export type PetProfileClientSuccess = {
+  ok: true;
+  status: 'ok';
+  pet: PetProfilePet;
+};
+
+export type PetProfileClientFailureStatus =
+  | 'pet_not_found'
+  | 'worker_request_failed'
+  | 'worker_response_invalid';
+
+export type PetProfileClientFailure = {
+  ok: false;
+  status: PetProfileClientFailureStatus;
+  reasons: string[];
+};
+
+export type PetProfileClientResult = PetProfileClientSuccess | PetProfileClientFailure;
+
+export type CreatePetProfileClientInput = {
+  workerBaseUrl: string;
+  petFeedPath: `/${string}`;
+  fetch: MediaUploadClientFetch;
+};
+
+export type PetProfileClient = {
+  loadProfile: (petId: string) => Promise<PetProfileClientResult>;
+};
+
+const parsePetProfileSuccess = (
+  body: Record<string, unknown> | null,
+): PetProfileClientSuccess | null => {
+  if (!body || body.status !== 'ok' || typeof body.pet !== 'object' || body.pet === null) {
+    return null;
+  }
+
+  const pet = body.pet as Record<string, unknown>;
+
+  if (
+    typeof pet.id !== 'string' ||
+    typeof pet.shelterId !== 'string' ||
+    typeof pet.publishedAt !== 'string'
+  ) {
+    return null;
+  }
+
+  return {
+    ok: true,
+    status: 'ok',
+    pet: pet as PetProfilePet,
+  };
+};
+
+export const createPetProfileClient = ({
+  workerBaseUrl,
+  petFeedPath,
+  fetch,
+}: CreatePetProfileClientInput): PetProfileClient => ({
+  loadProfile: async (petId) => {
+    let response: Response;
+
+    try {
+      response = await fetch(createWorkerSubUrl(workerBaseUrl, petFeedPath, petId));
+    } catch {
+      return { ok: false, status: 'worker_request_failed', reasons: ['network_error'] };
+    }
+
+    const body = await parseJsonResponse(response);
+
+    if (response.status === 404) {
+      return { ok: false, status: 'pet_not_found', reasons: ['pet_not_found'] };
+    }
+
+    if (!response.ok) {
+      const reasons = Array.isArray(body?.reasons) ? parseReasons(body) : ['worker_request_failed'];
+
+      return {
+        ok: false,
+        status: 'worker_request_failed',
+        reasons: sanitizeReasons(reasons, 'worker_request_failed'),
+      };
+    }
+
+    const success = parsePetProfileSuccess(body);
+
+    if (!success) {
+      return {
+        ok: false,
+        status: 'worker_response_invalid',
+        reasons: ['invalid_worker_response'],
+      };
+    }
+
+    return success;
+  },
+});
+
 export const createMediaUploadFlowClient = (
   input: CreateMediaUploadFlowClientInput,
 ): MediaUploadFlowClient => {
