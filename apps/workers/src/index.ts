@@ -12,6 +12,10 @@ import {
 import { handleWorkerPetFeedRequest } from './pet-feed';
 import { handleWorkerPetProfileRequest, matchWorkerPetProfileId } from './pet-profile';
 import {
+  handleWorkerShelterProfileRequest,
+  matchWorkerShelterProfileId,
+} from './shelter-profile';
+import {
   handleWorkerPetDraftRequest,
   matchWorkerPetDraftRoute,
 } from './pet-drafts';
@@ -94,6 +98,25 @@ export type {
   PetProfileRepository,
   PublishedPetProfile,
 } from './pet-profile';
+export {
+  handleWorkerShelterProfileRequest,
+  matchWorkerShelterProfileId,
+} from './shelter-profile';
+export type {
+  PublicShelterProfile,
+  ShelterKind,
+  ShelterProfileQuery,
+  ShelterProfileRepository,
+  ShelterVerificationStatus,
+} from './shelter-profile';
+export {
+  createSupabaseShelterRepositories,
+  SupabaseShelterRepositoryError,
+} from './shelter-supabase';
+export type {
+  CreateSupabaseShelterRepositoriesInput,
+  CreateSupabaseShelterRepositoriesResult,
+} from './shelter-supabase';
 export {
   createR2UploadSigner,
   createR2UploadSignerWorkerDependencies,
@@ -362,6 +385,19 @@ export const handleWorkerRequest = async (
       request,
       petId: profilePetId,
       petProfileRepository: dependencies.petProfileRepository,
+    });
+  }
+
+  const shelterProfileId = matchWorkerShelterProfileId(
+    url.pathname,
+    config.workers.shelterPath,
+  );
+
+  if (shelterProfileId !== null) {
+    return handleWorkerShelterProfileRequest({
+      request,
+      shelterId: shelterProfileId,
+      shelterProfileRepository: dependencies.shelterProfileRepository,
     });
   }
 
