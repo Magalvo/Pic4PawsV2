@@ -537,6 +537,54 @@ describe('Supabase pet repository adapters', () => {
     ]);
   });
 
+  it('loads a published pet profile by ID and returns null when pet is absent', async () => {
+    const publishedPetRow = {
+      ...petRow,
+      status: 'published',
+      published_at: '2026-06-04T16:15:00.000Z',
+    };
+    const { client, operations } = createFakeSupabaseClient({
+      'pets:maybeSingle': { data: publishedPetRow, error: null },
+    });
+    const { petProfileRepository } = createSupabasePetRepositories({ client });
+
+    await expect(petProfileRepository.loadPublishedPet({ petId: 'pet-1' })).resolves.toEqual({
+      id: 'pet-1',
+      shelterId: 'shelter-a',
+      name: 'Becas',
+      species: 'dog',
+      locationLabel: 'Lisboa',
+      shortDescription: 'Calmo e sociavel.',
+      heroMediaId: 'media-1',
+      mediaIds: ['media-1'],
+      publishedAt: '2026-06-04T16:15:00.000Z',
+      medical: insertContract.medical,
+    });
+
+    expect(operations).toEqual([
+      {
+        table: 'pets',
+        action: 'select',
+        columns:
+          'id,shelter_id,name,species,location_label,short_description,hero_media_id,media_ids,published_at,medical',
+        filters: [
+          { kind: 'eq', column: 'id', value: 'pet-1' },
+          { kind: 'eq', column: 'status', value: 'published' },
+          { kind: 'is', column: 'deleted_at', value: null },
+        ],
+        result: 'maybeSingle',
+      },
+    ]);
+
+    // Returns null when pet is absent
+    const { client: client2 } = createFakeSupabaseClient({
+      'pets:maybeSingle': { data: null, error: null },
+    });
+    const { petProfileRepository: repo2 } = createSupabasePetRepositories({ client: client2 });
+
+    await expect(repo2.loadPublishedPet({ petId: 'unknown-pet' })).resolves.toBeNull();
+  });
+
   it('throws sanitized adapter errors without leaking secrets', async () => {
     const { client } = createFakeSupabaseClient({
       'pets:single': {

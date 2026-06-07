@@ -1,5 +1,6 @@
 import type { MediaAssetRepository } from './media-upload';
 import type { PetFeedRepository } from './pet-feed';
+import type { PetProfileRepository } from './pet-profile';
 import type {
   PetDraftRepository,
   PetMediaAttachRepository,
@@ -10,8 +11,10 @@ import type {
   PetLifecycleSpecies,
   PetLifecycleStatus,
   PetMediaAssetRecord,
+  PublicPetMedicalStatus,
 } from '@pic4paws/domain';
 import type { PublishedPetSummary } from './pet-feed';
+import type { PublishedPetProfile } from './pet-profile';
 import type {
   PetDraftInsertContract,
   MediaAssetInsertContract,
@@ -63,6 +66,7 @@ export type CreateSupabasePetRepositoriesResult = {
   petMediaAttachRepository: PetMediaAttachRepository;
   petPublishRepository: PetPublishRepository;
   petFeedRepository: PetFeedRepository;
+  petProfileRepository: PetProfileRepository;
 };
 
 type PetRow = {
@@ -446,11 +450,61 @@ export const createSupabasePetRepositories = ({
     },
   };
 
+  const petProfileColumns =
+    'id,shelter_id,name,species,location_label,short_description,hero_media_id,media_ids,published_at,medical';
+
+  type ProfileRow = {
+    id: string;
+    shelter_id: string;
+    name: string | null;
+    species: PetLifecycleSpecies | null;
+    location_label: string | null;
+    short_description: string | null;
+    hero_media_id: string | null;
+    media_ids: string[];
+    published_at: string;
+    medical: PublicPetMedicalStatus;
+  };
+
+  const toPublishedPetProfile = (row: ProfileRow): PublishedPetProfile => ({
+    id: row.id,
+    shelterId: row.shelter_id,
+    name: row.name,
+    species: row.species,
+    locationLabel: row.location_label,
+    shortDescription: row.short_description,
+    heroMediaId: row.hero_media_id,
+    mediaIds: row.media_ids,
+    publishedAt: row.published_at,
+    medical: row.medical,
+  });
+
+  const petProfileRepository: PetProfileRepository = {
+    loadPublishedPet: async ({ petId }) => {
+      const result = await client
+        .from('pets')
+        .select(petProfileColumns)
+        .eq('id', petId)
+        .eq('status', 'published')
+        .is('deleted_at', null)
+        .maybeSingle();
+      const row = assertSupabaseResult<ProfileRow | null>(
+        result,
+        'Failed to load published pet profile',
+      );
+
+      if (!row) return null;
+
+      return toPublishedPetProfile(row);
+    },
+  };
+
   return {
     mediaAssetRepository,
     petDraftRepository,
     petMediaAttachRepository,
     petPublishRepository,
     petFeedRepository,
+    petProfileRepository,
   };
 };
