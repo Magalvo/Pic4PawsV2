@@ -17,6 +17,10 @@ import {
 } from './shelter-profile';
 import { handleWorkerAdoptionRequest } from './adoption';
 import {
+  handleWorkerAdoptionListRequest,
+  matchWorkerAdoptionListShelterId,
+} from './adoption-list';
+import {
   handleWorkerPetDraftRequest,
   matchWorkerPetDraftRoute,
 } from './pet-drafts';
@@ -134,6 +138,26 @@ export type {
   CreateSupabaseAdoptionRepositoriesInput,
   CreateSupabaseAdoptionRepositoriesResult,
 } from './adoption-supabase';
+export {
+  handleWorkerAdoptionListRequest,
+  matchWorkerAdoptionListShelterId,
+} from './adoption-list';
+export type {
+  AdoptionApplicationStatus,
+  AdoptionListRepository,
+  AdoptionListSummary,
+  HandleWorkerAdoptionListRequestInput,
+  ListAdoptionApplicationsQuery,
+  ListAdoptionApplicationsResult,
+} from './adoption-list';
+export {
+  createSupabaseAdoptionListRepositories,
+  SupabaseAdoptionListRepositoryError,
+} from './adoption-list-supabase';
+export type {
+  CreateSupabaseAdoptionListRepositoriesInput,
+  CreateSupabaseAdoptionListRepositoriesResult,
+} from './adoption-list-supabase';
 export {
   createR2UploadSigner,
   createR2UploadSignerWorkerDependencies,
@@ -415,6 +439,20 @@ export const handleWorkerRequest = async (
       request,
       shelterId: shelterProfileId,
       shelterProfileRepository: dependencies.shelterProfileRepository,
+    });
+  }
+
+  const adoptionListShelterId = matchWorkerAdoptionListShelterId(
+    url.pathname,
+    config.workers.shelterPath,
+  );
+
+  if (adoptionListShelterId !== null) {
+    return handleWorkerAdoptionListRequest({
+      request,
+      shelterId: adoptionListShelterId,
+      adoptionListRepository: dependencies.adoptionListRepository,
+      authenticator: dependencies.petDraftAuthenticator,
     });
   }
 
