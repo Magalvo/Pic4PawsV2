@@ -62,7 +62,7 @@ Do not batch items that can be reviewed or merged independently.
 
 ## 4. Current State As Of 2026-06-07
 
-All foundation work merged into `main`. Latest merged commit is the `agent/PET-FEED-CLIENT-001-batch` PR.
+All foundation work merged into `main`. Latest merged commit is the `agent/MOBILE-PET-PROFILE-001` PR.
 
 Completed foundation items (all merged to `main`):
 
@@ -96,6 +96,10 @@ Completed foundation items (all merged to `main`):
 - `PET-FEED-CLIENT-001` — `createPetFeedClient` in `@pic4paws/client`
 - `WEB-PET-FEED-001` — Web pet feed product boundary with PT-PT states
 - `MOBILE-PET-FEED-001` — Mobile pet feed product boundary with PT-PT states
+- `PET-PROFILE-WORKER-001` — public `GET /pets/:petId` single-pet route
+- `PET-PROFILE-CLIENT-001` — `createPetProfileClient` in `@pic4paws/client`
+- `WEB-PET-PROFILE-001` — Web pet profile product boundary with PT-PT states
+- `MOBILE-PET-PROFILE-001` — Mobile pet profile product boundary with PT-PT states
 
 The Worker now has:
 
@@ -105,6 +109,7 @@ The Worker now has:
 - authenticated pet media attachment for persisted public image assets
 - authenticated pet draft create, update, and publish routes
 - public paginated pet feed (`GET /pets`) with `PetFeedRepository` interface
+- public single-pet profile (`GET /pets/:petId`) with `PetProfileRepository` interface
 - `SupabaseTableQueryLike` supports `.is()`, `.order()`, `.range()`
 - tests that keep Supabase and Cloudflare calls mocked/injected
 
@@ -116,17 +121,25 @@ The Worker now has:
 - `PetDraftClient`
 - `PetDraftSaveFlowClient` (composed draft save + media upload flow)
 - `PetFeedClient` (public read, no auth)
+- `PetProfileClient` (public read, no auth; includes `medical` field)
 - no client-side Supabase service-role keys or R2 credentials
 
-Web/Mobile now have tested product boundaries for: media upload, pet media upload+attach, pet publish, pet draft, pet draft save flow, pet feed.
+Web/Mobile now have tested product boundaries for: media upload, pet media upload+attach, pet publish, pet draft, pet draft save flow, pet feed, pet profile.
 
 ## 5. Recommended Next Work Item
 
-The public read path is partially complete (`GET /pets` exists). Likely candidates:
+The adopter discovery loop (feed → pet → shelter) is nearly complete. The pet profile exposes
+`shelterId` but there is no public shelter profile route yet.
 
-- `PET-PROFILE-WORKER-001` — public `GET /pets/:petId` single-pet route
-- `PET-PROFILE-CLIENT-001` — client wrapper for the single-pet route
-- `WEB-PET-PROFILE-001` / `MOBILE-PET-PROFILE-001` — product boundaries for the pet profile view
+Recommended next items (each on its own `agent/<WORK-ITEM-ID>` branch):
+
+1. `SHELTER-PROFILE-WORKER-001` — public `GET /shelters/:shelterId` route
+2. `SHELTER-PROFILE-CLIENT-001` — `createShelterProfileClient` in `@pic4paws/client`
+3. `WEB-SHELTER-PROFILE-001` — Web shelter profile product boundary
+4. `MOBILE-SHELTER-PROFILE-001` — Mobile shelter profile product boundary
+
+After the shelter profile slice, the natural next milestone is the adoption request flow
+(authenticated, stateful, requires shelter review).
 
 Start each on its own `agent/<WORK-ITEM-ID>` branch per the convention in Section 3.
 
