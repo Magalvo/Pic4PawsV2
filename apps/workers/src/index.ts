@@ -15,6 +15,7 @@ import {
   handleWorkerShelterProfileRequest,
   matchWorkerShelterProfileId,
 } from './shelter-profile';
+import { handleWorkerAdoptionRequest } from './adoption';
 import {
   handleWorkerPetDraftRequest,
   matchWorkerPetDraftRoute,
@@ -117,6 +118,22 @@ export type {
   CreateSupabaseShelterRepositoriesInput,
   CreateSupabaseShelterRepositoriesResult,
 } from './shelter-supabase';
+export { handleWorkerAdoptionRequest, validateAdoptionPayload } from './adoption';
+export type {
+  AdoptionApplicationPetContext,
+  AdoptionApplicationRepository,
+  CreateAdoptionApplicationInput,
+  CreateAdoptionApplicationResult,
+  HousingType,
+} from './adoption';
+export {
+  createSupabaseAdoptionRepositories,
+  SupabaseAdoptionRepositoryError,
+} from './adoption-supabase';
+export type {
+  CreateSupabaseAdoptionRepositoriesInput,
+  CreateSupabaseAdoptionRepositoriesResult,
+} from './adoption-supabase';
 export {
   createR2UploadSigner,
   createR2UploadSignerWorkerDependencies,
@@ -398,6 +415,22 @@ export const handleWorkerRequest = async (
       request,
       shelterId: shelterProfileId,
       shelterProfileRepository: dependencies.shelterProfileRepository,
+    });
+  }
+
+  if (url.pathname === config.workers.adoptionsPath) {
+    const payload = await parseJsonBody(request);
+
+    if (payload === null && request.method === 'POST') {
+      return jsonResponse({ status: 'invalid_json' }, { status: 400 });
+    }
+
+    return handleWorkerAdoptionRequest({
+      request,
+      payload,
+      adoptionRepository: dependencies.adoptionRepository,
+      authenticator: dependencies.petDraftAuthenticator,
+      now: dependencies.now?.() ?? new Date().toISOString(),
     });
   }
 
