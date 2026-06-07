@@ -4,6 +4,7 @@ import {
   type WebPetMediaUploadUiContent,
 } from './pet-media-upload';
 import { webPetPublishUiContent, type WebPetPublishUiContent } from './pet-publish';
+import { webPetDraftUiContent, type WebPetDraftUiContent } from './pet-draft';
 
 export type WebFoundationStatus = 'contract-ready';
 
@@ -19,6 +20,7 @@ export type WebFoundationContent = {
     href: string | null;
   };
   mediaUpload: Pick<WebMediaUploadContent, 'title' | 'description' | 'status'>;
+  petDraft: Pick<WebPetDraftUiContent, 'title' | 'description' | 'status'>;
   petMediaUpload: Pick<WebPetMediaUploadUiContent, 'title' | 'description' | 'status'>;
   petPublish: Pick<WebPetPublishUiContent, 'title' | 'description' | 'status'>;
   readiness: Array<{
@@ -45,6 +47,11 @@ export const webFoundationContent: WebFoundationContent = {
     title: webMediaUploadContent.title,
     description: webMediaUploadContent.description,
     status: webMediaUploadContent.status,
+  },
+  petDraft: {
+    title: webPetDraftUiContent.title,
+    description: webPetDraftUiContent.description,
+    status: webPetDraftUiContent.status,
   },
   petMediaUpload: {
     title: webPetMediaUploadUiContent.title,
