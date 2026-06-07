@@ -1443,6 +1443,132 @@ export const createPetProfileClient = ({
   },
 });
 
+export type ShelterKind = 'shelter' | 'sanctuary' | 'association' | 'foster_network';
+
+export type ShelterVerificationStatus =
+  | 'draft'
+  | 'pending_review'
+  | 'verified'
+  | 'rejected'
+  | 'suspended';
+
+export type ShelterProfileClientShelter = {
+  id: string;
+  name: string;
+  slug: string;
+  kind: ShelterKind;
+  verificationStatus: ShelterVerificationStatus;
+  publicEmail: string | null;
+  publicPhone: string | null;
+  city: string;
+  district: string | null;
+  countryCode: string;
+  description: string | null;
+  logoMediaId: string | null;
+  coverMediaId: string | null;
+};
+
+export type ShelterProfileClientSuccess = {
+  ok: true;
+  status: 'ok';
+  shelter: ShelterProfileClientShelter;
+};
+
+export type ShelterProfileClientFailureStatus =
+  | 'shelter_not_found'
+  | 'worker_request_failed'
+  | 'worker_response_invalid';
+
+export type ShelterProfileClientFailure = {
+  ok: false;
+  status: ShelterProfileClientFailureStatus;
+  reasons: string[];
+};
+
+export type ShelterProfileClientResult =
+  | ShelterProfileClientSuccess
+  | ShelterProfileClientFailure;
+
+export type CreateShelterProfileClientInput = {
+  workerBaseUrl: string;
+  shelterPath: `/${string}`;
+  fetch: MediaUploadClientFetch;
+};
+
+export type ShelterProfileClient = {
+  loadProfile: (shelterId: string) => Promise<ShelterProfileClientResult>;
+};
+
+const parseShelterProfileSuccess = (
+  body: Record<string, unknown> | null,
+): ShelterProfileClientSuccess | null => {
+  if (!body || body.status !== 'ok' || typeof body.shelter !== 'object' || body.shelter === null) {
+    return null;
+  }
+
+  const shelter = body.shelter as Record<string, unknown>;
+
+  if (
+    typeof shelter.id !== 'string' ||
+    typeof shelter.name !== 'string' ||
+    typeof shelter.slug !== 'string'
+  ) {
+    return null;
+  }
+
+  return {
+    ok: true,
+    status: 'ok',
+    shelter: shelter as ShelterProfileClientShelter,
+  };
+};
+
+export const createShelterProfileClient = ({
+  workerBaseUrl,
+  shelterPath,
+  fetch,
+}: CreateShelterProfileClientInput): ShelterProfileClient => ({
+  loadProfile: async (shelterId) => {
+    let response: Response;
+
+    try {
+      response = await fetch(createWorkerSubUrl(workerBaseUrl, shelterPath, shelterId));
+    } catch {
+      return { ok: false, status: 'worker_request_failed', reasons: ['network_error'] };
+    }
+
+    const body = await parseJsonResponse(response);
+
+    if (response.status === 404) {
+      return { ok: false, status: 'shelter_not_found', reasons: ['shelter_not_found'] };
+    }
+
+    if (!response.ok) {
+      const reasons = Array.isArray(body?.reasons)
+        ? parseReasons(body)
+        : ['worker_request_failed'];
+
+      return {
+        ok: false,
+        status: 'worker_request_failed',
+        reasons: sanitizeReasons(reasons, 'worker_request_failed'),
+      };
+    }
+
+    const success = parseShelterProfileSuccess(body);
+
+    if (!success) {
+      return {
+        ok: false,
+        status: 'worker_response_invalid',
+        reasons: ['invalid_worker_response'],
+      };
+    }
+
+    return success;
+  },
+});
+
 export const createMediaUploadFlowClient = (
   input: CreateMediaUploadFlowClientInput,
 ): MediaUploadFlowClient => {
