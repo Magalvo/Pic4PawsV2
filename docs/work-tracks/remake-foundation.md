@@ -33,28 +33,26 @@ Read path (Worker + client + Web/Mobile):
 Adopter write path (Worker + client + Web/Mobile):
 `ADOPTION-WORKER-001`, `ADOPTION-CLIENT-001`, `WEB-ADOPTION-001`, `MOBILE-ADOPTION-001`.
 
+Shelter-side adoption review (Worker + client + Web/Mobile):
+`ADOPTION-LIST-WORKER-001`, `ADOPTION-LIST-CLIENT-001`, `WEB-ADOPTION-LIST-001`, `MOBILE-ADOPTION-LIST-001`.
+
 ## Current Focus
 
-All items above are merged. The adopter end-to-end adoption application flow is complete:
-feed → pet profile → shelter profile → submit adoption application.
+All items above are merged. Both the adopter end-to-end flow and the shelter-side adoption
+review slice are complete.
 
-Recommended next slice — shelter-side adoption review (each on its own `agent/<WORK-ITEM-ID>` branch):
+Adopter flow: feed → pet profile → shelter profile → submit adoption application.
+Shelter review flow: Worker route → client → Web + Mobile product boundaries.
 
-1. `ADOPTION-LIST-WORKER-001` — authenticated `GET /shelters/:shelterId/adoptions` Worker route
-   (shelter members list pending applications for their shelter)
-2. `ADOPTION-LIST-CLIENT-001` — `createAdoptionListClient` in `@pic4paws/client`
-3. `WEB-ADOPTION-LIST-001` — Web adoption list product boundary
-4. `MOBILE-ADOPTION-LIST-001` — Mobile adoption list product boundary
+Recommended next slice — donation/sponsorship (each on its own `agent/<WORK-ITEM-ID>` branch):
 
-Alternatively, the donation/sponsorship slice can be pursued if the adoption review flow
-is not a priority right now:
+1. `DONATION-WORKER-001` — authenticated `POST /donations` Worker route (payment intent
+   initiation; `donationTransactions` table already defined in schema)
+2. `DONATION-CLIENT-001` — `createDonationClient` in `@pic4paws/client`
+3. `WEB-DONATION-001` — Web donation product boundary
+4. `MOBILE-DONATION-001` — Mobile donation product boundary
 
-- `DONATION-WORKER-001` — `POST /donations` Worker route (payment initiation)
-- `DONATION-CLIENT-001` — `createDonationClient` in `@pic4paws/client`
-- `WEB-DONATION-001` / `MOBILE-DONATION-001` — Web/Mobile donation boundaries
-
-The `donationTransactions` and `adoptionApplications` tables are already defined in
-`packages/database/src/schema.ts`.
+The `donationTransactions` table is already defined in `packages/database/src/schema.ts`.
 
 ## Branching Convention
 

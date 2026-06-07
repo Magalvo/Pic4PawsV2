@@ -62,7 +62,8 @@ Do not batch items that can be reviewed or merged independently.
 
 ## 4. Current State As Of 2026-06-07
 
-All foundation work and the full public read path merged into `main`.
+All foundation work, the full public read path, and the full shelter-side adoption review
+slice merged into `main`.
 
 Completed foundation items (all merged to `main`):
 
@@ -108,6 +109,10 @@ Completed foundation items (all merged to `main`):
 - `ADOPTION-CLIENT-001` — `createAdoptionApplicationClient` in `@pic4paws/client`
 - `WEB-ADOPTION-001` — Web adoption application product boundary with PT-PT states
 - `MOBILE-ADOPTION-001` — Mobile adoption application product boundary with PT-PT states
+- `ADOPTION-LIST-WORKER-001` — authenticated `GET /shelters/:shelterId/adoptions` Worker route
+- `ADOPTION-LIST-CLIENT-001` — `createAdoptionListClient` in `@pic4paws/client`
+- `WEB-ADOPTION-LIST-001` — Web adoption list product boundary with PT-PT states
+- `MOBILE-ADOPTION-LIST-001` — Mobile adoption list product boundary with PT-PT states
 
 The Worker now has:
 
@@ -121,6 +126,9 @@ The Worker now has:
 - public shelter profile (`GET /shelters/:shelterId`) with `ShelterProfileRepository` interface
 - authenticated adoption application (`POST /adoptions`) with `AdoptionApplicationRepository`
   interface — `shelterId` derived server-side, GDPR consent gate, status `submitted`
+- authenticated adoption list (`GET /shelters/:shelterId/adoptions`) with
+  `AdoptionListRepository` interface — paginated (limit/offset), shelter membership check,
+  `matchWorkerAdoptionListShelterId` for URL path matching
 - `SupabaseTableQueryLike` supports `.is()`, `.order()`, `.range()`
 - `WORKER_SHELTER_PATH` config (default `/shelters`)
 - `WORKER_ADOPTIONS_PATH` config (default `/adoptions`)
@@ -139,33 +147,30 @@ The Worker now has:
 - `PetProfileClient` (public read, no auth)
 - `ShelterProfileClient` (public read, no auth)
 - `AdoptionApplicationClient` (authenticated write — `submitApplication`)
+- `AdoptionListClient` (authenticated read — `loadApplications` with pagination)
 - no client-side Supabase service-role keys or R2 credentials
 
 Web/Mobile now have tested product boundaries for: media upload, pet media upload+attach,
 pet publish, pet draft, pet draft save flow, pet feed, pet profile, shelter profile,
-adoption application.
+adoption application, adoption list (shelter-side review).
 
 The adopter end-to-end flow is fully wired at the boundary layer:
 **feed → pet profile → shelter profile → submit adoption application**.
 
+The shelter-side adoption review flow is fully wired at the boundary layer:
+**Worker route → client → Web + Mobile product boundaries**.
+
 ## 5. Recommended Next Work Item
 
-The adopter end-to-end flow is complete (feed → pet profile → shelter profile →
-submit adoption application).
+The adopter end-to-end flow and the shelter-side adoption review slice are both complete.
 
-Recommended next slice — shelter-side adoption review (each on its own `agent/<WORK-ITEM-ID>` branch):
+Recommended next slice — donation/sponsorship (each on its own `agent/<WORK-ITEM-ID>` branch):
 
-1. `ADOPTION-LIST-WORKER-001` — authenticated `GET /shelters/:shelterId/adoptions` Worker route
-   (shelter members list pending applications for their shelter; requires shelter membership check)
-2. `ADOPTION-LIST-CLIENT-001` — `createAdoptionListClient` in `@pic4paws/client`
-3. `WEB-ADOPTION-LIST-001` — Web adoption list product boundary
-4. `MOBILE-ADOPTION-LIST-001` — Mobile adoption list product boundary
-
-Alternatively, pursue the donation/sponsorship slice if the review flow is lower priority:
-
-1. `DONATION-WORKER-001` — `POST /donations` Worker route (payment intent initiation)
+1. `DONATION-WORKER-001` — authenticated `POST /donations` Worker route (payment intent
+   initiation; `donationTransactions` table already defined in schema)
 2. `DONATION-CLIENT-001` — `createDonationClient` in `@pic4paws/client`
-3. `WEB-DONATION-001` / `MOBILE-DONATION-001` — Web/Mobile donation boundaries
+3. `WEB-DONATION-001` — Web donation product boundary with PT-PT states
+4. `MOBILE-DONATION-001` — Mobile donation product boundary with PT-PT states
 
 The `donationTransactions` and `adoptionApplications` tables are already defined in
 `packages/database/src/schema.ts`.
