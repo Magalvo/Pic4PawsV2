@@ -1569,6 +1569,203 @@ export const createShelterProfileClient = ({
   },
 });
 
+// ─── Adoption Application Client ─────────────────────────────────────────────
+
+export type HousingType = 'apartment' | 'house' | 'farm' | 'other';
+
+export type AdoptionApplicationClientInput = {
+  petId: string;
+  applicantFullName: string;
+  applicantEmail: string;
+  applicantPhoneNumber: string;
+  applicantCity: string;
+  applicantDistrict?: string | null;
+  applicantPostalCode?: string | null;
+  housingType: HousingType;
+  hasOutdoorSpace: boolean;
+  hasChildren: boolean;
+  hasOtherAnimals: boolean;
+  otherAnimalsDescription?: string | null;
+  previousPetExperience: string;
+  dailyRoutine: string;
+  adoptionMotivation: string;
+  veterinarianContact?: string | null;
+  dataProcessingAccepted: true;
+  shelterContactAccepted: boolean;
+  consentVersion: string;
+  consentAcceptedAt: string;
+};
+
+export type AdoptionApplicationClientSuccess = {
+  ok: true;
+  status: 'adoption_application_submitted';
+  applicationId: string;
+  petId: string;
+  shelterId: string;
+  submittedAt: string;
+};
+
+export type AdoptionApplicationClientFailureStatus =
+  | 'unauthenticated'
+  | 'pet_not_found'
+  | 'invalid_adoption_application'
+  | 'adoption_repository_not_configured'
+  | 'auth_adapter_not_configured'
+  | 'worker_request_failed'
+  | 'worker_response_invalid';
+
+export type AdoptionApplicationClientFailure = {
+  ok: false;
+  status: AdoptionApplicationClientFailureStatus;
+  reasons: string[];
+};
+
+export type AdoptionApplicationClientResult =
+  | AdoptionApplicationClientSuccess
+  | AdoptionApplicationClientFailure;
+
+export type CreateAdoptionApplicationClientInput = {
+  workerBaseUrl: string;
+  adoptionsPath: `/${string}`;
+  getAccessToken: () => Promise<string | null>;
+  fetch: MediaUploadClientFetch;
+};
+
+export type AdoptionApplicationClient = {
+  submitApplication: (
+    input: AdoptionApplicationClientInput,
+  ) => Promise<AdoptionApplicationClientResult>;
+};
+
+const parseAdoptionSuccess = (
+  body: Record<string, unknown> | null,
+): AdoptionApplicationClientSuccess | null => {
+  if (
+    body?.status !== 'adoption_application_submitted' ||
+    typeof body.applicationId !== 'string' ||
+    typeof body.petId !== 'string' ||
+    typeof body.shelterId !== 'string' ||
+    typeof body.submittedAt !== 'string'
+  ) {
+    return null;
+  }
+
+  return {
+    ok: true,
+    status: 'adoption_application_submitted',
+    applicationId: body.applicationId,
+    petId: body.petId,
+    shelterId: body.shelterId,
+    submittedAt: body.submittedAt,
+  };
+};
+
+const parseAdoptionFailureStatus = (
+  body: Record<string, unknown> | null,
+): AdoptionApplicationClientFailureStatus => {
+  const status = body?.status;
+
+  if (
+    status === 'unauthenticated' ||
+    status === 'pet_not_found' ||
+    status === 'invalid_adoption_application' ||
+    status === 'adoption_repository_not_configured' ||
+    status === 'auth_adapter_not_configured'
+  ) {
+    return status;
+  }
+
+  return 'worker_request_failed';
+};
+
+const buildAdoptionPayload = (input: AdoptionApplicationClientInput): Record<string, unknown> => ({
+  petId: input.petId,
+  applicantFullName: input.applicantFullName,
+  applicantEmail: input.applicantEmail,
+  applicantPhoneNumber: input.applicantPhoneNumber,
+  applicantCity: input.applicantCity,
+  applicantDistrict: input.applicantDistrict ?? null,
+  applicantPostalCode: input.applicantPostalCode ?? null,
+  housingType: input.housingType,
+  hasOutdoorSpace: input.hasOutdoorSpace,
+  hasChildren: input.hasChildren,
+  hasOtherAnimals: input.hasOtherAnimals,
+  otherAnimalsDescription: input.otherAnimalsDescription ?? null,
+  previousPetExperience: input.previousPetExperience,
+  dailyRoutine: input.dailyRoutine,
+  adoptionMotivation: input.adoptionMotivation,
+  veterinarianContact: input.veterinarianContact ?? null,
+  dataProcessingAccepted: input.dataProcessingAccepted,
+  shelterContactAccepted: input.shelterContactAccepted,
+  consentVersion: input.consentVersion,
+  consentAcceptedAt: input.consentAcceptedAt,
+});
+
+export const createAdoptionApplicationClient = ({
+  workerBaseUrl,
+  adoptionsPath,
+  getAccessToken,
+  fetch,
+}: CreateAdoptionApplicationClientInput): AdoptionApplicationClient => ({
+  submitApplication: async (input) => {
+    const accessToken = await getAccessToken();
+
+    if (!accessToken?.trim()) {
+      return {
+        ok: false,
+        status: 'unauthenticated',
+        reasons: ['missing_access_token'],
+      };
+    }
+
+    let response: Response;
+
+    try {
+      response = await fetch(createWorkerUrl(workerBaseUrl, adoptionsPath), {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(buildAdoptionPayload(input)),
+      });
+    } catch {
+      return {
+        ok: false,
+        status: 'worker_request_failed',
+        reasons: ['network_error'],
+      };
+    }
+
+    const body = await parseJsonResponse(response);
+
+    if (!response.ok) {
+      const status = parseAdoptionFailureStatus(body);
+      const reasons = Array.isArray(body?.reasons) ? parseReasons(body) : [status];
+
+      return {
+        ok: false,
+        status,
+        reasons: sanitizeReasons(reasons, status),
+      };
+    }
+
+    const success = parseAdoptionSuccess(body);
+
+    if (!success) {
+      return {
+        ok: false,
+        status: 'worker_response_invalid',
+        reasons: ['invalid_worker_response'],
+      };
+    }
+
+    return success;
+  },
+});
+
+// ─── Media Upload Flow Client ─────────────────────────────────────────────────
+
 export const createMediaUploadFlowClient = (
   input: CreateMediaUploadFlowClientInput,
 ): MediaUploadFlowClient => {
