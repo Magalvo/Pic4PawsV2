@@ -16,6 +16,8 @@ import type { ShelterProfileRepository } from './shelter-profile';
 import { createSupabaseShelterRepositories } from './shelter-supabase';
 import type { AdoptionApplicationRepository } from './adoption';
 import { createSupabaseAdoptionRepositories } from './adoption-supabase';
+import type { AdoptionListRepository } from './adoption-list';
+import { createSupabaseAdoptionListRepositories } from './adoption-list-supabase';
 import type {
   PetDraftRepository,
   PetMediaAttachRepository,
@@ -50,6 +52,7 @@ export type WorkerRequestDependencies = {
   petProfileRepository?: PetProfileRepository;
   shelterProfileRepository?: ShelterProfileRepository;
   adoptionRepository?: AdoptionApplicationRepository;
+  adoptionListRepository?: AdoptionListRepository;
   supabaseClientFactory?: WorkerSupabaseClientFactory;
   now?: () => string;
 };
@@ -91,6 +94,7 @@ export const createWorkerSupabaseDependencies = ({
     const petRepositories = createSupabasePetRepositories({ client });
     const shelterRepositories = createSupabaseShelterRepositories({ client });
     const adoptionRepositories = createSupabaseAdoptionRepositories({ client });
+    const adoptionListRepositories = createSupabaseAdoptionListRepositories({ client });
 
     return {
       mediaUploadSigner,
@@ -103,6 +107,7 @@ export const createWorkerSupabaseDependencies = ({
       petProfileRepository: petRepositories.petProfileRepository,
       shelterProfileRepository: shelterRepositories.shelterProfileRepository,
       adoptionRepository: adoptionRepositories.adoptionRepository,
+      adoptionListRepository: adoptionListRepositories.adoptionListRepository,
       now,
     };
   } catch {
@@ -154,5 +159,7 @@ export const resolveWorkerRequestDependencies = ({
       dependencies.shelterProfileRepository ?? supabaseDependencies.shelterProfileRepository,
     adoptionRepository:
       dependencies.adoptionRepository ?? supabaseDependencies.adoptionRepository,
+    adoptionListRepository:
+      dependencies.adoptionListRepository ?? supabaseDependencies.adoptionListRepository,
   };
 };
