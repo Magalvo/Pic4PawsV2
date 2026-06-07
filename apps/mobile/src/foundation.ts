@@ -17,6 +17,7 @@ import {
   type MobilePetDraftSaveFlowUiContent,
 } from './pet-draft-save-flow';
 import { mobilePetFeedUiContent, type MobilePetFeedUiContent } from './pet-feed';
+import { mobilePetProfileUiContent, type MobilePetProfileUiContent } from './pet-profile';
 
 export type MobileFoundationStatus = 'contract-ready';
 
@@ -37,6 +38,7 @@ export type MobileFoundationContent = {
   petPublish: Pick<MobilePetPublishUiContent, 'title' | 'description' | 'status'>;
   petDraftSaveFlow: Pick<MobilePetDraftSaveFlowUiContent, 'title' | 'description' | 'status'>;
   petFeed: Pick<MobilePetFeedUiContent, 'title' | 'description' | 'status'>;
+  petProfile: Pick<MobilePetProfileUiContent, 'title' | 'description' | 'status'>;
   readiness: Array<{
     id: 'database' | 'auth' | 'pets' | 'payments' | 'media' | 'workers';
     label: string;
@@ -86,6 +88,11 @@ export const mobileFoundationContent: MobileFoundationContent = {
     title: mobilePetFeedUiContent.title,
     description: mobilePetFeedUiContent.description,
     status: mobilePetFeedUiContent.status,
+  },
+  petProfile: {
+    title: mobilePetProfileUiContent.title,
+    description: mobilePetProfileUiContent.description,
+    status: mobilePetProfileUiContent.status,
   },
   readiness: [
     {
