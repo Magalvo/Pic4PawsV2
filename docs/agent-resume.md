@@ -62,7 +62,7 @@ Do not batch items that can be reviewed or merged independently.
 
 ## 4. Current State As Of 2026-06-07
 
-All foundation work merged into `main`. Latest merged commit is the `agent/PET-FEED-CLIENT-001-batch` PR.
+All foundation work and the full public read path merged into `main`.
 
 Completed foundation items (all merged to `main`):
 
@@ -96,6 +96,14 @@ Completed foundation items (all merged to `main`):
 - `PET-FEED-CLIENT-001` — `createPetFeedClient` in `@pic4paws/client`
 - `WEB-PET-FEED-001` — Web pet feed product boundary with PT-PT states
 - `MOBILE-PET-FEED-001` — Mobile pet feed product boundary with PT-PT states
+- `PET-PROFILE-WORKER-001` — public `GET /pets/:petId` single-pet Worker route
+- `PET-PROFILE-CLIENT-001` — `createPetProfileClient` in `@pic4paws/client`
+- `WEB-PET-PROFILE-001` — Web pet profile product boundary with PT-PT states
+- `MOBILE-PET-PROFILE-001` — Mobile pet profile product boundary with PT-PT states
+- `SHELTER-PROFILE-WORKER-001` — public `GET /shelters/:shelterId` Worker route
+- `SHELTER-PROFILE-CLIENT-001` — `createShelterProfileClient` in `@pic4paws/client`
+- `WEB-SHELTER-PROFILE-001` — Web shelter profile product boundary with PT-PT states
+- `MOBILE-SHELTER-PROFILE-001` — Mobile shelter profile product boundary with PT-PT states
 
 The Worker now has:
 
@@ -105,7 +113,12 @@ The Worker now has:
 - authenticated pet media attachment for persisted public image assets
 - authenticated pet draft create, update, and publish routes
 - public paginated pet feed (`GET /pets`) with `PetFeedRepository` interface
+- public single-pet profile (`GET /pets/:petId`) with `PetProfileRepository` interface
+- public shelter profile (`GET /shelters/:shelterId`) with `ShelterProfileRepository` interface
 - `SupabaseTableQueryLike` supports `.is()`, `.order()`, `.range()`
+- `WORKER_SHELTER_PATH` config (default `/shelters`)
+- private shelter fields (taxId, registrationNumber, precise address, paymentAccountStatus)
+  deliberately excluded from the public shelter profile response
 - tests that keep Supabase and Cloudflare calls mocked/injected
 
 `@pic4paws/client` now has:
@@ -116,17 +129,31 @@ The Worker now has:
 - `PetDraftClient`
 - `PetDraftSaveFlowClient` (composed draft save + media upload flow)
 - `PetFeedClient` (public read, no auth)
+- `PetProfileClient` (public read, no auth)
+- `ShelterProfileClient` (public read, no auth)
 - no client-side Supabase service-role keys or R2 credentials
 
-Web/Mobile now have tested product boundaries for: media upload, pet media upload+attach, pet publish, pet draft, pet draft save flow, pet feed.
+Web/Mobile now have tested product boundaries for: media upload, pet media upload+attach,
+pet publish, pet draft, pet draft save flow, pet feed, pet profile, shelter profile.
+
+The adopter discovery loop is fully wired at the boundary layer:
+**feed → pet profile → shelter profile**.
 
 ## 5. Recommended Next Work Item
 
-The public read path is partially complete (`GET /pets` exists). Likely candidates:
+The public read path is complete. The next logical step is the adopter write path:
+submitting an adoption application.
 
-- `PET-PROFILE-WORKER-001` — public `GET /pets/:petId` single-pet route
-- `PET-PROFILE-CLIENT-001` — client wrapper for the single-pet route
-- `WEB-PET-PROFILE-001` / `MOBILE-PET-PROFILE-001` — product boundaries for the pet profile view
+Recommended slice (each on its own `agent/<WORK-ITEM-ID>` branch):
+
+1. `ADOPTION-WORKER-001` — authenticated `POST /adoptions` Worker route
+2. `ADOPTION-CLIENT-001` — `createAdoptionApplicationClient` in `@pic4paws/client`
+3. `WEB-ADOPTION-001` — Web adoption application product boundary
+4. `MOBILE-ADOPTION-001` — Mobile adoption application product boundary
+
+The adoption application schema is already defined in `packages/database/src/schema.ts`
+(`adoptionApplications` table). All required fields — applicant contact, housing, consent,
+motivation — are present.
 
 Start each on its own `agent/<WORK-ITEM-ID>` branch per the convention in Section 3.
 

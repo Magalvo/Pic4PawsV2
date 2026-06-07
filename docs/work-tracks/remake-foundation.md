@@ -26,18 +26,23 @@ Write path (Worker + client + Web/Mobile):
 `PET-DRAFT-SAVE-FLOW-CLIENT-001`, `WEB-PET-DRAFT-SAVE-FLOW-001`, `MOBILE-PET-DRAFT-SAVE-FLOW-001`.
 
 Read path (Worker + client + Web/Mobile):
-`PET-FEED-WORKER-001`, `PET-FEED-CLIENT-001`, `WEB-PET-FEED-001`, `MOBILE-PET-FEED-001`.
+`PET-FEED-WORKER-001`, `PET-FEED-CLIENT-001`, `WEB-PET-FEED-001`, `MOBILE-PET-FEED-001`,
+`PET-PROFILE-WORKER-001`, `PET-PROFILE-CLIENT-001`, `WEB-PET-PROFILE-001`, `MOBILE-PET-PROFILE-001`,
+`SHELTER-PROFILE-WORKER-001`, `SHELTER-PROFILE-CLIENT-001`, `WEB-SHELTER-PROFILE-001`, `MOBILE-SHELTER-PROFILE-001`.
 
 ## Current Focus
 
-All items above are merged. The read path is partially built (feed list exists, single-pet profile does not).
+All items above are merged. The adopter discovery loop (feed → pet profile → shelter profile)
+is fully wired at the product boundary layer.
 
-Recommended next items (each on its own `agent/<WORK-ITEM-ID>` branch):
+Recommended next slice — adopter write path (each on its own `agent/<WORK-ITEM-ID>` branch):
 
-1. `PET-PROFILE-WORKER-001` — public `GET /pets/:petId` route
-2. `PET-PROFILE-CLIENT-001` — `createPetProfileClient` in `@pic4paws/client`
-3. `WEB-PET-PROFILE-001` — Web pet profile product boundary
-4. `MOBILE-PET-PROFILE-001` — Mobile pet profile product boundary
+1. `ADOPTION-WORKER-001` — authenticated `POST /adoptions` Worker route
+2. `ADOPTION-CLIENT-001` — `createAdoptionApplicationClient` in `@pic4paws/client`
+3. `WEB-ADOPTION-001` — Web adoption application product boundary
+4. `MOBILE-ADOPTION-001` — Mobile adoption application product boundary
+
+The `adoptionApplications` table is already defined in `packages/database/src/schema.ts`.
 
 ## Branching Convention
 
