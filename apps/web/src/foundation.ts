@@ -13,6 +13,7 @@ import { webPetFeedUiContent, type WebPetFeedUiContent } from './pet-feed';
 import { webPetProfileUiContent, type WebPetProfileUiContent } from './pet-profile';
 import { webShelterProfileUiContent, type WebShelterProfileUiContent } from './shelter-profile';
 import { webAdoptionUiContent, type WebAdoptionUiContent } from './adoption';
+import { webAdoptionListUiContent, type WebAdoptionListUiContent } from './adoption-list';
 
 export type WebFoundationStatus = 'contract-ready';
 
@@ -36,6 +37,7 @@ export type WebFoundationContent = {
   petProfile: Pick<WebPetProfileUiContent, 'title' | 'description' | 'status'>;
   shelterProfile: Pick<WebShelterProfileUiContent, 'title' | 'description' | 'status'>;
   adoptionApplication: Pick<WebAdoptionUiContent, 'title' | 'description' | 'status'>;
+  adoptionList: Pick<WebAdoptionListUiContent, 'title' | 'description' | 'status'>;
   readiness: Array<{
     id: 'database' | 'auth' | 'pets' | 'payments' | 'media' | 'workers';
     label: string;
@@ -100,6 +102,11 @@ export const webFoundationContent: WebFoundationContent = {
     title: webAdoptionUiContent.title,
     description: webAdoptionUiContent.description,
     status: webAdoptionUiContent.status,
+  },
+  adoptionList: {
+    title: webAdoptionListUiContent.title,
+    description: webAdoptionListUiContent.description,
+    status: webAdoptionListUiContent.status,
   },
   readiness: [
     {
