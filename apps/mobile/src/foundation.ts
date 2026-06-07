@@ -8,6 +8,10 @@ import {
   mobilePetPublishUiContent,
   type MobilePetPublishUiContent,
 } from './pet-publish';
+import {
+  mobilePetDraftUiContent,
+  type MobilePetDraftUiContent,
+} from './pet-draft';
 
 export type MobileFoundationStatus = 'contract-ready';
 
@@ -23,6 +27,7 @@ export type MobileFoundationContent = {
     route: string | null;
   };
   mediaUpload: Pick<MobileMediaUploadContent, 'title' | 'description' | 'status'>;
+  petDraft: Pick<MobilePetDraftUiContent, 'title' | 'description' | 'status'>;
   petMediaUpload: Pick<MobilePetMediaUploadUiContent, 'title' | 'description' | 'status'>;
   petPublish: Pick<MobilePetPublishUiContent, 'title' | 'description' | 'status'>;
   readiness: Array<{
@@ -49,6 +54,11 @@ export const mobileFoundationContent: MobileFoundationContent = {
     title: mobileMediaUploadContent.title,
     description: mobileMediaUploadContent.description,
     status: mobileMediaUploadContent.status,
+  },
+  petDraft: {
+    title: mobilePetDraftUiContent.title,
+    description: mobilePetDraftUiContent.description,
+    status: mobilePetDraftUiContent.status,
   },
   petMediaUpload: {
     title: mobilePetMediaUploadUiContent.title,
