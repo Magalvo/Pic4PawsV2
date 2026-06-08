@@ -2947,6 +2947,153 @@ export const createSponsorshipManageClient = ({
   },
 });
 
+// ─── Sponsorship Donor List Client ──────────────────────────────────────────
+
+export type SponsorshipDonorListQuery = {
+  limit?: number | null;
+  offset?: number | null;
+};
+
+export type SponsorshipDonorListClientSuccess = {
+  ok: true;
+  status: 'ok';
+  sponsorships: SponsorshipListItem[];
+  total: number;
+};
+
+export type SponsorshipDonorListClientFailureStatus =
+  | 'unauthenticated'
+  | 'sponsorship_donor_list_repository_not_configured'
+  | 'auth_adapter_not_configured'
+  | 'worker_request_failed'
+  | 'worker_response_invalid';
+
+export type SponsorshipDonorListClientFailure = {
+  ok: false;
+  status: SponsorshipDonorListClientFailureStatus;
+  reasons: string[];
+};
+
+export type SponsorshipDonorListClientResult =
+  | SponsorshipDonorListClientSuccess
+  | SponsorshipDonorListClientFailure;
+
+export type CreateSponsorshipDonorListClientInput = {
+  workerBaseUrl: string;
+  sponsorshipsPath: `/${string}`;
+  getAccessToken: () => Promise<string | null>;
+  fetch: MediaUploadClientFetch;
+};
+
+export type SponsorshipDonorListClient = {
+  loadDonorSponsorships: (
+    query?: SponsorshipDonorListQuery,
+  ) => Promise<SponsorshipDonorListClientResult>;
+};
+
+const parseSponsorshipDonorListSuccess = (
+  body: Record<string, unknown> | null,
+): SponsorshipDonorListClientSuccess | null => {
+  if (
+    !body ||
+    body.status !== 'ok' ||
+    !Array.isArray(body.sponsorships) ||
+    typeof body.total !== 'number'
+  ) {
+    return null;
+  }
+
+  return {
+    ok: true,
+    status: 'ok',
+    sponsorships: body.sponsorships as SponsorshipListItem[],
+    total: body.total,
+  };
+};
+
+const parseSponsorshipDonorListFailureStatus = (
+  body: Record<string, unknown> | null,
+): SponsorshipDonorListClientFailureStatus => {
+  const status = body?.status;
+
+  if (
+    status === 'unauthenticated' ||
+    status === 'sponsorship_donor_list_repository_not_configured' ||
+    status === 'auth_adapter_not_configured'
+  ) {
+    return status;
+  }
+
+  return 'worker_request_failed';
+};
+
+export const createSponsorshipDonorListClient = ({
+  workerBaseUrl,
+  sponsorshipsPath,
+  getAccessToken,
+  fetch,
+}: CreateSponsorshipDonorListClientInput): SponsorshipDonorListClient => ({
+  loadDonorSponsorships: async (query = {}) => {
+    const accessToken = await getAccessToken();
+
+    if (!accessToken?.trim()) {
+      return {
+        ok: false,
+        status: 'unauthenticated',
+        reasons: ['missing_access_token'],
+      };
+    }
+
+    const base = createWorkerUrl(workerBaseUrl, sponsorshipsPath);
+    const url = new URL(base);
+
+    if (query?.limit != null) url.searchParams.set('limit', String(query.limit));
+    if (query?.offset != null) url.searchParams.set('offset', String(query.offset));
+
+    let response: Response;
+
+    try {
+      response = await fetch(url.toString(), {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+    } catch {
+      return {
+        ok: false,
+        status: 'worker_request_failed',
+        reasons: ['network_error'],
+      };
+    }
+
+    const body = await parseJsonResponse(response);
+
+    if (!response.ok) {
+      const status = parseSponsorshipDonorListFailureStatus(body);
+      const reasons = Array.isArray(body?.reasons) ? parseReasons(body) : [status];
+
+      return {
+        ok: false,
+        status,
+        reasons: sanitizeReasons(reasons, status),
+      };
+    }
+
+    const success = parseSponsorshipDonorListSuccess(body);
+
+    if (!success) {
+      return {
+        ok: false,
+        status: 'worker_response_invalid',
+        reasons: ['invalid_worker_response'],
+      };
+    }
+
+    return success;
+  },
+});
+
 // ─── Media Upload Flow Client ─────────────────────────────────────────────────
 
 export const createMediaUploadFlowClient = (
