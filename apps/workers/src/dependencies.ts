@@ -40,6 +40,8 @@ import type { AdoptionViewRepository } from './adoption-view';
 import { createSupabaseAdoptionViewRepositories } from './adoption-view-supabase';
 import type { ShelterMemberRepository } from './shelter-member';
 import { createSupabaseShelterMemberRepositories } from './shelter-member-supabase';
+import type { PetArchiveRepository } from './pet-archive';
+import { createSupabasePetArchiveRepositories } from './pet-archive-supabase';
 import type {
   PetDraftRepository,
   PetMediaAttachRepository,
@@ -87,6 +89,7 @@ export type WorkerRequestDependencies = {
   adoptionStatusRepository?: AdoptionStatusRepository;
   adoptionViewRepository?: AdoptionViewRepository;
   shelterMemberRepository?: ShelterMemberRepository;
+  petArchiveRepository?: PetArchiveRepository;
   supabaseClientFactory?: WorkerSupabaseClientFactory;
   now?: () => string;
 };
@@ -140,6 +143,7 @@ export const createWorkerSupabaseDependencies = ({
     const adoptionStatusRepositories = createSupabaseAdoptionStatusRepositories({ client });
     const adoptionViewRepositories = createSupabaseAdoptionViewRepositories({ client });
     const shelterMemberRepositories = createSupabaseShelterMemberRepositories({ client });
+    const petArchiveRepositories = createSupabasePetArchiveRepositories({ client });
 
     return {
       mediaUploadSigner,
@@ -164,6 +168,7 @@ export const createWorkerSupabaseDependencies = ({
       adoptionStatusRepository: adoptionStatusRepositories.adoptionStatusRepository,
       adoptionViewRepository: adoptionViewRepositories.adoptionViewRepository,
       shelterMemberRepository: shelterMemberRepositories.shelterMemberRepository,
+      petArchiveRepository: petArchiveRepositories.petArchiveRepository,
       // paymentWebhookVerifier is intentionally NOT set here — it is provider-SDK-specific
       // and must be injected by the production fetch handler or tests
       now,
@@ -243,5 +248,7 @@ export const resolveWorkerRequestDependencies = ({
       dependencies.adoptionViewRepository ?? supabaseDependencies.adoptionViewRepository,
     shelterMemberRepository:
       dependencies.shelterMemberRepository ?? supabaseDependencies.shelterMemberRepository,
+    petArchiveRepository:
+      dependencies.petArchiveRepository ?? supabaseDependencies.petArchiveRepository,
   };
 };

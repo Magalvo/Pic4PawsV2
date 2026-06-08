@@ -37,6 +37,7 @@ export type SupabaseTableQueryLike = PromiseLike<SupabaseQueryResult<unknown>> &
   insert: (payload: unknown) => SupabaseTableQueryLike;
   update: (payload: unknown) => SupabaseTableQueryLike;
   eq: (column: string, value: unknown) => SupabaseTableQueryLike;
+  neq: (column: string, value: unknown) => SupabaseTableQueryLike;
   in: (column: string, value: unknown[]) => SupabaseTableQueryLike;
   is: (column: string, value: unknown) => SupabaseTableQueryLike;
   order: (column: string, options?: { ascending?: boolean }) => SupabaseTableQueryLike;
