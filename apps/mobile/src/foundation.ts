@@ -28,6 +28,10 @@ import {
   type MobileAdoptionListUiContent,
 } from './adoption-list';
 import { mobileDonationUiContent, type MobileDonationUiContent } from './donation';
+import {
+  mobileDonationListUiContent,
+  type MobileDonationListUiContent,
+} from './donation-list';
 
 export type MobileFoundationStatus = 'contract-ready';
 
@@ -53,6 +57,7 @@ export type MobileFoundationContent = {
   adoptionApplication: Pick<MobileAdoptionUiContent, 'title' | 'description' | 'status'>;
   adoptionList: Pick<MobileAdoptionListUiContent, 'title' | 'description' | 'status'>;
   donation: Pick<MobileDonationUiContent, 'title' | 'description' | 'status'>;
+  donationList: Pick<MobileDonationListUiContent, 'title' | 'description' | 'status'>;
   readiness: Array<{
     id: 'database' | 'auth' | 'pets' | 'payments' | 'media' | 'workers';
     label: string;
@@ -127,6 +132,11 @@ export const mobileFoundationContent: MobileFoundationContent = {
     title: mobileDonationUiContent.title,
     description: mobileDonationUiContent.description,
     status: mobileDonationUiContent.status,
+  },
+  donationList: {
+    title: mobileDonationListUiContent.title,
+    description: mobileDonationListUiContent.description,
+    status: mobileDonationListUiContent.status,
   },
   readiness: [
     {
