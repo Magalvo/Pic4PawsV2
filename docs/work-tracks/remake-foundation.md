@@ -36,23 +36,23 @@ Adopter write path (Worker + client + Web/Mobile):
 Shelter-side adoption review (Worker + client + Web/Mobile):
 `ADOPTION-LIST-WORKER-001`, `ADOPTION-LIST-CLIENT-001`, `WEB-ADOPTION-LIST-001`, `MOBILE-ADOPTION-LIST-001`.
 
+Donation slice (Worker):
+`DONATION-WORKER-001`.
+
 ## Current Focus
 
-All items above are merged. Both the adopter end-to-end flow and the shelter-side adoption
-review slice are complete.
+`DONATION-WORKER-001` is merged. The donation Worker route is live at `POST /donations`
+with `amountCents ≥ 100` validation, GDPR gate, and `DonationRepository` interface.
 
-Adopter flow: feed → pet profile → shelter profile → submit adoption application.
-Shelter review flow: Worker route → client → Web + Mobile product boundaries.
+Remaining donation slice (each on its own `agent/<WORK-ITEM-ID>` branch):
 
-Recommended next slice — donation/sponsorship (each on its own `agent/<WORK-ITEM-ID>` branch):
+1. `DONATION-CLIENT-001` — `createDonationClient` in `@pic4paws/client`
+   (`submitDonation(shelterId, input)` → `DonationClientResult`)
+2. `WEB-DONATION-001` — Web donation product boundary with PT-PT states
+   (states: `idle`, `submitting`, `submitted`, `failed`)
+3. `MOBILE-DONATION-001` — Mobile donation product boundary (mirrors Web with `Mobile` prefix)
 
-1. `DONATION-WORKER-001` — authenticated `POST /donations` Worker route (payment intent
-   initiation; `donationTransactions` table already defined in schema)
-2. `DONATION-CLIENT-001` — `createDonationClient` in `@pic4paws/client`
-3. `WEB-DONATION-001` — Web donation product boundary
-4. `MOBILE-DONATION-001` — Mobile donation product boundary
-
-The `donationTransactions` table is already defined in `packages/database/src/schema.ts`.
+`donationTransactions` table already defined in `packages/database/src/schema.ts`.
 
 ## Branching Convention
 

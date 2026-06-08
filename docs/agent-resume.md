@@ -60,10 +60,10 @@ Do not batch items that can be reviewed or merged independently.
 - `npm run test`
 - `npm run build`
 
-## 4. Current State As Of 2026-06-07
+## 4. Current State As Of 2026-06-08
 
-All foundation work, the full public read path, and the full shelter-side adoption review
-slice merged into `main`.
+All foundation work, the full public read path, the full shelter-side adoption review
+slice, and the first item of the donation slice merged into `main`.
 
 Completed foundation items (all merged to `main`):
 
@@ -113,6 +113,7 @@ Completed foundation items (all merged to `main`):
 - `ADOPTION-LIST-CLIENT-001` — `createAdoptionListClient` in `@pic4paws/client`
 - `WEB-ADOPTION-LIST-001` — Web adoption list product boundary with PT-PT states
 - `MOBILE-ADOPTION-LIST-001` — Mobile adoption list product boundary with PT-PT states
+- `DONATION-WORKER-001` — authenticated `POST /donations` Worker route (donation intent initiation)
 
 The Worker now has:
 
@@ -129,9 +130,13 @@ The Worker now has:
 - authenticated adoption list (`GET /shelters/:shelterId/adoptions`) with
   `AdoptionListRepository` interface — paginated (limit/offset), shelter membership check,
   `matchWorkerAdoptionListShelterId` for URL path matching
+- authenticated donation intent (`POST /donations`) with `DonationRepository` interface —
+  `amountCents ≥ 100`, GDPR gate, `donorUserId` from authenticated actor, provider from
+  config, stub `providerPaymentId` + `idempotencyKey` via `crypto.randomUUID()`
 - `SupabaseTableQueryLike` supports `.is()`, `.order()`, `.range()`
 - `WORKER_SHELTER_PATH` config (default `/shelters`)
 - `WORKER_ADOPTIONS_PATH` config (default `/adoptions`)
+- `WORKER_DONATIONS_PATH` config (default `/donations`)
 - private shelter fields (taxId, registrationNumber, precise address, paymentAccountStatus)
   deliberately excluded from the public shelter profile response
 - tests that keep Supabase and Cloudflare calls mocked/injected
@@ -160,20 +165,22 @@ The adopter end-to-end flow is fully wired at the boundary layer:
 The shelter-side adoption review flow is fully wired at the boundary layer:
 **Worker route → client → Web + Mobile product boundaries**.
 
+The donation Worker route is implemented. Remaining donation slice items need the client
+and both product boundaries.
+
 ## 5. Recommended Next Work Item
 
-The adopter end-to-end flow and the shelter-side adoption review slice are both complete.
+The donation Worker route (`DONATION-WORKER-001`) is merged. Continue the donation slice:
 
-Recommended next slice — donation/sponsorship (each on its own `agent/<WORK-ITEM-ID>` branch):
-
-1. `DONATION-WORKER-001` — authenticated `POST /donations` Worker route (payment intent
-   initiation; `donationTransactions` table already defined in schema)
-2. `DONATION-CLIENT-001` — `createDonationClient` in `@pic4paws/client`
-3. `WEB-DONATION-001` — Web donation product boundary with PT-PT states
-4. `MOBILE-DONATION-001` — Mobile donation product boundary with PT-PT states
-
-The `donationTransactions` and `adoptionApplications` tables are already defined in
-`packages/database/src/schema.ts`.
+1. `DONATION-CLIENT-001` — `createDonationClient` in `@pic4paws/client`
+   - `loadApplications` → `createDonation(shelterId, query)` → `DonationClientResult`
+   - URL: `POST {workerBaseUrl}/donations`
+   - Bearer auth, credential sanitization, `forbidden` as a dedicated failure status
+2. `WEB-DONATION-001` — Web donation product boundary with PT-PT states
+   - `createWebDonationUi({ donationClient })` with `getInitialState` + `submitDonation`
+   - States: `idle`, `submitting`, `submitted`, `failed` (+ `canRetry: true`)
+   - `webDonationUiContent` + `webFoundationContent.donation` entry
+3. `MOBILE-DONATION-001` — Mobile donation product boundary (mirrors Web with `Mobile` prefix)
 
 Start each on its own `agent/<WORK-ITEM-ID>` branch per the convention in Section 3.
 
