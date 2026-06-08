@@ -56,6 +56,10 @@ import {
   mobileAdoptionStatusUiContent,
   type MobileAdoptionStatusUiContent,
 } from './adoption-status';
+import {
+  mobileAdoptionViewUiContent,
+  type MobileAdoptionViewUiContent,
+} from './adoption-view';
 
 export type MobileFoundationStatus = 'contract-ready';
 
@@ -88,6 +92,7 @@ export type MobileFoundationContent = {
   sponsorshipManage: Pick<MobileSponsorshipManageUiContent, 'title' | 'description' | 'status'>;
   sponsorshipDonorList: Pick<MobileSponsorshipDonorListUiContent, 'title' | 'description' | 'status'>;
   adoptionStatus: Pick<MobileAdoptionStatusUiContent, 'title' | 'description' | 'status'>;
+  adoptionView: Pick<MobileAdoptionViewUiContent, 'title' | 'description' | 'status'>;
   readiness: Array<{
     id: 'database' | 'auth' | 'pets' | 'payments' | 'media' | 'workers';
     label: string;
@@ -197,6 +202,11 @@ export const mobileFoundationContent: MobileFoundationContent = {
     title: mobileAdoptionStatusUiContent.title,
     description: mobileAdoptionStatusUiContent.description,
     status: mobileAdoptionStatusUiContent.status,
+  },
+  adoptionView: {
+    title: mobileAdoptionViewUiContent.title,
+    description: mobileAdoptionViewUiContent.description,
+    status: mobileAdoptionViewUiContent.status,
   },
   readiness: [
     {
