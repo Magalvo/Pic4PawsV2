@@ -2631,6 +2631,169 @@ export const createSponsorshipClient = ({
   },
 });
 
+// ─── Sponsorship List Client ────────────────────────────────────────────────
+
+export type SponsorshipClientStatus = 'active' | 'cancelled' | 'paused';
+
+export type SponsorshipListItem = {
+  sponsorshipId: string;
+  amountCents: number;
+  currency: string;
+  paymentMethod: DonationClientPaymentMethod;
+  recurringInterval: SponsorshipClientRecurringInterval;
+  status: SponsorshipClientStatus;
+  petId: string | null;
+  createdAt: string;
+};
+
+export type SponsorshipListQuery = {
+  limit?: number | null;
+  offset?: number | null;
+};
+
+export type SponsorshipListClientSuccess = {
+  ok: true;
+  status: 'ok';
+  sponsorships: SponsorshipListItem[];
+  total: number;
+};
+
+export type SponsorshipListClientFailureStatus =
+  | 'unauthenticated'
+  | 'forbidden'
+  | 'sponsorship_list_repository_not_configured'
+  | 'auth_adapter_not_configured'
+  | 'worker_request_failed'
+  | 'worker_response_invalid';
+
+export type SponsorshipListClientFailure = {
+  ok: false;
+  status: SponsorshipListClientFailureStatus;
+  reasons: string[];
+};
+
+export type SponsorshipListClientResult =
+  | SponsorshipListClientSuccess
+  | SponsorshipListClientFailure;
+
+export type CreateSponsorshipListClientInput = {
+  workerBaseUrl: string;
+  shelterPath: `/${string}`;
+  getAccessToken: () => Promise<string | null>;
+  fetch: MediaUploadClientFetch;
+};
+
+export type SponsorshipListClient = {
+  loadSponsorships: (
+    shelterId: string,
+    query?: SponsorshipListQuery,
+  ) => Promise<SponsorshipListClientResult>;
+};
+
+const parseSponsorshipListSuccess = (
+  body: Record<string, unknown> | null,
+): SponsorshipListClientSuccess | null => {
+  if (
+    !body ||
+    body.status !== 'ok' ||
+    !Array.isArray(body.sponsorships) ||
+    typeof body.total !== 'number'
+  ) {
+    return null;
+  }
+
+  return {
+    ok: true,
+    status: 'ok',
+    sponsorships: body.sponsorships as SponsorshipListItem[],
+    total: body.total,
+  };
+};
+
+const parseSponsorshipListFailureStatus = (
+  body: Record<string, unknown> | null,
+): SponsorshipListClientFailureStatus => {
+  const status = body?.status;
+
+  if (
+    status === 'unauthenticated' ||
+    status === 'forbidden' ||
+    status === 'sponsorship_list_repository_not_configured' ||
+    status === 'auth_adapter_not_configured'
+  ) {
+    return status;
+  }
+
+  return 'worker_request_failed';
+};
+
+export const createSponsorshipListClient = ({
+  workerBaseUrl,
+  shelterPath,
+  getAccessToken,
+  fetch,
+}: CreateSponsorshipListClientInput): SponsorshipListClient => ({
+  loadSponsorships: async (shelterId, query = {}) => {
+    const accessToken = await getAccessToken();
+
+    if (!accessToken?.trim()) {
+      return {
+        ok: false,
+        status: 'unauthenticated',
+        reasons: ['missing_access_token'],
+      };
+    }
+
+    const base = createWorkerSubUrl(workerBaseUrl, shelterPath, shelterId, 'sponsorships');
+    const url = new URL(base);
+
+    if (query?.limit != null) url.searchParams.set('limit', String(query.limit));
+    if (query?.offset != null) url.searchParams.set('offset', String(query.offset));
+
+    let response: Response;
+
+    try {
+      response = await fetch(url.toString(), {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+    } catch {
+      return {
+        ok: false,
+        status: 'worker_request_failed',
+        reasons: ['network_error'],
+      };
+    }
+
+    const body = await parseJsonResponse(response);
+
+    if (!response.ok) {
+      const status = parseSponsorshipListFailureStatus(body);
+      const reasons = Array.isArray(body?.reasons) ? parseReasons(body) : [status];
+
+      return {
+        ok: false,
+        status,
+        reasons: sanitizeReasons(reasons, status),
+      };
+    }
+
+    const success = parseSponsorshipListSuccess(body);
+
+    if (!success) {
+      return {
+        ok: false,
+        status: 'worker_response_invalid',
+        reasons: ['invalid_worker_response'],
+      };
+    }
+
+    return success;
+  },
+});
+
 // ─── Media Upload Flow Client ─────────────────────────────────────────────────
 
 export const createMediaUploadFlowClient = (
