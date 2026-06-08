@@ -1933,6 +1933,189 @@ export const createAdoptionListClient = ({
   },
 });
 
+// ─── Donation Client ─────────────────────────────────────────────────────────
+
+export type DonationClientKind = 'one_time_donation' | 'monthly_sponsorship';
+
+export type DonationClientPaymentMethod =
+  | 'mb_way'
+  | 'multibanco'
+  | 'card'
+  | 'bank_transfer'
+  | 'unknown';
+
+export type DonationClientInput = {
+  shelterId: string;
+  amountCents: number;
+  kind: DonationClientKind;
+  paymentMethod: DonationClientPaymentMethod;
+  dataProcessingAccepted: true;
+  petId?: string | null;
+  publicMessage?: string | null;
+  anonymous?: boolean;
+  donorDisplayName?: string | null;
+  donorEmail?: string | null;
+};
+
+export type DonationClientSuccess = {
+  ok: true;
+  status: 'donation_created';
+  donationId: string;
+  amountCents: number;
+  currency: string;
+  kind: DonationClientKind;
+  shelterId: string;
+  createdAt: string;
+};
+
+export type DonationClientFailureStatus =
+  | 'unauthenticated'
+  | 'invalid_donation'
+  | 'donation_repository_not_configured'
+  | 'auth_adapter_not_configured'
+  | 'worker_request_failed'
+  | 'worker_response_invalid';
+
+export type DonationClientFailure = {
+  ok: false;
+  status: DonationClientFailureStatus;
+  reasons: string[];
+};
+
+export type DonationClientResult = DonationClientSuccess | DonationClientFailure;
+
+export type CreateDonationClientInput = {
+  workerBaseUrl: string;
+  donationsPath: `/${string}`;
+  getAccessToken: () => Promise<string | null>;
+  fetch: MediaUploadClientFetch;
+};
+
+export type DonationClient = {
+  submitDonation: (input: DonationClientInput) => Promise<DonationClientResult>;
+};
+
+const parseDonationSuccess = (
+  body: Record<string, unknown> | null,
+): DonationClientSuccess | null => {
+  if (
+    !body ||
+    body.status !== 'donation_created' ||
+    typeof body.donationId !== 'string' ||
+    typeof body.amountCents !== 'number' ||
+    typeof body.currency !== 'string' ||
+    typeof body.kind !== 'string' ||
+    typeof body.shelterId !== 'string' ||
+    typeof body.createdAt !== 'string'
+  ) {
+    return null;
+  }
+
+  return {
+    ok: true,
+    status: 'donation_created',
+    donationId: body.donationId,
+    amountCents: body.amountCents,
+    currency: body.currency,
+    kind: body.kind as DonationClientKind,
+    shelterId: body.shelterId,
+    createdAt: body.createdAt,
+  };
+};
+
+const parseDonationFailureStatus = (
+  body: Record<string, unknown> | null,
+): DonationClientFailureStatus => {
+  const status = body?.status;
+
+  if (
+    status === 'unauthenticated' ||
+    status === 'invalid_donation' ||
+    status === 'donation_repository_not_configured' ||
+    status === 'auth_adapter_not_configured'
+  ) {
+    return status;
+  }
+
+  return 'worker_request_failed';
+};
+
+const buildDonationPayload = (input: DonationClientInput): Record<string, unknown> => ({
+  shelterId: input.shelterId,
+  amountCents: input.amountCents,
+  kind: input.kind,
+  paymentMethod: input.paymentMethod,
+  petId: input.petId ?? null,
+  publicMessage: input.publicMessage ?? null,
+  anonymous: input.anonymous ?? false,
+  donorDisplayName: input.donorDisplayName ?? null,
+  donorEmail: input.donorEmail ?? null,
+  dataProcessingAccepted: input.dataProcessingAccepted,
+});
+
+export const createDonationClient = ({
+  workerBaseUrl,
+  donationsPath,
+  getAccessToken,
+  fetch,
+}: CreateDonationClientInput): DonationClient => ({
+  submitDonation: async (input) => {
+    const accessToken = await getAccessToken();
+
+    if (!accessToken?.trim()) {
+      return {
+        ok: false,
+        status: 'unauthenticated',
+        reasons: ['missing_access_token'],
+      };
+    }
+
+    let response: Response;
+
+    try {
+      response = await fetch(createWorkerUrl(workerBaseUrl, donationsPath), {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(buildDonationPayload(input)),
+      });
+    } catch {
+      return {
+        ok: false,
+        status: 'worker_request_failed',
+        reasons: ['network_error'],
+      };
+    }
+
+    const body = await parseJsonResponse(response);
+
+    if (!response.ok) {
+      const status = parseDonationFailureStatus(body);
+      const reasons = Array.isArray(body?.reasons) ? parseReasons(body) : [status];
+
+      return {
+        ok: false,
+        status,
+        reasons: sanitizeReasons(reasons, status),
+      };
+    }
+
+    const success = parseDonationSuccess(body);
+
+    if (!success) {
+      return {
+        ok: false,
+        status: 'worker_response_invalid',
+        reasons: ['invalid_worker_response'],
+      };
+    }
+
+    return success;
+  },
+});
+
 // ─── Media Upload Flow Client ─────────────────────────────────────────────────
 
 export const createMediaUploadFlowClient = (
