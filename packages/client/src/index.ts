@@ -3248,6 +3248,159 @@ export const createAdoptionStatusClient = ({
   },
 });
 
+// ─── Adoption View Client ─────────────────────────────────────────────────────
+
+export type AdoptionViewClientApplication = {
+  applicationId: string;
+  applicationStatus: AdoptionApplicationStatus;
+  shelterId: string;
+  petId: string | null;
+};
+
+export type AdoptionViewClientSuccess = {
+  ok: true;
+  status: 'ok';
+  application: AdoptionViewClientApplication;
+};
+
+export type AdoptionViewClientFailureStatus =
+  | 'unauthenticated'
+  | 'forbidden'
+  | 'adoption_not_found'
+  | 'adoption_view_repository_not_configured'
+  | 'auth_adapter_not_configured'
+  | 'worker_request_failed'
+  | 'worker_response_invalid';
+
+export type AdoptionViewClientFailure = {
+  ok: false;
+  status: AdoptionViewClientFailureStatus;
+  reasons: string[];
+};
+
+export type AdoptionViewClientResult =
+  | AdoptionViewClientSuccess
+  | AdoptionViewClientFailure;
+
+export type CreateAdoptionViewClientInput = {
+  workerBaseUrl: string;
+  adoptionsPath: `/${string}`;
+  getAccessToken: () => Promise<string | null>;
+  fetch: MediaUploadClientFetch;
+};
+
+export type AdoptionViewClient = {
+  loadAdoptionView: (applicationId: string) => Promise<AdoptionViewClientResult>;
+};
+
+const parseAdoptionViewSuccess = (
+  body: Record<string, unknown> | null,
+): AdoptionViewClientSuccess | null => {
+  if (
+    !body ||
+    body.status !== 'ok' ||
+    typeof body.applicationId !== 'string' ||
+    typeof body.applicationStatus !== 'string' ||
+    typeof body.shelterId !== 'string' ||
+    (body.petId !== null && typeof body.petId !== 'string')
+  ) {
+    return null;
+  }
+
+  return {
+    ok: true,
+    status: 'ok',
+    application: {
+      applicationId: body.applicationId,
+      applicationStatus: body.applicationStatus as AdoptionApplicationStatus,
+      shelterId: body.shelterId,
+      petId: typeof body.petId === 'string' ? body.petId : null,
+    },
+  };
+};
+
+const parseAdoptionViewFailureStatus = (
+  body: Record<string, unknown> | null,
+): AdoptionViewClientFailureStatus => {
+  const status = body?.status;
+
+  if (
+    status === 'unauthenticated' ||
+    status === 'forbidden' ||
+    status === 'adoption_not_found' ||
+    status === 'adoption_view_repository_not_configured' ||
+    status === 'auth_adapter_not_configured'
+  ) {
+    return status;
+  }
+
+  return 'worker_request_failed';
+};
+
+export const createAdoptionViewClient = ({
+  workerBaseUrl,
+  adoptionsPath,
+  getAccessToken,
+  fetch,
+}: CreateAdoptionViewClientInput): AdoptionViewClient => ({
+  loadAdoptionView: async (applicationId) => {
+    const accessToken = await getAccessToken();
+
+    if (!accessToken?.trim()) {
+      return {
+        ok: false,
+        status: 'unauthenticated',
+        reasons: ['missing_access_token'],
+      };
+    }
+
+    let response: Response;
+
+    try {
+      response = await fetch(
+        createWorkerSubUrl(workerBaseUrl, adoptionsPath, applicationId),
+        {
+          method: 'GET',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        },
+      );
+    } catch {
+      return {
+        ok: false,
+        status: 'worker_request_failed',
+        reasons: ['network_error'],
+      };
+    }
+
+    const body = await parseJsonResponse(response);
+
+    if (!response.ok) {
+      const failureStatus = parseAdoptionViewFailureStatus(body);
+      const reasons = Array.isArray(body?.reasons) ? parseReasons(body) : [failureStatus];
+
+      return {
+        ok: false,
+        status: failureStatus,
+        reasons: sanitizeReasons(reasons, failureStatus),
+      };
+    }
+
+    const success = parseAdoptionViewSuccess(body);
+
+    if (!success) {
+      return {
+        ok: false,
+        status: 'worker_response_invalid',
+        reasons: ['invalid_worker_response'],
+      };
+    }
+
+    return success;
+  },
+});
+
 // ─── Media Upload Flow Client ─────────────────────────────────────────────────
 
 export const createMediaUploadFlowClient = (
