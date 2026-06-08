@@ -22,6 +22,10 @@ import {
   webSponsorshipListUiContent,
   type WebSponsorshipListUiContent,
 } from './sponsorship-list';
+import {
+  webSponsorshipDonorListUiContent,
+  type WebSponsorshipDonorListUiContent,
+} from './sponsorship-donor-list';
 
 export type WebFoundationStatus = 'contract-ready';
 
@@ -51,6 +55,7 @@ export type WebFoundationContent = {
   donationStatus: Pick<WebDonationStatusUiContent, 'title' | 'description' | 'status'>;
   sponsorship: Pick<WebSponsorshipUiContent, 'title' | 'description' | 'status'>;
   sponsorshipList: Pick<WebSponsorshipListUiContent, 'title' | 'description' | 'status'>;
+  sponsorshipDonorList: Pick<WebSponsorshipDonorListUiContent, 'title' | 'description' | 'status'>;
   readiness: Array<{
     id: 'database' | 'auth' | 'pets' | 'payments' | 'media' | 'workers';
     label: string;
@@ -145,6 +150,11 @@ export const webFoundationContent: WebFoundationContent = {
     title: webSponsorshipListUiContent.title,
     description: webSponsorshipListUiContent.description,
     status: webSponsorshipListUiContent.status,
+  },
+  sponsorshipDonorList: {
+    title: webSponsorshipDonorListUiContent.title,
+    description: webSponsorshipDonorListUiContent.description,
+    status: webSponsorshipDonorListUiContent.status,
   },
   readiness: [
     {
