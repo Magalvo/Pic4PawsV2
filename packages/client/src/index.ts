@@ -3701,6 +3701,138 @@ export const createShelterMemberClient = ({
   },
 });
 
+// ─── Pet Archive Client ───────────────────────────────────────────────────────
+
+export type PetArchiveClientSuccess = {
+  ok: true;
+  status: 'ok';
+  petId: string;
+};
+
+export type PetArchiveClientFailureStatus =
+  | 'unauthenticated'
+  | 'forbidden'
+  | 'pet_not_found'
+  | 'pet_already_archived'
+  | 'invalid_payload'
+  | 'pet_archive_repository_not_configured'
+  | 'auth_adapter_not_configured'
+  | 'worker_request_failed'
+  | 'worker_response_invalid';
+
+export type PetArchiveClientFailure = {
+  ok: false;
+  status: PetArchiveClientFailureStatus;
+  reasons: string[];
+};
+
+export type PetArchiveClientResult = PetArchiveClientSuccess | PetArchiveClientFailure;
+
+export type CreatePetArchiveClientInput = {
+  workerBaseUrl: string;
+  petFeedPath: `/${string}`;
+  getAccessToken: () => Promise<string | null>;
+  fetch: MediaUploadClientFetch;
+};
+
+export type PetArchiveClient = {
+  archivePet: (petId: string) => Promise<PetArchiveClientResult>;
+};
+
+const parsePetArchiveSuccess = (
+  body: Record<string, unknown> | null,
+): PetArchiveClientSuccess | null => {
+  if (!body || body.status !== 'ok' || typeof body.petId !== 'string') return null;
+
+  return { ok: true, status: 'ok', petId: body.petId };
+};
+
+const parsePetArchiveFailureStatus = (
+  body: Record<string, unknown> | null,
+): PetArchiveClientFailureStatus => {
+  const status = body?.status;
+
+  if (
+    status === 'unauthenticated' ||
+    status === 'forbidden' ||
+    status === 'pet_not_found' ||
+    status === 'pet_already_archived' ||
+    status === 'invalid_payload' ||
+    status === 'pet_archive_repository_not_configured' ||
+    status === 'auth_adapter_not_configured'
+  ) {
+    return status;
+  }
+
+  return 'worker_request_failed';
+};
+
+export const createPetArchiveClient = ({
+  workerBaseUrl,
+  petFeedPath,
+  getAccessToken,
+  fetch,
+}: CreatePetArchiveClientInput): PetArchiveClient => ({
+  archivePet: async (petId: string): Promise<PetArchiveClientResult> => {
+    const accessToken = await getAccessToken();
+
+    if (!accessToken?.trim()) {
+      return {
+        ok: false,
+        status: 'unauthenticated',
+        reasons: ['missing_access_token'],
+      };
+    }
+
+    let response: Response;
+
+    try {
+      response = await fetch(
+        createWorkerSubUrl(workerBaseUrl, petFeedPath, petId, 'status'),
+        {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ status: 'archived' }),
+        },
+      );
+    } catch {
+      return {
+        ok: false,
+        status: 'worker_request_failed',
+        reasons: ['network_error'],
+      };
+    }
+
+    const body = await parseJsonResponse(response);
+
+    if (!response.ok) {
+      const failureStatus = parsePetArchiveFailureStatus(body);
+      const reasons = Array.isArray(body?.reasons) ? parseReasons(body) : [failureStatus];
+
+      return {
+        ok: false,
+        status: failureStatus,
+        reasons: sanitizeReasons(reasons, failureStatus),
+      };
+    }
+
+    const success = parsePetArchiveSuccess(body);
+
+    if (!success) {
+      return {
+        ok: false,
+        status: 'worker_response_invalid',
+        reasons: ['invalid_worker_response'],
+      };
+    }
+
+    return success;
+  },
+});
+
 // ─── Media Upload Flow Client ─────────────────────────────────────────────────
 
 export const createMediaUploadFlowClient = (
