@@ -61,25 +61,22 @@ Donor-facing sponsorship list — `GET /sponsorships` (Worker + client + Web/Mob
 Adoption status management — full slice (Worker + client + Web/Mobile):
 `ADOPTION-STATUS-WORKER-001`, `ADOPTION-STATUS-CLIENT-001`, `WEB-ADOPTION-STATUS-001`, `MOBILE-ADOPTION-STATUS-001`.
 
-Adoption view — `GET /adoptions/:applicationId` (Worker only so far):
-`ADOPTION-VIEW-WORKER-001`.
+Adoption view — full slice (Worker + client + Web/Mobile):
+`ADOPTION-VIEW-WORKER-001`, `ADOPTION-VIEW-CLIENT-001`, `WEB-ADOPTION-VIEW-001`, `MOBILE-ADOPTION-VIEW-001`.
 
 ## Current Focus
 
-`ADOPTION-VIEW-WORKER-001` implements `GET /adoptions/:applicationId` — dual access (applicant
-OR shelter member). The route is method-switched at the same path as the PATCH route using
-`matchWorkerAdoptionStatusId`. `applicantUserId` is used only for access control and is omitted
-from the response. 14 tests.
-
-The adoption status management slice is now fully wired end-to-end (Worker + client + Web + Mobile).
+The adoption view slice is now fully wired end-to-end (Worker + client + Web + Mobile, PRs #80–#83).
+`applicantUserId` is omitted from the response. 6-state read boundary (idle/loading/loaded/not_found/forbidden/failed). 850 tests.
 
 The foundation now covers all write paths, all public read paths, all shelter-side list
 views (adoption, donation, sponsorship), the donor-facing sponsorship list, the full
-sponsorship lifecycle, adoption status management (full slice), and the adoption view Worker route.
+sponsorship lifecycle, adoption status management (full slice), and the full adoption view slice.
 
 Suggested next:
-1. Complete adoption view slice: `ADOPTION-VIEW-CLIENT-001` + `WEB-ADOPTION-VIEW-001` + `MOBILE-ADOPTION-VIEW-001`.
-2. Or begin a new domain slice (shelter member management, notifications, pet status transitions).
+1. **Shelter member management** — `SHELTER-MEMBER-WORKER-001` (`GET/POST/DELETE /shelters/:shelterId/members`), client + Web/Mobile.
+2. **Pet archival** — `PET-ARCHIVE-WORKER-001` (`PATCH /pets/:petId/status` → `archived`), client + Web/Mobile.
+3. **Notification delivery** — Worker-side dispatch + client read boundary.
 
 ## Branching Convention
 
