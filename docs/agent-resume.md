@@ -121,6 +121,11 @@ Completed foundation items (all merged to `main`):
 - `DONATION-LIST-CLIENT-001` — `createDonationListClient` in `@pic4paws/client`
 - `WEB-DONATION-LIST-001` — Web donation list product boundary with PT-PT states (6 states incl. forbidden)
 - `MOBILE-DONATION-LIST-001` — Mobile donation list product boundary with PT-PT states
+- `PAYMENT-WEBHOOK-WORKER-001` — `POST /webhooks/payments` payment webhook handler (server-to-server)
+- `DONATION-STATUS-WORKER-001` — `GET /donations/:donationId` donor status polling Worker route
+- `DONATION-STATUS-CLIENT-001` — `createDonationStatusClient` in `@pic4paws/client`
+- `WEB-DONATION-STATUS-001` — Web donation status product boundary (6 states incl. not_found + forbidden)
+- `MOBILE-DONATION-STATUS-001` — Mobile donation status product boundary with PT-PT states
 
 The Worker now has (as of 2026-06-08):
 
@@ -143,8 +148,13 @@ The Worker now has (as of 2026-06-08):
 - authenticated shelter donation list (`GET /shelters/:shelterId/donations`) with
   `DonationListRepository` interface — paginated (limit/offset), shelter membership check,
   `matchWorkerDonationListShelterId` for URL path matching
-- `POST /webhooks/payments` stub already in router — returns `501 provider_adapter_not_configured`
-  until `PAYMENT-WEBHOOK-WORKER-001` replaces it
+- `POST /webhooks/payments` payment webhook handler — `PaymentWebhookVerifier` interface
+  (HMAC verification, provider-specific), `PaymentWebhookRepository` (idempotency via
+  `payment_webhook_events`, UPDATE `donation_transactions`), `PROVIDER_SIGNATURE_HEADERS` map.
+  `paymentWebhookVerifier` intentionally NOT set by factory (requires provider SDK adapter)
+- `GET /donations/:donationId` donor status polling — `DonationStatusRepository.getDonationStatus`,
+  donor-only access (`actor.id !== record.donorUserId → 403`), `donorUserId` omitted from 200
+  response, `matchWorkerDonationStatusId` path matcher
 - `SupabaseTableQueryLike` supports `.is()`, `.order()`, `.range()`
 - `WORKER_SHELTER_PATH` config (default `/shelters`)
 - `WORKER_ADOPTIONS_PATH` config (default `/adoptions`)
@@ -167,12 +177,14 @@ The Worker now has (as of 2026-06-08):
 - `AdoptionListClient` (authenticated read — `loadApplications` with pagination)
 - `DonationClient` (authenticated write — `submitDonation`)
 - `DonationListClient` (authenticated read — `loadDonations` with pagination)
+- `DonationStatusClient` (authenticated read — `loadDonationStatus(donationId)`)
 - no client-side Supabase service-role keys or R2 credentials
 
 Web/Mobile now have tested product boundaries for: media upload, pet media upload+attach,
 pet publish, pet draft, pet draft save flow, pet feed, pet profile, shelter profile,
 adoption application, adoption list (shelter-side review), donation, donation list
-(shelter-side, 6 states including dedicated `forbidden`).
+(shelter-side, 6 states including dedicated `forbidden`), donation status (6 states
+including dedicated `not_found` + `forbidden`).
 
 The adopter end-to-end flow is fully wired at the boundary layer:
 **feed → pet profile → shelter profile → submit adoption application**.
@@ -180,46 +192,38 @@ The adopter end-to-end flow is fully wired at the boundary layer:
 The shelter-side adoption review flow is fully wired at the boundary layer:
 **Worker route → client → Web + Mobile product boundaries**.
 
-The full donation intent flow is wired end-to-end:
-**Worker route → client → Web + Mobile product boundaries**.
+The full donation slice is wired end-to-end:
+**donation intent → payment webhook → donor status polling → Web + Mobile boundaries**.
 
-The donation list slice is complete. Payment state transitions (webhook handling) are next.
+Payment state is always driven by verified server-side webhook. The `paymentWebhookVerifier`
+is intentionally left unset by the factory — provider-specific HMAC adapters must be wired
+per deployment.
 
 ## 5. Recommended Next Work Item
 
-**PAYMENT-WEBHOOK-WORKER-001** — Payment webhook handler (Worker only, server-to-server).
+**SPONSORSHIP-WORKER-001** — Recurring sponsorship (padrinhos) Worker route.
 
-The scaffolding is already in place:
-- `config.workers.paymentWebhookPath` → `/webhooks/payments`
-- `config.payments.primaryProvider` → `eupago | ifthenpay | stripe`
-- Per-provider secrets: `eupagoWebhookSecret`, `ifthenpayWebhookSecret`, `stripeWebhookSecret`
-- The Worker index already routes to a stub that returns `501 provider_adapter_not_configured`
-- `payment_webhook_events` table exists in the schema (unique on `provider + provider_event_id`)
-- `donation_transactions` has `provider_payment_id`, `provider`, and `status` columns
+Sponsorships are recurring payments tied to a pet or shelter. Design sketch:
 
-Work to do in `apps/workers/src/`:
-1. Create `payment-webhook.ts`:
-   - `ParsedWebhookEvent` type: `{ providerEventId, providerPaymentId, newStatus, payload }`
-   - `PaymentWebhookVerifier` type: `({ rawBody, signatureHeader, secret }) => ParsedWebhookEvent | null`
-   - `PaymentWebhookRepository` interface: `isEventAlreadyProcessed`, `recordWebhookEvent`, `updateDonationStatus`
-   - `PROVIDER_SIGNATURE_HEADERS` map: eupago/ifthenpay/stripe header names
-   - `handleWorkerPaymentWebhookRequest` function
-2. Create `payment-webhook-supabase.ts`: Supabase implementation
-3. Update `dependencies.ts`: add `paymentWebhookVerifier?`, `paymentWebhookRepository?`
-4. Update `index.ts`: replace stub body with call to `handleWorkerPaymentWebhookRequest`
-   (read `rawBody = await request.text()` instead of `parseJsonBody`)
+- `POST /sponsorships` — create sponsorship intent:
+  - Authenticated (`WorkerPetDraftAuthenticator`), `donorUserId` from actor
+  - Body: `{ shelterId, petId?, amountCents, currency, paymentMethod, recurringInterval, gdprConsent }`
+  - `recurringInterval`: `'monthly' | 'quarterly' | 'annual'`
+  - `amountCents ≥ 100` validation
+  - GDPR consent gate
+  - `sponsorships` table: `id, donorUserId, shelterId, petId?, amountCents, currency,
+    paymentMethod, recurringInterval, status, providerSubscriptionId?, createdAt, cancelledAt?`
+  - Returns `{ status: 'ok', sponsorshipId }`
+- `SponsorshipRepository` interface: `createSponsorship`
+- Supabase impl in `sponsorship-supabase.ts`
+- Route wired in `index.ts` under `WORKER_SPONSORSHIPS_PATH` config
 
-Handler logic:
-- 501 → no verifier configured
-- 401 → verifier returns null (bad signature or unparseable)
-- 501 → no repository
-- 200 `webhook_already_processed` → idempotency check passes
-- 200 `webhook_accepted` (donationFound: true/false) → happy path
+No client/UI boundary in this item — Worker route only.
 
-No client or UI boundary — this is server-to-server only.
-
-After this: optionally `DONATION-STATUS-WORKER-001` (`GET /donations/:donationId`) for
-client-side status polling, then consider the sponsorship slice.
+After SPONSORSHIP-WORKER-001:
+- `SPONSORSHIP-CLIENT-001` — `createSponsorshipClient` in `@pic4paws/client`
+- `WEB-SPONSORSHIP-001` / `MOBILE-SPONSORSHIP-001` — product boundaries
+- `SPONSORSHIP-LIST-WORKER-001` — `GET /shelters/:shelterId/sponsorships` shelter-side list
 
 ## 6. Handoff Prompt For Codex
 
