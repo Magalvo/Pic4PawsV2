@@ -49,15 +49,23 @@ Payment confirmation + donor status polling (Worker + client + Web/Mobile):
 Recurring sponsorship — padrinhos (Worker + client + Web/Mobile):
 `SPONSORSHIP-WORKER-001`, `SPONSORSHIP-CLIENT-001`, `WEB-SPONSORSHIP-001`, `MOBILE-SPONSORSHIP-001`.
 
+Shelter-side sponsorship list (Worker + client + Web/Mobile):
+`SPONSORSHIP-LIST-WORKER-001`, `SPONSORSHIP-LIST-CLIENT-001`, `WEB-SPONSORSHIP-LIST-001`, `MOBILE-SPONSORSHIP-LIST-001`.
+
 ## Current Focus
 
-The full sponsorship (padrinhos) creation slice is merged (PR #63). Donors can create recurring
-sponsorships tied to a shelter or pet. Web + Mobile boundaries expose all 4 states with
-PT-PT copy and credential-sanitized failure reasons.
+The full sponsorship list slice is merged (PRs #64–#67). Shelter admins can view all recurring
+sponsorships for their shelter. All 6 states (idle/loading/loaded/empty/forbidden/failed) with
+PT-PT copy, dedicated `forbidden` state, and credential-sanitized failure reasons in both
+Web and Mobile boundaries.
 
-Next: shelter-side sponsorship list slice:
+The foundation now covers all write paths, all public read paths, and all shelter-side list
+views (adoption, donation, sponsorship).
 
-1. `SPONSORSHIP-LIST-WORKER-001` — `GET /shelters/:shelterId/sponsorships` authenticated list route
+Suggested next:
+
+1. `SPONSORSHIP-MANAGE-WORKER-001` — `PATCH /sponsorships/:sponsorshipId` cancel/pause/resume
+2. Or begin a new domain slice (shelter member management, notifications, pet status transitions)
 
 ## Branching Convention
 
