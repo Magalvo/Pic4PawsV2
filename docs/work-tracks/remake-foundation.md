@@ -46,16 +46,18 @@ Payment confirmation + donor status polling (Worker + client + Web/Mobile):
 `PAYMENT-WEBHOOK-WORKER-001`, `DONATION-STATUS-WORKER-001`, `DONATION-STATUS-CLIENT-001`,
 `WEB-DONATION-STATUS-001`, `MOBILE-DONATION-STATUS-001`.
 
+Recurring sponsorship — padrinhos (Worker + client + Web/Mobile):
+`SPONSORSHIP-WORKER-001`, `SPONSORSHIP-CLIENT-001`, `WEB-SPONSORSHIP-001`, `MOBILE-SPONSORSHIP-001`.
+
 ## Current Focus
 
-The full donation status slice is merged. Payment state is driven by verified server-side webhook.
-Donors can poll their donation status. The `paymentWebhookVerifier` is intentionally unset by the
-factory — provider-specific HMAC adapters must be wired per deployment.
+The full sponsorship (padrinhos) creation slice is merged (PR #63). Donors can create recurring
+sponsorships tied to a shelter or pet. Web + Mobile boundaries expose all 4 states with
+PT-PT copy and credential-sanitized failure reasons.
 
-Next: recurring sponsorship (padrinhos) slice:
+Next: shelter-side sponsorship list slice:
 
-1. `SPONSORSHIP-WORKER-001` — `POST /sponsorships` Worker route (similar to `POST /donations`
-   but with `recurringInterval: monthly | quarterly | annual`)
+1. `SPONSORSHIP-LIST-WORKER-001` — `GET /shelters/:shelterId/sponsorships` authenticated list route
 
 ## Branching Convention
 
