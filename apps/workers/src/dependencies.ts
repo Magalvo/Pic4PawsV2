@@ -38,6 +38,8 @@ import type { AdoptionStatusRepository } from './adoption-status';
 import { createSupabaseAdoptionStatusRepositories } from './adoption-status-supabase';
 import type { AdoptionViewRepository } from './adoption-view';
 import { createSupabaseAdoptionViewRepositories } from './adoption-view-supabase';
+import type { ShelterMemberRepository } from './shelter-member';
+import { createSupabaseShelterMemberRepositories } from './shelter-member-supabase';
 import type {
   PetDraftRepository,
   PetMediaAttachRepository,
@@ -84,6 +86,7 @@ export type WorkerRequestDependencies = {
   sponsorshipDonorListRepository?: SponsorshipDonorListRepository;
   adoptionStatusRepository?: AdoptionStatusRepository;
   adoptionViewRepository?: AdoptionViewRepository;
+  shelterMemberRepository?: ShelterMemberRepository;
   supabaseClientFactory?: WorkerSupabaseClientFactory;
   now?: () => string;
 };
@@ -136,6 +139,7 @@ export const createWorkerSupabaseDependencies = ({
     const sponsorshipDonorListRepositories = createSupabaseSponsorshipDonorListRepositories({ client });
     const adoptionStatusRepositories = createSupabaseAdoptionStatusRepositories({ client });
     const adoptionViewRepositories = createSupabaseAdoptionViewRepositories({ client });
+    const shelterMemberRepositories = createSupabaseShelterMemberRepositories({ client });
 
     return {
       mediaUploadSigner,
@@ -159,6 +163,7 @@ export const createWorkerSupabaseDependencies = ({
       sponsorshipDonorListRepository: sponsorshipDonorListRepositories.sponsorshipDonorListRepository,
       adoptionStatusRepository: adoptionStatusRepositories.adoptionStatusRepository,
       adoptionViewRepository: adoptionViewRepositories.adoptionViewRepository,
+      shelterMemberRepository: shelterMemberRepositories.shelterMemberRepository,
       // paymentWebhookVerifier is intentionally NOT set here — it is provider-SDK-specific
       // and must be injected by the production fetch handler or tests
       now,
@@ -236,5 +241,7 @@ export const resolveWorkerRequestDependencies = ({
       dependencies.adoptionStatusRepository ?? supabaseDependencies.adoptionStatusRepository,
     adoptionViewRepository:
       dependencies.adoptionViewRepository ?? supabaseDependencies.adoptionViewRepository,
+    shelterMemberRepository:
+      dependencies.shelterMemberRepository ?? supabaseDependencies.shelterMemberRepository,
   };
 };

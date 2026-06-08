@@ -25,6 +25,12 @@ import {
   matchWorkerAdoptionStatusId,
 } from './adoption-status';
 import { handleWorkerAdoptionViewRequest } from './adoption-view';
+import {
+  handleWorkerShelterMemberRequest,
+  handleWorkerShelterMemberRemoveRequest,
+  matchWorkerShelterMemberShelterId,
+  matchWorkerShelterMemberRemoveIds,
+} from './shelter-member';
 import { handleWorkerDonationRequest } from './donation';
 import { handleWorkerSponsorshipRequest } from './sponsorship';
 import {
@@ -216,6 +222,33 @@ export type {
   CreateSupabaseAdoptionViewRepositoriesInput,
   CreateSupabaseAdoptionViewRepositoriesResult,
 } from './adoption-view-supabase';
+export {
+  handleWorkerShelterMemberRequest,
+  handleWorkerShelterMemberRemoveRequest,
+  matchWorkerShelterMemberShelterId,
+  matchWorkerShelterMemberRemoveIds,
+  validateAddShelterMemberPayload,
+} from './shelter-member';
+export type {
+  AddShelterMemberInput,
+  AddShelterMemberResult,
+  HandleWorkerShelterMemberRemoveRequestInput,
+  HandleWorkerShelterMemberRequestInput,
+  ListShelterMembersQuery,
+  ListShelterMembersResult,
+  RemoveShelterMemberInput,
+  ShelterMemberRepository,
+  ShelterMemberRole,
+  ShelterMemberSummary,
+} from './shelter-member';
+export {
+  createSupabaseShelterMemberRepositories,
+  SupabaseShelterMemberRepositoryError,
+} from './shelter-member-supabase';
+export type {
+  CreateSupabaseShelterMemberRepositoriesInput,
+  CreateSupabaseShelterMemberRepositoriesResult,
+} from './shelter-member-supabase';
 export {
   createR2UploadSigner,
   createR2UploadSignerWorkerDependencies,
@@ -635,6 +668,36 @@ export const handleWorkerRequest = async (
       request,
       petId: profilePetId,
       petProfileRepository: dependencies.petProfileRepository,
+    });
+  }
+
+  const memberRemoveIds = matchWorkerShelterMemberRemoveIds(
+    url.pathname,
+    config.workers.shelterPath,
+  );
+
+  if (memberRemoveIds !== null) {
+    return handleWorkerShelterMemberRemoveRequest({
+      request,
+      shelterId: memberRemoveIds.shelterId,
+      memberId: memberRemoveIds.memberId,
+      shelterMemberRepository: dependencies.shelterMemberRepository,
+      authenticator: dependencies.petDraftAuthenticator,
+    });
+  }
+
+  const memberShelterId = matchWorkerShelterMemberShelterId(
+    url.pathname,
+    config.workers.shelterPath,
+  );
+
+  if (memberShelterId !== null) {
+    return handleWorkerShelterMemberRequest({
+      request,
+      shelterId: memberShelterId,
+      shelterMemberRepository: dependencies.shelterMemberRepository,
+      authenticator: dependencies.petDraftAuthenticator,
+      now: dependencies.now?.() ?? new Date().toISOString(),
     });
   }
 
