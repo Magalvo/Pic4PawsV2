@@ -3094,6 +3094,160 @@ export const createSponsorshipDonorListClient = ({
   },
 });
 
+// ─── Adoption Status Client ───────────────────────────────────────────────────
+
+export type AdoptionStatusShelterManageStatus =
+  | 'under_review'
+  | 'more_info_requested'
+  | 'approved'
+  | 'rejected';
+
+export type AdoptionStatusClientSuccess = {
+  ok: true;
+  status: 'ok';
+  applicationId: string;
+  newStatus: AdoptionStatusShelterManageStatus;
+};
+
+export type AdoptionStatusClientFailureStatus =
+  | 'unauthenticated'
+  | 'forbidden'
+  | 'adoption_not_found'
+  | 'invalid_adoption_status'
+  | 'adoption_status_repository_not_configured'
+  | 'auth_adapter_not_configured'
+  | 'worker_request_failed'
+  | 'worker_response_invalid';
+
+export type AdoptionStatusClientFailure = {
+  ok: false;
+  status: AdoptionStatusClientFailureStatus;
+  reasons: string[];
+};
+
+export type AdoptionStatusClientResult =
+  | AdoptionStatusClientSuccess
+  | AdoptionStatusClientFailure;
+
+export type CreateAdoptionStatusClientInput = {
+  workerBaseUrl: string;
+  adoptionsPath: `/${string}`;
+  getAccessToken: () => Promise<string | null>;
+  fetch: MediaUploadClientFetch;
+};
+
+export type AdoptionStatusClient = {
+  manageAdoptionStatus: (
+    applicationId: string,
+    status: AdoptionStatusShelterManageStatus,
+  ) => Promise<AdoptionStatusClientResult>;
+};
+
+const parseAdoptionStatusSuccess = (
+  body: Record<string, unknown> | null,
+): AdoptionStatusClientSuccess | null => {
+  if (
+    !body ||
+    body.status !== 'ok' ||
+    typeof body.applicationId !== 'string' ||
+    typeof body.newStatus !== 'string'
+  ) {
+    return null;
+  }
+
+  return {
+    ok: true,
+    status: 'ok',
+    applicationId: body.applicationId,
+    newStatus: body.newStatus as AdoptionStatusShelterManageStatus,
+  };
+};
+
+const parseAdoptionStatusFailureStatus = (
+  body: Record<string, unknown> | null,
+): AdoptionStatusClientFailureStatus => {
+  const status = body?.status;
+
+  if (
+    status === 'unauthenticated' ||
+    status === 'forbidden' ||
+    status === 'adoption_not_found' ||
+    status === 'invalid_adoption_status' ||
+    status === 'adoption_status_repository_not_configured' ||
+    status === 'auth_adapter_not_configured'
+  ) {
+    return status;
+  }
+
+  return 'worker_request_failed';
+};
+
+export const createAdoptionStatusClient = ({
+  workerBaseUrl,
+  adoptionsPath,
+  getAccessToken,
+  fetch,
+}: CreateAdoptionStatusClientInput): AdoptionStatusClient => ({
+  manageAdoptionStatus: async (applicationId, status) => {
+    const accessToken = await getAccessToken();
+
+    if (!accessToken?.trim()) {
+      return {
+        ok: false,
+        status: 'unauthenticated',
+        reasons: ['missing_access_token'],
+      };
+    }
+
+    let response: Response;
+
+    try {
+      response = await fetch(
+        createWorkerSubUrl(workerBaseUrl, adoptionsPath, applicationId),
+        {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ status }),
+        },
+      );
+    } catch {
+      return {
+        ok: false,
+        status: 'worker_request_failed',
+        reasons: ['network_error'],
+      };
+    }
+
+    const body = await parseJsonResponse(response);
+
+    if (!response.ok) {
+      const failureStatus = parseAdoptionStatusFailureStatus(body);
+      const reasons = Array.isArray(body?.reasons) ? parseReasons(body) : [failureStatus];
+
+      return {
+        ok: false,
+        status: failureStatus,
+        reasons: sanitizeReasons(reasons, failureStatus),
+      };
+    }
+
+    const success = parseAdoptionStatusSuccess(body);
+
+    if (!success) {
+      return {
+        ok: false,
+        status: 'worker_response_invalid',
+        reasons: ['invalid_worker_response'],
+      };
+    }
+
+    return success;
+  },
+});
+
 // ─── Media Upload Flow Client ─────────────────────────────────────────────────
 
 export const createMediaUploadFlowClient = (
