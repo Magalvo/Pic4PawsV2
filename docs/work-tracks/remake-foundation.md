@@ -52,20 +52,21 @@ Recurring sponsorship — padrinhos (Worker + client + Web/Mobile):
 Shelter-side sponsorship list (Worker + client + Web/Mobile):
 `SPONSORSHIP-LIST-WORKER-001`, `SPONSORSHIP-LIST-CLIENT-001`, `WEB-SPONSORSHIP-LIST-001`, `MOBILE-SPONSORSHIP-LIST-001`.
 
+Sponsorship lifecycle management — cancel/pause/resume (Worker + client + Web/Mobile):
+`SPONSORSHIP-MANAGE-WORKER-001`, `SPONSORSHIP-MANAGE-CLIENT-001`, `WEB-SPONSORSHIP-MANAGE-001`, `MOBILE-SPONSORSHIP-MANAGE-001`.
+
 ## Current Focus
 
-The full sponsorship list slice is merged (PRs #64–#67). Shelter admins can view all recurring
-sponsorships for their shelter. All 6 states (idle/loading/loaded/empty/forbidden/failed) with
-PT-PT copy, dedicated `forbidden` state, and credential-sanitized failure reasons in both
-Web and Mobile boundaries.
+The full sponsorship manage slice is merged (PRs #68–#71). Shelter admins and donors can
+cancel, pause, or resume a recurring sponsorship. 4 states (idle/submitting/succeeded/failed)
+with PT-PT copy, dual access control (shelter manager OR donor), and credential-sanitized
+failure reasons in both Web and Mobile boundaries.
 
-The foundation now covers all write paths, all public read paths, and all shelter-side list
-views (adoption, donation, sponsorship).
+The foundation now covers all write paths, all public read paths, all shelter-side list
+views (adoption, donation, sponsorship), and the full sponsorship lifecycle.
 
-Suggested next:
-
-1. `SPONSORSHIP-MANAGE-WORKER-001` — `PATCH /sponsorships/:sponsorshipId` cancel/pause/resume
-2. Or begin a new domain slice (shelter member management, notifications, pet status transitions)
+Suggested next: Begin a new domain slice (shelter member management, notifications, pet
+status transitions, or donor-facing sponsorship list).
 
 ## Branching Convention
 
