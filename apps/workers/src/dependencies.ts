@@ -22,6 +22,8 @@ import type { DonationRepository } from './donation';
 import { createSupabaseDonationRepositories } from './donation-supabase';
 import type { DonationListRepository } from './donation-list';
 import { createSupabaseDonationListRepositories } from './donation-list-supabase';
+import type { PaymentWebhookRepository, PaymentWebhookVerifier } from './payment-webhook';
+import { createSupabasePaymentWebhookRepositories } from './payment-webhook-supabase';
 import type {
   PetDraftRepository,
   PetMediaAttachRepository,
@@ -59,6 +61,8 @@ export type WorkerRequestDependencies = {
   adoptionListRepository?: AdoptionListRepository;
   donationRepository?: DonationRepository;
   donationListRepository?: DonationListRepository;
+  paymentWebhookVerifier?: PaymentWebhookVerifier;
+  paymentWebhookRepository?: PaymentWebhookRepository;
   supabaseClientFactory?: WorkerSupabaseClientFactory;
   now?: () => string;
 };
@@ -103,6 +107,7 @@ export const createWorkerSupabaseDependencies = ({
     const adoptionListRepositories = createSupabaseAdoptionListRepositories({ client });
     const donationRepositories = createSupabaseDonationRepositories({ client });
     const donationListRepositories = createSupabaseDonationListRepositories({ client });
+    const paymentWebhookRepositories = createSupabasePaymentWebhookRepositories({ client });
 
     return {
       mediaUploadSigner,
@@ -118,6 +123,9 @@ export const createWorkerSupabaseDependencies = ({
       adoptionListRepository: adoptionListRepositories.adoptionListRepository,
       donationRepository: donationRepositories.donationRepository,
       donationListRepository: donationListRepositories.donationListRepository,
+      paymentWebhookRepository: paymentWebhookRepositories.paymentWebhookRepository,
+      // paymentWebhookVerifier is intentionally NOT set here — it is provider-SDK-specific
+      // and must be injected by the production fetch handler or tests
       now,
     };
   } catch {
@@ -175,5 +183,8 @@ export const resolveWorkerRequestDependencies = ({
       dependencies.donationRepository ?? supabaseDependencies.donationRepository,
     donationListRepository:
       dependencies.donationListRepository ?? supabaseDependencies.donationListRepository,
+    paymentWebhookVerifier: dependencies.paymentWebhookVerifier,
+    paymentWebhookRepository:
+      dependencies.paymentWebhookRepository ?? supabaseDependencies.paymentWebhookRepository,
   };
 };

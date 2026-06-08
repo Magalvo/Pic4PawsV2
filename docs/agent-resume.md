@@ -117,8 +117,12 @@ Completed foundation items (all merged to `main`):
 - `DONATION-CLIENT-001` — `createDonationClient` in `@pic4paws/client`
 - `WEB-DONATION-001` — Web donation product boundary with PT-PT states
 - `MOBILE-DONATION-001` — Mobile donation product boundary with PT-PT states
+- `DONATION-LIST-WORKER-001` — authenticated `GET /shelters/:shelterId/donations` Worker route
+- `DONATION-LIST-CLIENT-001` — `createDonationListClient` in `@pic4paws/client`
+- `WEB-DONATION-LIST-001` — Web donation list product boundary with PT-PT states (6 states incl. forbidden)
+- `MOBILE-DONATION-LIST-001` — Mobile donation list product boundary with PT-PT states
 
-The Worker now has:
+The Worker now has (as of 2026-06-08):
 
 - server-side Supabase SDK dependency composition
 - server-side R2/S3-compatible upload signer factory
@@ -136,6 +140,11 @@ The Worker now has:
 - authenticated donation intent (`POST /donations`) with `DonationRepository` interface —
   `amountCents ≥ 100`, GDPR gate, `donorUserId` from authenticated actor, provider from
   config, stub `providerPaymentId` + `idempotencyKey` via `crypto.randomUUID()`
+- authenticated shelter donation list (`GET /shelters/:shelterId/donations`) with
+  `DonationListRepository` interface — paginated (limit/offset), shelter membership check,
+  `matchWorkerDonationListShelterId` for URL path matching
+- `POST /webhooks/payments` stub already in router — returns `501 provider_adapter_not_configured`
+  until `PAYMENT-WEBHOOK-WORKER-001` replaces it
 - `SupabaseTableQueryLike` supports `.is()`, `.order()`, `.range()`
 - `WORKER_SHELTER_PATH` config (default `/shelters`)
 - `WORKER_ADOPTIONS_PATH` config (default `/adoptions`)
@@ -157,11 +166,13 @@ The Worker now has:
 - `AdoptionApplicationClient` (authenticated write — `submitApplication`)
 - `AdoptionListClient` (authenticated read — `loadApplications` with pagination)
 - `DonationClient` (authenticated write — `submitDonation`)
+- `DonationListClient` (authenticated read — `loadDonations` with pagination)
 - no client-side Supabase service-role keys or R2 credentials
 
 Web/Mobile now have tested product boundaries for: media upload, pet media upload+attach,
 pet publish, pet draft, pet draft save flow, pet feed, pet profile, shelter profile,
-adoption application, adoption list (shelter-side review), donation.
+adoption application, adoption list (shelter-side review), donation, donation list
+(shelter-side, 6 states including dedicated `forbidden`).
 
 The adopter end-to-end flow is fully wired at the boundary layer:
 **feed → pet profile → shelter profile → submit adoption application**.
@@ -172,25 +183,43 @@ The shelter-side adoption review flow is fully wired at the boundary layer:
 The full donation intent flow is wired end-to-end:
 **Worker route → client → Web + Mobile product boundaries**.
 
-Payment state transitions (webhook handling) and the shelter-side donation list are the
-next items.
+The donation list slice is complete. Payment state transitions (webhook handling) are next.
 
 ## 5. Recommended Next Work Item
 
-The full donation slice is merged. Continue with the shelter-side donation list:
+**PAYMENT-WEBHOOK-WORKER-001** — Payment webhook handler (Worker only, server-to-server).
 
-1. `DONATION-LIST-WORKER-001` — `GET /shelters/:shelterId/donations` Worker route
-   - Auth: shelter membership check (mirrors ADOPTION-LIST-WORKER-001)
-   - Pagination: `limit` / `offset` query params
-   - Repository: `DonationListRepository.listDonations(shelterId, query)`
-   - Response: `{ status: 'donation_list_loaded', donations: [...], total: number }`
-   - Each item: donationId, kind, status, amountCents, currency, paymentMethod,
-     anonymous, donorDisplayName, publicMessage, createdAt
-2. `DONATION-LIST-CLIENT-001` — `createDonationListClient` in `@pic4paws/client`
-3. `WEB-DONATION-LIST-001` — Web donation list product boundary with PT-PT states
-4. `MOBILE-DONATION-LIST-001` — Mobile donation list product boundary
+The scaffolding is already in place:
+- `config.workers.paymentWebhookPath` → `/webhooks/payments`
+- `config.payments.primaryProvider` → `eupago | ifthenpay | stripe`
+- Per-provider secrets: `eupagoWebhookSecret`, `ifthenpayWebhookSecret`, `stripeWebhookSecret`
+- The Worker index already routes to a stub that returns `501 provider_adapter_not_configured`
+- `payment_webhook_events` table exists in the schema (unique on `provider + provider_event_id`)
+- `donation_transactions` has `provider_payment_id`, `provider`, and `status` columns
 
-Start each on its own `agent/<WORK-ITEM-ID>` branch per the convention in Section 3.
+Work to do in `apps/workers/src/`:
+1. Create `payment-webhook.ts`:
+   - `ParsedWebhookEvent` type: `{ providerEventId, providerPaymentId, newStatus, payload }`
+   - `PaymentWebhookVerifier` type: `({ rawBody, signatureHeader, secret }) => ParsedWebhookEvent | null`
+   - `PaymentWebhookRepository` interface: `isEventAlreadyProcessed`, `recordWebhookEvent`, `updateDonationStatus`
+   - `PROVIDER_SIGNATURE_HEADERS` map: eupago/ifthenpay/stripe header names
+   - `handleWorkerPaymentWebhookRequest` function
+2. Create `payment-webhook-supabase.ts`: Supabase implementation
+3. Update `dependencies.ts`: add `paymentWebhookVerifier?`, `paymentWebhookRepository?`
+4. Update `index.ts`: replace stub body with call to `handleWorkerPaymentWebhookRequest`
+   (read `rawBody = await request.text()` instead of `parseJsonBody`)
+
+Handler logic:
+- 501 → no verifier configured
+- 401 → verifier returns null (bad signature or unparseable)
+- 501 → no repository
+- 200 `webhook_already_processed` → idempotency check passes
+- 200 `webhook_accepted` (donationFound: true/false) → happy path
+
+No client or UI boundary — this is server-to-server only.
+
+After this: optionally `DONATION-STATUS-WORKER-001` (`GET /donations/:donationId`) for
+client-side status polling, then consider the sponsorship slice.
 
 ## 6. Handoff Prompt For Codex
 
