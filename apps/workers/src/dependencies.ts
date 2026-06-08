@@ -24,6 +24,8 @@ import type { DonationListRepository } from './donation-list';
 import { createSupabaseDonationListRepositories } from './donation-list-supabase';
 import type { PaymentWebhookRepository, PaymentWebhookVerifier } from './payment-webhook';
 import { createSupabasePaymentWebhookRepositories } from './payment-webhook-supabase';
+import type { DonationStatusRepository } from './donation-status';
+import { createSupabaseDonationStatusRepositories } from './donation-status-supabase';
 import type {
   PetDraftRepository,
   PetMediaAttachRepository,
@@ -63,6 +65,7 @@ export type WorkerRequestDependencies = {
   donationListRepository?: DonationListRepository;
   paymentWebhookVerifier?: PaymentWebhookVerifier;
   paymentWebhookRepository?: PaymentWebhookRepository;
+  donationStatusRepository?: DonationStatusRepository;
   supabaseClientFactory?: WorkerSupabaseClientFactory;
   now?: () => string;
 };
@@ -108,6 +111,7 @@ export const createWorkerSupabaseDependencies = ({
     const donationRepositories = createSupabaseDonationRepositories({ client });
     const donationListRepositories = createSupabaseDonationListRepositories({ client });
     const paymentWebhookRepositories = createSupabasePaymentWebhookRepositories({ client });
+    const donationStatusRepositories = createSupabaseDonationStatusRepositories({ client });
 
     return {
       mediaUploadSigner,
@@ -124,6 +128,7 @@ export const createWorkerSupabaseDependencies = ({
       donationRepository: donationRepositories.donationRepository,
       donationListRepository: donationListRepositories.donationListRepository,
       paymentWebhookRepository: paymentWebhookRepositories.paymentWebhookRepository,
+      donationStatusRepository: donationStatusRepositories.donationStatusRepository,
       // paymentWebhookVerifier is intentionally NOT set here — it is provider-SDK-specific
       // and must be injected by the production fetch handler or tests
       now,
@@ -186,5 +191,7 @@ export const resolveWorkerRequestDependencies = ({
     paymentWebhookVerifier: dependencies.paymentWebhookVerifier,
     paymentWebhookRepository:
       dependencies.paymentWebhookRepository ?? supabaseDependencies.paymentWebhookRepository,
+    donationStatusRepository:
+      dependencies.donationStatusRepository ?? supabaseDependencies.donationStatusRepository,
   };
 };
