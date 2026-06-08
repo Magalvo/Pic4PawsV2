@@ -30,6 +30,8 @@ import type { SponsorshipRepository } from './sponsorship';
 import { createSupabaseSponsorshipRepositories } from './sponsorship-supabase';
 import type { SponsorshipListRepository } from './sponsorship-list';
 import { createSupabaseSponsorshipListRepositories } from './sponsorship-list-supabase';
+import type { SponsorshipManageRepository } from './sponsorship-manage';
+import { createSupabaseSponsorshipManageRepositories } from './sponsorship-manage-supabase';
 import type {
   PetDraftRepository,
   PetMediaAttachRepository,
@@ -72,6 +74,7 @@ export type WorkerRequestDependencies = {
   donationStatusRepository?: DonationStatusRepository;
   sponsorshipRepository?: SponsorshipRepository;
   sponsorshipListRepository?: SponsorshipListRepository;
+  sponsorshipManageRepository?: SponsorshipManageRepository;
   supabaseClientFactory?: WorkerSupabaseClientFactory;
   now?: () => string;
 };
@@ -120,6 +123,7 @@ export const createWorkerSupabaseDependencies = ({
     const donationStatusRepositories = createSupabaseDonationStatusRepositories({ client });
     const sponsorshipRepositories = createSupabaseSponsorshipRepositories({ client });
     const sponsorshipListRepositories = createSupabaseSponsorshipListRepositories({ client });
+    const sponsorshipManageRepositories = createSupabaseSponsorshipManageRepositories({ client });
 
     return {
       mediaUploadSigner,
@@ -139,6 +143,7 @@ export const createWorkerSupabaseDependencies = ({
       donationStatusRepository: donationStatusRepositories.donationStatusRepository,
       sponsorshipRepository: sponsorshipRepositories.sponsorshipRepository,
       sponsorshipListRepository: sponsorshipListRepositories.sponsorshipListRepository,
+      sponsorshipManageRepository: sponsorshipManageRepositories.sponsorshipManageRepository,
       // paymentWebhookVerifier is intentionally NOT set here — it is provider-SDK-specific
       // and must be injected by the production fetch handler or tests
       now,
@@ -207,5 +212,7 @@ export const resolveWorkerRequestDependencies = ({
       dependencies.sponsorshipRepository ?? supabaseDependencies.sponsorshipRepository,
     sponsorshipListRepository:
       dependencies.sponsorshipListRepository ?? supabaseDependencies.sponsorshipListRepository,
+    sponsorshipManageRepository:
+      dependencies.sponsorshipManageRepository ?? supabaseDependencies.sponsorshipManageRepository,
   };
 };
