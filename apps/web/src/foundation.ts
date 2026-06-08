@@ -38,6 +38,10 @@ import {
   webAdoptionViewUiContent,
   type WebAdoptionViewUiContent,
 } from './adoption-view';
+import {
+  webShelterMemberUiContent,
+  type WebShelterMemberUiContent,
+} from './shelter-member';
 
 export type WebFoundationStatus = 'contract-ready';
 
@@ -71,6 +75,7 @@ export type WebFoundationContent = {
   sponsorshipDonorList: Pick<WebSponsorshipDonorListUiContent, 'title' | 'description' | 'status'>;
   adoptionStatus: Pick<WebAdoptionStatusUiContent, 'title' | 'description' | 'status'>;
   adoptionView: Pick<WebAdoptionViewUiContent, 'title' | 'description' | 'status'>;
+  shelterMember: Pick<WebShelterMemberUiContent, 'title' | 'description' | 'status'>;
   readiness: Array<{
     id: 'database' | 'auth' | 'pets' | 'payments' | 'media' | 'workers';
     label: string;
@@ -185,6 +190,11 @@ export const webFoundationContent: WebFoundationContent = {
     title: webAdoptionViewUiContent.title,
     description: webAdoptionViewUiContent.description,
     status: webAdoptionViewUiContent.status,
+  },
+  shelterMember: {
+    title: webShelterMemberUiContent.title,
+    description: webShelterMemberUiContent.description,
+    status: webShelterMemberUiContent.status,
   },
   readiness: [
     {
