@@ -2463,6 +2463,174 @@ export const createDonationStatusClient = ({
   },
 });
 
+// ─── Sponsorship Client ──────────────────────────────────────────────────────
+
+export type SponsorshipClientRecurringInterval = 'monthly' | 'quarterly' | 'annual';
+
+export type SponsorshipClientInput = {
+  shelterId: string;
+  amountCents: number;
+  paymentMethod: DonationClientPaymentMethod;
+  recurringInterval: SponsorshipClientRecurringInterval;
+  dataProcessingAccepted: true;
+  petId?: string | null;
+};
+
+export type SponsorshipClientSuccess = {
+  ok: true;
+  status: 'sponsorship_created';
+  sponsorshipId: string;
+  amountCents: number;
+  currency: string;
+  recurringInterval: SponsorshipClientRecurringInterval;
+  shelterId: string;
+  createdAt: string;
+};
+
+export type SponsorshipClientFailureStatus =
+  | 'unauthenticated'
+  | 'invalid_sponsorship'
+  | 'sponsorship_repository_not_configured'
+  | 'auth_adapter_not_configured'
+  | 'worker_request_failed'
+  | 'worker_response_invalid';
+
+export type SponsorshipClientFailure = {
+  ok: false;
+  status: SponsorshipClientFailureStatus;
+  reasons: string[];
+};
+
+export type SponsorshipClientResult = SponsorshipClientSuccess | SponsorshipClientFailure;
+
+export type CreateSponsorshipClientInput = {
+  workerBaseUrl: string;
+  sponsorshipsPath: `/${string}`;
+  getAccessToken: () => Promise<string | null>;
+  fetch: MediaUploadClientFetch;
+};
+
+export type SponsorshipClient = {
+  submitSponsorship: (input: SponsorshipClientInput) => Promise<SponsorshipClientResult>;
+};
+
+const parseSponsorshipSuccess = (
+  body: Record<string, unknown> | null,
+): SponsorshipClientSuccess | null => {
+  if (
+    !body ||
+    body.status !== 'sponsorship_created' ||
+    typeof body.sponsorshipId !== 'string' ||
+    typeof body.amountCents !== 'number' ||
+    typeof body.currency !== 'string' ||
+    typeof body.recurringInterval !== 'string' ||
+    typeof body.shelterId !== 'string' ||
+    typeof body.createdAt !== 'string'
+  ) {
+    return null;
+  }
+
+  return {
+    ok: true,
+    status: 'sponsorship_created',
+    sponsorshipId: body.sponsorshipId,
+    amountCents: body.amountCents,
+    currency: body.currency,
+    recurringInterval: body.recurringInterval as SponsorshipClientRecurringInterval,
+    shelterId: body.shelterId,
+    createdAt: body.createdAt,
+  };
+};
+
+const parseSponsorshipFailureStatus = (
+  body: Record<string, unknown> | null,
+): SponsorshipClientFailureStatus => {
+  const status = body?.status;
+
+  if (
+    status === 'unauthenticated' ||
+    status === 'invalid_sponsorship' ||
+    status === 'sponsorship_repository_not_configured' ||
+    status === 'auth_adapter_not_configured'
+  ) {
+    return status;
+  }
+
+  return 'worker_request_failed';
+};
+
+const buildSponsorshipPayload = (input: SponsorshipClientInput): Record<string, unknown> => ({
+  shelterId: input.shelterId,
+  amountCents: input.amountCents,
+  paymentMethod: input.paymentMethod,
+  recurringInterval: input.recurringInterval,
+  petId: input.petId ?? null,
+  dataProcessingAccepted: input.dataProcessingAccepted,
+});
+
+export const createSponsorshipClient = ({
+  workerBaseUrl,
+  sponsorshipsPath,
+  getAccessToken,
+  fetch,
+}: CreateSponsorshipClientInput): SponsorshipClient => ({
+  submitSponsorship: async (input) => {
+    const accessToken = await getAccessToken();
+
+    if (!accessToken?.trim()) {
+      return {
+        ok: false,
+        status: 'unauthenticated',
+        reasons: ['missing_access_token'],
+      };
+    }
+
+    let response: Response;
+
+    try {
+      response = await fetch(createWorkerUrl(workerBaseUrl, sponsorshipsPath), {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(buildSponsorshipPayload(input)),
+      });
+    } catch {
+      return {
+        ok: false,
+        status: 'worker_request_failed',
+        reasons: ['network_error'],
+      };
+    }
+
+    const body = await parseJsonResponse(response);
+
+    if (!response.ok) {
+      const status = parseSponsorshipFailureStatus(body);
+      const reasons = Array.isArray(body?.reasons) ? parseReasons(body) : [status];
+
+      return {
+        ok: false,
+        status,
+        reasons: sanitizeReasons(reasons, status),
+      };
+    }
+
+    const success = parseSponsorshipSuccess(body);
+
+    if (!success) {
+      return {
+        ok: false,
+        status: 'worker_response_invalid',
+        reasons: ['invalid_worker_response'],
+      };
+    }
+
+    return success;
+  },
+});
+
 // ─── Media Upload Flow Client ─────────────────────────────────────────────────
 
 export const createMediaUploadFlowClient = (
