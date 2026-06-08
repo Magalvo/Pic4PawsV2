@@ -215,7 +215,7 @@ describe('POST /sponsorships — recurring sponsorship initiation', () => {
     expect(body.status).toBe('sponsorship_repository_not_configured');
   });
 
-  it('returns 405 for GET /sponsorships', async () => {
+  it('GET /sponsorships routes to donor list handler (not create), returns 501 without donor list repo', async () => {
     const request = new Request('https://workers.pic4paws.pt/sponsorships', {
       method: 'GET',
       headers: { Authorization: 'Bearer valid-token' },
@@ -224,11 +224,13 @@ describe('POST /sponsorships — recurring sponsorship initiation', () => {
     const response = await handleWorkerRequest(request, validEnv, {
       petDraftAuthenticator: fakeAuth,
       sponsorshipRepository: makeSponsorshipRepo(),
+      // no sponsorshipDonorListRepository
     });
     const body = await response.json();
 
-    expect(response.status).toBe(405);
-    expect(body.status).toBe('method_not_allowed');
+    // GET /sponsorships is now the donor list endpoint — 501 when repo not configured
+    expect(response.status).toBe(501);
+    expect(body.status).toBe('sponsorship_donor_list_repository_not_configured');
   });
 
   it('response body never contains credential markers', async () => {

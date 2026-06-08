@@ -30,6 +30,7 @@ import {
   handleWorkerSponsorshipManageRequest,
   matchWorkerSponsorshipManageId,
 } from './sponsorship-manage';
+import { handleWorkerSponsorshipDonorListRequest } from './sponsorship-donor-list';
 import {
   handleWorkerDonationListRequest,
   matchWorkerDonationListShelterId,
@@ -313,6 +314,21 @@ export type {
   CreateSupabaseSponsorshipManageRepositoriesInput,
   CreateSupabaseSponsorshipManageRepositoriesResult,
 } from './sponsorship-manage-supabase';
+export { handleWorkerSponsorshipDonorListRequest } from './sponsorship-donor-list';
+export type {
+  HandleWorkerSponsorshipDonorListRequestInput,
+  ListDonorSponsorshipsQuery,
+  ListDonorSponsorshipsResult,
+  SponsorshipDonorListRepository,
+} from './sponsorship-donor-list';
+export {
+  createSupabaseSponsorshipDonorListRepositories,
+  SupabaseSponsorshipDonorListRepositoryError,
+} from './sponsorship-donor-list-supabase';
+export type {
+  CreateSupabaseSponsorshipDonorListRepositoriesInput,
+  CreateSupabaseSponsorshipDonorListRepositoriesResult,
+} from './sponsorship-donor-list-supabase';
 export type {
   CreateR2UploadSignerInput,
   R2UploadPresigner,
@@ -698,6 +714,14 @@ export const handleWorkerRequest = async (
       sponsorshipId: sponsorshipManageId,
       payload,
       sponsorshipManageRepository: dependencies.sponsorshipManageRepository,
+      authenticator: dependencies.petDraftAuthenticator,
+    });
+  }
+
+  if (url.pathname === config.workers.sponsorshipsPath && request.method === 'GET') {
+    return handleWorkerSponsorshipDonorListRequest({
+      request,
+      sponsorshipDonorListRepository: dependencies.sponsorshipDonorListRepository,
       authenticator: dependencies.petDraftAuthenticator,
     });
   }
