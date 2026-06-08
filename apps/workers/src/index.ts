@@ -23,6 +23,10 @@ import {
 import { handleWorkerDonationRequest } from './donation';
 import { handleWorkerSponsorshipRequest } from './sponsorship';
 import {
+  handleWorkerSponsorshipListRequest,
+  matchWorkerSponsorshipListShelterId,
+} from './sponsorship-list';
+import {
   handleWorkerDonationListRequest,
   matchWorkerDonationListShelterId,
 } from './donation-list';
@@ -266,6 +270,26 @@ export type {
   CreateSupabaseSponsorshipRepositoriesInput,
   CreateSupabaseSponsorshipRepositoriesResult,
 } from './sponsorship-supabase';
+export {
+  handleWorkerSponsorshipListRequest,
+  matchWorkerSponsorshipListShelterId,
+} from './sponsorship-list';
+export type {
+  HandleWorkerSponsorshipListRequestInput,
+  ListSponsorshipsQuery,
+  ListSponsorshipsResult,
+  SponsorshipListRepository,
+  SponsorshipListSummary,
+  SponsorshipStatus,
+} from './sponsorship-list';
+export {
+  createSupabaseSponsorshipListRepositories,
+  SupabaseSponsorshipListRepositoryError,
+} from './sponsorship-list-supabase';
+export type {
+  CreateSupabaseSponsorshipListRepositoriesInput,
+  CreateSupabaseSponsorshipListRepositoriesResult,
+} from './sponsorship-list-supabase';
 export type {
   CreateR2UploadSignerInput,
   R2UploadPresigner,
@@ -622,6 +646,20 @@ export const handleWorkerRequest = async (
       authenticator: dependencies.petDraftAuthenticator,
       provider: config.payments.primaryProvider,
       now: dependencies.now?.() ?? new Date().toISOString(),
+    });
+  }
+
+  const sponsorshipListShelterId = matchWorkerSponsorshipListShelterId(
+    url.pathname,
+    config.workers.shelterPath,
+  );
+
+  if (sponsorshipListShelterId !== null) {
+    return handleWorkerSponsorshipListRequest({
+      request,
+      shelterId: sponsorshipListShelterId,
+      sponsorshipListRepository: dependencies.sponsorshipListRepository,
+      authenticator: dependencies.petDraftAuthenticator,
     });
   }
 

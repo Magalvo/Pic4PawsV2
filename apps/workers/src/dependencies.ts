@@ -28,6 +28,8 @@ import type { DonationStatusRepository } from './donation-status';
 import { createSupabaseDonationStatusRepositories } from './donation-status-supabase';
 import type { SponsorshipRepository } from './sponsorship';
 import { createSupabaseSponsorshipRepositories } from './sponsorship-supabase';
+import type { SponsorshipListRepository } from './sponsorship-list';
+import { createSupabaseSponsorshipListRepositories } from './sponsorship-list-supabase';
 import type {
   PetDraftRepository,
   PetMediaAttachRepository,
@@ -69,6 +71,7 @@ export type WorkerRequestDependencies = {
   paymentWebhookRepository?: PaymentWebhookRepository;
   donationStatusRepository?: DonationStatusRepository;
   sponsorshipRepository?: SponsorshipRepository;
+  sponsorshipListRepository?: SponsorshipListRepository;
   supabaseClientFactory?: WorkerSupabaseClientFactory;
   now?: () => string;
 };
@@ -116,6 +119,7 @@ export const createWorkerSupabaseDependencies = ({
     const paymentWebhookRepositories = createSupabasePaymentWebhookRepositories({ client });
     const donationStatusRepositories = createSupabaseDonationStatusRepositories({ client });
     const sponsorshipRepositories = createSupabaseSponsorshipRepositories({ client });
+    const sponsorshipListRepositories = createSupabaseSponsorshipListRepositories({ client });
 
     return {
       mediaUploadSigner,
@@ -134,6 +138,7 @@ export const createWorkerSupabaseDependencies = ({
       paymentWebhookRepository: paymentWebhookRepositories.paymentWebhookRepository,
       donationStatusRepository: donationStatusRepositories.donationStatusRepository,
       sponsorshipRepository: sponsorshipRepositories.sponsorshipRepository,
+      sponsorshipListRepository: sponsorshipListRepositories.sponsorshipListRepository,
       // paymentWebhookVerifier is intentionally NOT set here — it is provider-SDK-specific
       // and must be injected by the production fetch handler or tests
       now,
@@ -200,5 +205,7 @@ export const resolveWorkerRequestDependencies = ({
       dependencies.donationStatusRepository ?? supabaseDependencies.donationStatusRepository,
     sponsorshipRepository:
       dependencies.sponsorshipRepository ?? supabaseDependencies.sponsorshipRepository,
+    sponsorshipListRepository:
+      dependencies.sponsorshipListRepository ?? supabaseDependencies.sponsorshipListRepository,
   };
 };
