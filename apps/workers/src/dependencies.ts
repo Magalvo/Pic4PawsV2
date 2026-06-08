@@ -18,6 +18,8 @@ import type { AdoptionApplicationRepository } from './adoption';
 import { createSupabaseAdoptionRepositories } from './adoption-supabase';
 import type { AdoptionListRepository } from './adoption-list';
 import { createSupabaseAdoptionListRepositories } from './adoption-list-supabase';
+import type { DonationRepository } from './donation';
+import { createSupabaseDonationRepositories } from './donation-supabase';
 import type {
   PetDraftRepository,
   PetMediaAttachRepository,
@@ -53,6 +55,7 @@ export type WorkerRequestDependencies = {
   shelterProfileRepository?: ShelterProfileRepository;
   adoptionRepository?: AdoptionApplicationRepository;
   adoptionListRepository?: AdoptionListRepository;
+  donationRepository?: DonationRepository;
   supabaseClientFactory?: WorkerSupabaseClientFactory;
   now?: () => string;
 };
@@ -95,6 +98,7 @@ export const createWorkerSupabaseDependencies = ({
     const shelterRepositories = createSupabaseShelterRepositories({ client });
     const adoptionRepositories = createSupabaseAdoptionRepositories({ client });
     const adoptionListRepositories = createSupabaseAdoptionListRepositories({ client });
+    const donationRepositories = createSupabaseDonationRepositories({ client });
 
     return {
       mediaUploadSigner,
@@ -108,6 +112,7 @@ export const createWorkerSupabaseDependencies = ({
       shelterProfileRepository: shelterRepositories.shelterProfileRepository,
       adoptionRepository: adoptionRepositories.adoptionRepository,
       adoptionListRepository: adoptionListRepositories.adoptionListRepository,
+      donationRepository: donationRepositories.donationRepository,
       now,
     };
   } catch {
@@ -161,5 +166,7 @@ export const resolveWorkerRequestDependencies = ({
       dependencies.adoptionRepository ?? supabaseDependencies.adoptionRepository,
     adoptionListRepository:
       dependencies.adoptionListRepository ?? supabaseDependencies.adoptionListRepository,
+    donationRepository:
+      dependencies.donationRepository ?? supabaseDependencies.donationRepository,
   };
 };

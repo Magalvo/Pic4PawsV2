@@ -20,6 +20,7 @@ import {
   handleWorkerAdoptionListRequest,
   matchWorkerAdoptionListShelterId,
 } from './adoption-list';
+import { handleWorkerDonationRequest } from './donation';
 import {
   handleWorkerPetDraftRequest,
   matchWorkerPetDraftRoute,
@@ -163,6 +164,24 @@ export {
   createR2UploadSignerWorkerDependencies,
   R2UploadSignerFactoryError,
 } from './r2-signer';
+export { handleWorkerDonationRequest, validateDonationPayload } from './donation';
+export type {
+  CreateDonationInput,
+  CreateDonationResult,
+  DonationKind,
+  DonationPaymentMethod,
+  DonationProvider,
+  DonationRepository,
+  HandleWorkerDonationRequestInput,
+} from './donation';
+export {
+  createSupabaseDonationRepositories,
+  SupabaseDonationRepositoryError,
+} from './donation-supabase';
+export type {
+  CreateSupabaseDonationRepositoriesInput,
+  CreateSupabaseDonationRepositoriesResult,
+} from './donation-supabase';
 export type {
   CreateR2UploadSignerInput,
   R2UploadPresigner,
@@ -468,6 +487,23 @@ export const handleWorkerRequest = async (
       payload,
       adoptionRepository: dependencies.adoptionRepository,
       authenticator: dependencies.petDraftAuthenticator,
+      now: dependencies.now?.() ?? new Date().toISOString(),
+    });
+  }
+
+  if (url.pathname === config.workers.donationsPath) {
+    const payload = await parseJsonBody(request);
+
+    if (payload === null && request.method === 'POST') {
+      return jsonResponse({ status: 'invalid_json' }, { status: 400 });
+    }
+
+    return handleWorkerDonationRequest({
+      request,
+      payload,
+      donationRepository: dependencies.donationRepository,
+      authenticator: dependencies.petDraftAuthenticator,
+      provider: config.payments.primaryProvider,
       now: dependencies.now?.() ?? new Date().toISOString(),
     });
   }
