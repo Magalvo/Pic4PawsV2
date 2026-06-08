@@ -147,8 +147,11 @@ Completed foundation items (all merged to `main`):
 - `WEB-ADOPTION-STATUS-001` — Web adoption status product boundary for shelter staff (4 states: idle/submitting/succeeded/failed)
 - `MOBILE-ADOPTION-STATUS-001` — Mobile adoption status product boundary for shelter staff
 - `ADOPTION-VIEW-WORKER-001` — `GET /adoptions/:applicationId` dual-access Worker route (applicant OR shelter member), `AdoptionViewRepository` + Supabase impl, `applicantUserId` omitted from response
+- `ADOPTION-VIEW-CLIENT-001` — `createAdoptionViewClient` in `@pic4paws/client`
+- `WEB-ADOPTION-VIEW-001` — Web adoption view product boundary (6 states: idle/loading/loaded/not_found/forbidden/failed)
+- `MOBILE-ADOPTION-VIEW-001` — Mobile adoption view product boundary with PT-PT states
 
-The Worker now has (as of 2026-06-08, updated through PR #80):
+The Worker now has (as of 2026-06-08, updated through PR #83):
 
 - server-side Supabase SDK dependency composition
 - server-side R2/S3-compatible upload signer factory
@@ -218,6 +221,7 @@ The Worker now has (as of 2026-06-08, updated through PR #80):
 - `SponsorshipManageClient` (authenticated write — `manageSponsorship(sponsorshipId, status)`)
 - `SponsorshipDonorListClient` (authenticated read — `loadDonorSponsorships(query?)` — donor's own list)
 - `AdoptionStatusClient` (authenticated write — `manageAdoptionStatus(applicationId, status)`)
+- `AdoptionViewClient` (authenticated read — `loadAdoptionView(applicationId)`, 7 failure statuses)
 - no client-side Supabase service-role keys or R2 credentials
 
 Web/Mobile now have tested product boundaries for: media upload, pet media upload+attach,
@@ -229,10 +233,11 @@ including dedicated `not_found` + `forbidden`), sponsorship (recurring / padrinh
 6 states including dedicated `forbidden`), sponsorship manage (cancel/pause/resume,
 4 states: idle/submitting/succeeded/failed, dual access: shelter manager OR donor),
 sponsorship donor list (donor-facing, 5 states: idle/loading/loaded/empty/failed, no `forbidden`),
-adoption status management (shelter staff approve/reject/review, 4 states: idle/submitting/succeeded/failed).
+adoption status management (shelter staff approve/reject/review, 4 states: idle/submitting/succeeded/failed),
+adoption view (adopter + shelter read, 6 states: idle/loading/loaded/not_found/forbidden/failed).
 
 The adopter end-to-end flow is fully wired at the boundary layer:
-**feed → pet profile → shelter profile → submit adoption application**.
+**feed → pet profile → shelter profile → submit adoption application → view adoption status**.
 
 The shelter-side adoption review flow is fully wired at the boundary layer:
 **Worker route → client → Web + Mobile product boundaries**.
@@ -255,8 +260,8 @@ The donor-facing sponsorship list slice is wired end-to-end:
 The adoption status management slice is fully wired end-to-end:
 **`PATCH /adoptions/:applicationId` Worker route → `AdoptionStatusClient` → Web + Mobile product boundaries**.
 
-The adoption view Worker route is implemented:
-**`GET /adoptions/:applicationId` Worker route** — dual access (applicant OR shelter member), `applicantUserId` omitted from response. Client + UI boundaries not yet built.
+The adoption view slice is fully wired end-to-end:
+**`GET /adoptions/:applicationId` Worker route → `AdoptionViewClient` → Web + Mobile product boundaries** (6 states, dual access: applicant OR shelter member, `applicantUserId` omitted from response).
 
 Payment state is always driven by verified server-side webhook. The `paymentWebhookVerifier`
 is intentionally left unset by the factory — provider-specific HMAC adapters must be wired
@@ -264,18 +269,20 @@ per deployment.
 
 ## 5. Recommended Next Work Item
 
-The adoption view Worker route is complete (PR TBD). The foundation now covers:
+The adoption view slice is complete (PRs #80–#83). The foundation now covers:
 - All write paths (pet drafts, media, adoption, donation, sponsorship, sponsorship manage, adoption status management)
-- All read paths (pet feed, pet profile, shelter profile, adoption view)
+- All read paths (pet feed, pet profile, shelter profile, adoption view — all 4 layers)
 - All shelter-side list views (adoption list, donation list, sponsorship list)
 - Donor-facing sponsorship list (GET /sponsorships)
 - Full payment confirmation pipeline (webhook → donor status polling)
 - Sponsorship lifecycle management (cancel/pause/resume — dual access: shelter OR donor)
 - Adoption status management — full slice (Worker + client + Web + Mobile)
+- Adoption view — full slice (Worker + client + Web + Mobile)
 
 **Suggested next** (in priority order):
-1. Continue the adoption view slice: `ADOPTION-VIEW-CLIENT-001` → `createAdoptionViewClient` in `@pic4paws/client`, then `WEB-ADOPTION-VIEW-001` + `MOBILE-ADOPTION-VIEW-001` product boundaries.
-2. Begin a new domain slice: shelter member management, notifications, or pet status transitions.
+1. **Shelter member management** — `SHELTER-MEMBER-WORKER-001` (`GET /shelters/:shelterId/members` + `POST` + `DELETE`), client + Web/Mobile boundaries.
+2. **Pet archival / status transitions** — `PET-ARCHIVE-WORKER-001` (`PATCH /pets/:petId/status` to `archived`), client + Web/Mobile boundaries.
+3. **Notification delivery** — Worker-side notification dispatch + client read boundary.
 
 ## 6. Handoff Prompt For Codex
 
