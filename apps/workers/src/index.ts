@@ -21,6 +21,7 @@ import {
   matchWorkerAdoptionListShelterId,
 } from './adoption-list';
 import { handleWorkerDonationRequest } from './donation';
+import { handleWorkerSponsorshipRequest } from './sponsorship';
 import {
   handleWorkerDonationListRequest,
   matchWorkerDonationListShelterId,
@@ -249,6 +250,22 @@ export type {
   CreateSupabaseDonationStatusRepositoriesInput,
   CreateSupabaseDonationStatusRepositoriesResult,
 } from './donation-status-supabase';
+export { handleWorkerSponsorshipRequest, validateSponsorshipPayload } from './sponsorship';
+export type {
+  CreateSponsorshipInput,
+  CreateSponsorshipResult,
+  HandleWorkerSponsorshipRequestInput,
+  SponsorshipRecurringInterval,
+  SponsorshipRepository,
+} from './sponsorship';
+export {
+  createSupabaseSponsorshipRepositories,
+  SupabaseSponsorshipRepositoryError,
+} from './sponsorship-supabase';
+export type {
+  CreateSupabaseSponsorshipRepositoriesInput,
+  CreateSupabaseSponsorshipRepositoriesResult,
+} from './sponsorship-supabase';
 export type {
   CreateR2UploadSignerInput,
   R2UploadPresigner,
@@ -602,6 +619,23 @@ export const handleWorkerRequest = async (
       request,
       payload,
       donationRepository: dependencies.donationRepository,
+      authenticator: dependencies.petDraftAuthenticator,
+      provider: config.payments.primaryProvider,
+      now: dependencies.now?.() ?? new Date().toISOString(),
+    });
+  }
+
+  if (url.pathname === config.workers.sponsorshipsPath) {
+    const payload = await parseJsonBody(request);
+
+    if (payload === null && request.method === 'POST') {
+      return jsonResponse({ status: 'invalid_json' }, { status: 400 });
+    }
+
+    return handleWorkerSponsorshipRequest({
+      request,
+      payload,
+      sponsorshipRepository: dependencies.sponsorshipRepository,
       authenticator: dependencies.petDraftAuthenticator,
       provider: config.payments.primaryProvider,
       now: dependencies.now?.() ?? new Date().toISOString(),
