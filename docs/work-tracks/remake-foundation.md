@@ -55,18 +55,26 @@ Shelter-side sponsorship list (Worker + client + Web/Mobile):
 Sponsorship lifecycle management — cancel/pause/resume (Worker + client + Web/Mobile):
 `SPONSORSHIP-MANAGE-WORKER-001`, `SPONSORSHIP-MANAGE-CLIENT-001`, `WEB-SPONSORSHIP-MANAGE-001`, `MOBILE-SPONSORSHIP-MANAGE-001`.
 
+Donor-facing sponsorship list — `GET /sponsorships` (Worker + client + Web/Mobile):
+`SPONSORSHIP-DONOR-LIST-WORKER-001`, `SPONSORSHIP-DONOR-LIST-CLIENT-001`, `WEB-SPONSORSHIP-DONOR-LIST-001`, `MOBILE-SPONSORSHIP-DONOR-LIST-001`.
+
+Adoption status management — `PATCH /adoptions/:applicationId` (Worker only so far):
+`ADOPTION-STATUS-WORKER-001`.
+
 ## Current Focus
 
-The full sponsorship manage slice is merged (PRs #68–#71). Shelter admins and donors can
-cancel, pause, or resume a recurring sponsorship. 4 states (idle/submitting/succeeded/failed)
-with PT-PT copy, dual access control (shelter manager OR donor), and credential-sanitized
-failure reasons in both Web and Mobile boundaries.
+`ADOPTION-STATUS-WORKER-001` is merged (PR #76). Shelter admins can now move adoption
+applications through the review lifecycle: `submitted → under_review → more_info_requested
+→ approved / rejected`. The `PATCH /adoptions/:applicationId` route is shelter-only (no
+dual access), with the same `matchWorkerAdoptionStatusId` path-matcher pattern as manage routes.
 
 The foundation now covers all write paths, all public read paths, all shelter-side list
-views (adoption, donation, sponsorship), and the full sponsorship lifecycle.
+views (adoption, donation, sponsorship), the donor-facing sponsorship list, and the full
+sponsorship lifecycle including adoption status management at the Worker level.
 
-Suggested next: Begin a new domain slice (shelter member management, notifications, pet
-status transitions, or donor-facing sponsorship list).
+Suggested next:
+1. Complete adoption status slice: `ADOPTION-STATUS-CLIENT-001` + `WEB-ADOPTION-STATUS-001` + `MOBILE-ADOPTION-STATUS-001`.
+2. Or begin a new domain slice (shelter member management, notifications, pet status transitions).
 
 ## Branching Convention
 

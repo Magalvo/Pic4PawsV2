@@ -20,6 +20,10 @@ import {
   handleWorkerAdoptionListRequest,
   matchWorkerAdoptionListShelterId,
 } from './adoption-list';
+import {
+  handleWorkerAdoptionStatusRequest,
+  matchWorkerAdoptionStatusId,
+} from './adoption-status';
 import { handleWorkerDonationRequest } from './donation';
 import { handleWorkerSponsorshipRequest } from './sponsorship';
 import {
@@ -178,6 +182,25 @@ export type {
   CreateSupabaseAdoptionListRepositoriesInput,
   CreateSupabaseAdoptionListRepositoriesResult,
 } from './adoption-list-supabase';
+export {
+  handleWorkerAdoptionStatusRequest,
+  matchWorkerAdoptionStatusId,
+  validateAdoptionStatusPayload,
+} from './adoption-status';
+export type {
+  AdoptionStatusRecord,
+  AdoptionStatusRepository,
+  HandleWorkerAdoptionStatusRequestInput,
+  UpdateAdoptionStatusInput,
+} from './adoption-status';
+export {
+  createSupabaseAdoptionStatusRepositories,
+  SupabaseAdoptionStatusRepositoryError,
+} from './adoption-status-supabase';
+export type {
+  CreateSupabaseAdoptionStatusRepositoriesInput,
+  CreateSupabaseAdoptionStatusRepositoriesResult,
+} from './adoption-status-supabase';
 export {
   createR2UploadSigner,
   createR2UploadSignerWorkerDependencies,
@@ -637,6 +660,22 @@ export const handleWorkerRequest = async (
       request,
       shelterId: donationListShelterId,
       donationListRepository: dependencies.donationListRepository,
+      authenticator: dependencies.petDraftAuthenticator,
+    });
+  }
+
+  const adoptionStatusId = matchWorkerAdoptionStatusId(
+    url.pathname,
+    config.workers.adoptionsPath,
+  );
+
+  if (adoptionStatusId !== null) {
+    const payload = await parseJsonBody(request);
+    return handleWorkerAdoptionStatusRequest({
+      request,
+      applicationId: adoptionStatusId,
+      payload,
+      adoptionStatusRepository: dependencies.adoptionStatusRepository,
       authenticator: dependencies.petDraftAuthenticator,
     });
   }
