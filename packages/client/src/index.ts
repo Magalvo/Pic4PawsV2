@@ -2116,6 +2116,176 @@ export const createDonationClient = ({
   },
 });
 
+// ─── Donation List Client ────────────────────────────────────────────────────
+
+export type DonationClientStatus =
+  | 'created'
+  | 'pending_payment'
+  | 'paid'
+  | 'failed'
+  | 'cancelled'
+  | 'refunded'
+  | 'partially_refunded';
+
+export type DonationListApplication = {
+  donationId: string;
+  kind: DonationClientKind;
+  status: DonationClientStatus;
+  amountCents: number;
+  currency: string;
+  paymentMethod: DonationClientPaymentMethod;
+  anonymous: boolean;
+  donorDisplayName: string | null;
+  publicMessage: string | null;
+  createdAt: string;
+};
+
+export type DonationListQuery = {
+  limit?: number | null;
+  offset?: number | null;
+};
+
+export type DonationListClientSuccess = {
+  ok: true;
+  status: 'ok';
+  donations: DonationListApplication[];
+  total: number;
+};
+
+export type DonationListClientFailureStatus =
+  | 'unauthenticated'
+  | 'forbidden'
+  | 'donation_list_repository_not_configured'
+  | 'auth_adapter_not_configured'
+  | 'worker_request_failed'
+  | 'worker_response_invalid';
+
+export type DonationListClientFailure = {
+  ok: false;
+  status: DonationListClientFailureStatus;
+  reasons: string[];
+};
+
+export type DonationListClientResult = DonationListClientSuccess | DonationListClientFailure;
+
+export type CreateDonationListClientInput = {
+  workerBaseUrl: string;
+  shelterPath: `/${string}`;
+  getAccessToken: () => Promise<string | null>;
+  fetch: MediaUploadClientFetch;
+};
+
+export type DonationListClient = {
+  loadDonations: (
+    shelterId: string,
+    query?: DonationListQuery,
+  ) => Promise<DonationListClientResult>;
+};
+
+const parseDonationListSuccess = (
+  body: Record<string, unknown> | null,
+): DonationListClientSuccess | null => {
+  if (
+    !body ||
+    body.status !== 'ok' ||
+    !Array.isArray(body.donations) ||
+    typeof body.total !== 'number'
+  ) {
+    return null;
+  }
+
+  return {
+    ok: true,
+    status: 'ok',
+    donations: body.donations as DonationListApplication[],
+    total: body.total,
+  };
+};
+
+const parseDonationListFailureStatus = (
+  body: Record<string, unknown> | null,
+): DonationListClientFailureStatus => {
+  const status = body?.status;
+
+  if (
+    status === 'unauthenticated' ||
+    status === 'forbidden' ||
+    status === 'donation_list_repository_not_configured' ||
+    status === 'auth_adapter_not_configured'
+  ) {
+    return status;
+  }
+
+  return 'worker_request_failed';
+};
+
+export const createDonationListClient = ({
+  workerBaseUrl,
+  shelterPath,
+  getAccessToken,
+  fetch,
+}: CreateDonationListClientInput): DonationListClient => ({
+  loadDonations: async (shelterId, query = {}) => {
+    const accessToken = await getAccessToken();
+
+    if (!accessToken?.trim()) {
+      return {
+        ok: false,
+        status: 'unauthenticated',
+        reasons: ['missing_access_token'],
+      };
+    }
+
+    const base = createWorkerSubUrl(workerBaseUrl, shelterPath, shelterId, 'donations');
+    const url = new URL(base);
+
+    if (query?.limit != null) url.searchParams.set('limit', String(query.limit));
+    if (query?.offset != null) url.searchParams.set('offset', String(query.offset));
+
+    let response: Response;
+
+    try {
+      response = await fetch(url.toString(), {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+    } catch {
+      return {
+        ok: false,
+        status: 'worker_request_failed',
+        reasons: ['network_error'],
+      };
+    }
+
+    const body = await parseJsonResponse(response);
+
+    if (!response.ok) {
+      const status = parseDonationListFailureStatus(body);
+      const reasons = Array.isArray(body?.reasons) ? parseReasons(body) : [status];
+
+      return {
+        ok: false,
+        status,
+        reasons: sanitizeReasons(reasons, status),
+      };
+    }
+
+    const success = parseDonationListSuccess(body);
+
+    if (!success) {
+      return {
+        ok: false,
+        status: 'worker_response_invalid',
+        reasons: ['invalid_worker_response'],
+      };
+    }
+
+    return success;
+  },
+});
+
 // ─── Media Upload Flow Client ─────────────────────────────────────────────────
 
 export const createMediaUploadFlowClient = (
