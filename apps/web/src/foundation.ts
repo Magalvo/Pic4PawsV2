@@ -34,6 +34,10 @@ import {
   webAdoptionStatusUiContent,
   type WebAdoptionStatusUiContent,
 } from './adoption-status';
+import {
+  webAdoptionViewUiContent,
+  type WebAdoptionViewUiContent,
+} from './adoption-view';
 
 export type WebFoundationStatus = 'contract-ready';
 
@@ -66,6 +70,7 @@ export type WebFoundationContent = {
   sponsorshipManage: Pick<WebSponsorshipManageUiContent, 'title' | 'description' | 'status'>;
   sponsorshipDonorList: Pick<WebSponsorshipDonorListUiContent, 'title' | 'description' | 'status'>;
   adoptionStatus: Pick<WebAdoptionStatusUiContent, 'title' | 'description' | 'status'>;
+  adoptionView: Pick<WebAdoptionViewUiContent, 'title' | 'description' | 'status'>;
   readiness: Array<{
     id: 'database' | 'auth' | 'pets' | 'payments' | 'media' | 'workers';
     label: string;
@@ -175,6 +180,11 @@ export const webFoundationContent: WebFoundationContent = {
     title: webAdoptionStatusUiContent.title,
     description: webAdoptionStatusUiContent.description,
     status: webAdoptionStatusUiContent.status,
+  },
+  adoptionView: {
+    title: webAdoptionViewUiContent.title,
+    description: webAdoptionViewUiContent.description,
+    status: webAdoptionViewUiContent.status,
   },
   readiness: [
     {
