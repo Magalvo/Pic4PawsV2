@@ -130,6 +130,10 @@ Completed foundation items (all merged to `main`):
 - `SPONSORSHIP-CLIENT-001` — `createSponsorshipClient` in `@pic4paws/client`
 - `WEB-SPONSORSHIP-001` — Web sponsorship product boundary (4 states: idle/submitting/submitted/failed)
 - `MOBILE-SPONSORSHIP-001` — Mobile sponsorship product boundary with PT-PT states
+- `SPONSORSHIP-LIST-WORKER-001` — authenticated `GET /shelters/:shelterId/sponsorships` Worker route with `SponsorshipListRepository` + Supabase impl
+- `SPONSORSHIP-LIST-CLIENT-001` — `createSponsorshipListClient` in `@pic4paws/client`
+- `WEB-SPONSORSHIP-LIST-001` — Web sponsorship list product boundary (6 states incl. dedicated `forbidden`)
+- `MOBILE-SPONSORSHIP-LIST-001` — Mobile sponsorship list product boundary with PT-PT states
 
 The Worker now has (as of 2026-06-08):
 
@@ -152,6 +156,9 @@ The Worker now has (as of 2026-06-08):
 - authenticated shelter donation list (`GET /shelters/:shelterId/donations`) with
   `DonationListRepository` interface — paginated (limit/offset), shelter membership check,
   `matchWorkerDonationListShelterId` for URL path matching
+- authenticated shelter sponsorship list (`GET /shelters/:shelterId/sponsorships`) with
+  `SponsorshipListRepository` interface — paginated (limit/offset), shelter membership check,
+  `matchWorkerSponsorshipListShelterId` for URL path matching
 - `POST /webhooks/payments` payment webhook handler — `PaymentWebhookVerifier` interface
   (HMAC verification, provider-specific), `PaymentWebhookRepository` (idempotency via
   `payment_webhook_events`, UPDATE `donation_transactions`), `PROVIDER_SIGNATURE_HEADERS` map.
@@ -183,6 +190,7 @@ The Worker now has (as of 2026-06-08):
 - `DonationListClient` (authenticated read — `loadDonations` with pagination)
 - `DonationStatusClient` (authenticated read — `loadDonationStatus(donationId)`)
 - `SponsorshipClient` (authenticated write — `submitSponsorship` with `recurringInterval`)
+- `SponsorshipListClient` (authenticated read — `loadSponsorships(shelterId, query?)` with pagination)
 - no client-side Supabase service-role keys or R2 credentials
 
 Web/Mobile now have tested product boundaries for: media upload, pet media upload+attach,
@@ -190,7 +198,8 @@ pet publish, pet draft, pet draft save flow, pet feed, pet profile, shelter prof
 adoption application, adoption list (shelter-side review), donation, donation list
 (shelter-side, 6 states including dedicated `forbidden`), donation status (6 states
 including dedicated `not_found` + `forbidden`), sponsorship (recurring / padrinhos,
-4 states including idle/submitting/submitted/failed).
+4 states including idle/submitting/submitted/failed), sponsorship list (shelter-side,
+6 states including dedicated `forbidden`).
 
 The adopter end-to-end flow is fully wired at the boundary layer:
 **feed → pet profile → shelter profile → submit adoption application**.
@@ -204,27 +213,31 @@ The full donation slice is wired end-to-end:
 The full sponsorship slice (padrinhos) is wired end-to-end:
 **sponsorship intent → Web + Mobile boundaries** (`POST /sponsorships` Worker route + `SponsorshipClient` + both product boundaries).
 
+The full sponsorship list slice is wired end-to-end:
+**`GET /shelters/:shelterId/sponsorships` Worker route → `SponsorshipListClient` → Web + Mobile product boundaries** (6 states including dedicated `forbidden`).
+
 Payment state is always driven by verified server-side webhook. The `paymentWebhookVerifier`
 is intentionally left unset by the factory — provider-specific HMAC adapters must be wired
 per deployment.
 
 ## 5. Recommended Next Work Item
 
-**SPONSORSHIP-LIST-WORKER-001** — Shelter-side sponsorship list Worker route.
+The full sponsorship list slice is complete (PRs #64–#67). The foundation now covers:
+- All write paths (pet drafts, media, adoption, donation, sponsorship)
+- All read paths (pet feed, pet profile, shelter profile)
+- All shelter-side list views (adoption list, donation list, sponsorship list)
+- Full payment confirmation pipeline (webhook → donor status polling)
 
-Design sketch (mirrors `DONATION-LIST-WORKER-001`):
+**Suggested next: `SPONSORSHIP-MANAGE-WORKER-001`** — Shelter-side sponsorship state management.
 
-- `GET /shelters/:shelterId/sponsorships` — authenticated, shelter-membership check
-- Pagination: `limit` / `offset` query params, default `limit=20`, max `limit=100`
-- `SponsorshipListRepository` interface: `listSponsorships({ shelterId, limit, offset })`
-- Supabase impl in `sponsorship-supabase.ts` (extend `createSupabaseSponsorshipRepositories`)
-- `matchWorkerSponsorshipListShelterId` path matcher
-- Returns `{ status: 'sponsorships_listed', sponsorships: [...], total, limit, offset }`
-- Route wired under `WORKER_SPONSORSHIPS_PATH` prefix (i.e. `{sponsorshipsPath}/{shelterId}/sponsorships`)
+Design sketch:
+- `PATCH /sponsorships/:sponsorshipId` — authenticated, cancel/pause/resume a sponsorship
+- `SponsorshipManageRepository` interface: `updateSponsorshipStatus({ sponsorshipId, status })`
+- Shelter membership check: requester must manage the shelter that owns the sponsorship
+- Returns `{ status: 'ok', sponsorshipId, status: SponsorshipStatus }`
+- Mirrors donation/adoption action patterns
 
-After SPONSORSHIP-LIST-WORKER-001:
-- `SPONSORSHIP-LIST-CLIENT-001` — `createSponsorshipListClient` in `@pic4paws/client`
-- `WEB-SPONSORSHIP-LIST-001` / `MOBILE-SPONSORSHIP-LIST-001` — shelter-side list product boundaries
+Alternatively, begin a new domain slice (e.g. shelter member management, notifications, or pet status transitions).
 
 ## 6. Handoff Prompt For Codex
 
