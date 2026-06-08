@@ -34,4 +34,8 @@ No Web product boundary exists — the web app cannot present the shelter donati
 
 ## 4. Completion Notes
 
-_To be filled in after implementation._
+- Implemented `apps/web/src/donation-list.ts` with all 6 states, `WebDonationListResultViewModel` union, and `createWebDonationListUi({ donationListClient })`.
+- Extended `apps/web/src/foundation.ts` with `donationList` entry (type + value).
+- 10 tests in `tests/web/donation-list-ui.test.ts` — confirmed fail before impl, pass after.
+- Validation: typecheck 15/15 clean, lint clean, 498/498 tests pass, build 9/9 clean.
+- PR #53: https://github.com/Magalvo/Pic4PawsV2/pull/53
