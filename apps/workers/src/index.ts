@@ -24,6 +24,7 @@ import {
   handleWorkerAdoptionStatusRequest,
   matchWorkerAdoptionStatusId,
 } from './adoption-status';
+import { handleWorkerAdoptionViewRequest } from './adoption-view';
 import { handleWorkerDonationRequest } from './donation';
 import { handleWorkerSponsorshipRequest } from './sponsorship';
 import {
@@ -201,6 +202,20 @@ export type {
   CreateSupabaseAdoptionStatusRepositoriesInput,
   CreateSupabaseAdoptionStatusRepositoriesResult,
 } from './adoption-status-supabase';
+export { handleWorkerAdoptionViewRequest } from './adoption-view';
+export type {
+  AdoptionViewRecord,
+  AdoptionViewRepository,
+  HandleWorkerAdoptionViewRequestInput,
+} from './adoption-view';
+export {
+  createSupabaseAdoptionViewRepositories,
+  SupabaseAdoptionViewRepositoryError,
+} from './adoption-view-supabase';
+export type {
+  CreateSupabaseAdoptionViewRepositoriesInput,
+  CreateSupabaseAdoptionViewRepositoriesResult,
+} from './adoption-view-supabase';
 export {
   createR2UploadSigner,
   createR2UploadSignerWorkerDependencies,
@@ -664,20 +679,34 @@ export const handleWorkerRequest = async (
     });
   }
 
-  const adoptionStatusId = matchWorkerAdoptionStatusId(
+  const adoptionApplicationId = matchWorkerAdoptionStatusId(
     url.pathname,
     config.workers.adoptionsPath,
   );
 
-  if (adoptionStatusId !== null) {
-    const payload = await parseJsonBody(request);
-    return handleWorkerAdoptionStatusRequest({
-      request,
-      applicationId: adoptionStatusId,
-      payload,
-      adoptionStatusRepository: dependencies.adoptionStatusRepository,
-      authenticator: dependencies.petDraftAuthenticator,
-    });
+  if (adoptionApplicationId !== null) {
+    if (request.method === 'PATCH') {
+      const payload = await parseJsonBody(request);
+      return handleWorkerAdoptionStatusRequest({
+        request,
+        applicationId: adoptionApplicationId,
+        payload,
+        adoptionStatusRepository: dependencies.adoptionStatusRepository,
+        authenticator: dependencies.petDraftAuthenticator,
+      });
+    }
+    if (request.method === 'GET') {
+      return handleWorkerAdoptionViewRequest({
+        request,
+        applicationId: adoptionApplicationId,
+        adoptionViewRepository: dependencies.adoptionViewRepository,
+        authenticator: dependencies.petDraftAuthenticator,
+      });
+    }
+    return jsonResponse(
+      { status: 'method_not_allowed', allowedMethods: ['GET', 'PATCH'] },
+      { status: 405, headers: { Allow: 'GET, PATCH' } },
+    );
   }
 
   if (url.pathname === config.workers.adoptionsPath) {

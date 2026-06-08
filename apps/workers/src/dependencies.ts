@@ -36,6 +36,8 @@ import type { SponsorshipDonorListRepository } from './sponsorship-donor-list';
 import { createSupabaseSponsorshipDonorListRepositories } from './sponsorship-donor-list-supabase';
 import type { AdoptionStatusRepository } from './adoption-status';
 import { createSupabaseAdoptionStatusRepositories } from './adoption-status-supabase';
+import type { AdoptionViewRepository } from './adoption-view';
+import { createSupabaseAdoptionViewRepositories } from './adoption-view-supabase';
 import type {
   PetDraftRepository,
   PetMediaAttachRepository,
@@ -81,6 +83,7 @@ export type WorkerRequestDependencies = {
   sponsorshipManageRepository?: SponsorshipManageRepository;
   sponsorshipDonorListRepository?: SponsorshipDonorListRepository;
   adoptionStatusRepository?: AdoptionStatusRepository;
+  adoptionViewRepository?: AdoptionViewRepository;
   supabaseClientFactory?: WorkerSupabaseClientFactory;
   now?: () => string;
 };
@@ -132,6 +135,7 @@ export const createWorkerSupabaseDependencies = ({
     const sponsorshipManageRepositories = createSupabaseSponsorshipManageRepositories({ client });
     const sponsorshipDonorListRepositories = createSupabaseSponsorshipDonorListRepositories({ client });
     const adoptionStatusRepositories = createSupabaseAdoptionStatusRepositories({ client });
+    const adoptionViewRepositories = createSupabaseAdoptionViewRepositories({ client });
 
     return {
       mediaUploadSigner,
@@ -154,6 +158,7 @@ export const createWorkerSupabaseDependencies = ({
       sponsorshipManageRepository: sponsorshipManageRepositories.sponsorshipManageRepository,
       sponsorshipDonorListRepository: sponsorshipDonorListRepositories.sponsorshipDonorListRepository,
       adoptionStatusRepository: adoptionStatusRepositories.adoptionStatusRepository,
+      adoptionViewRepository: adoptionViewRepositories.adoptionViewRepository,
       // paymentWebhookVerifier is intentionally NOT set here — it is provider-SDK-specific
       // and must be injected by the production fetch handler or tests
       now,
@@ -229,5 +234,7 @@ export const resolveWorkerRequestDependencies = ({
       supabaseDependencies.sponsorshipDonorListRepository,
     adoptionStatusRepository:
       dependencies.adoptionStatusRepository ?? supabaseDependencies.adoptionStatusRepository,
+    adoptionViewRepository:
+      dependencies.adoptionViewRepository ?? supabaseDependencies.adoptionViewRepository,
   };
 };
