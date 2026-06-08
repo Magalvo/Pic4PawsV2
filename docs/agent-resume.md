@@ -134,6 +134,10 @@ Completed foundation items (all merged to `main`):
 - `SPONSORSHIP-LIST-CLIENT-001` — `createSponsorshipListClient` in `@pic4paws/client`
 - `WEB-SPONSORSHIP-LIST-001` — Web sponsorship list product boundary (6 states incl. dedicated `forbidden`)
 - `MOBILE-SPONSORSHIP-LIST-001` — Mobile sponsorship list product boundary with PT-PT states
+- `SPONSORSHIP-MANAGE-WORKER-001` — authenticated `PATCH /sponsorships/:sponsorshipId` route with dual access (shelter manager OR donor), `SponsorshipManageRepository` + Supabase impl
+- `SPONSORSHIP-MANAGE-CLIENT-001` — `createSponsorshipManageClient` in `@pic4paws/client`
+- `WEB-SPONSORSHIP-MANAGE-001` — Web sponsorship manage product boundary (4 states: idle/submitting/succeeded/failed)
+- `MOBILE-SPONSORSHIP-MANAGE-001` — Mobile sponsorship manage product boundary with PT-PT states
 
 The Worker now has (as of 2026-06-08):
 
@@ -159,6 +163,9 @@ The Worker now has (as of 2026-06-08):
 - authenticated shelter sponsorship list (`GET /shelters/:shelterId/sponsorships`) with
   `SponsorshipListRepository` interface — paginated (limit/offset), shelter membership check,
   `matchWorkerSponsorshipListShelterId` for URL path matching
+- authenticated sponsorship manage (`PATCH /sponsorships/:sponsorshipId`) with
+  `SponsorshipManageRepository` interface — dual access (shelter manager OR donor),
+  `matchWorkerSponsorshipManageId` path matcher, `getSponsorshipForManage` + `updateSponsorshipStatus`
 - `POST /webhooks/payments` payment webhook handler — `PaymentWebhookVerifier` interface
   (HMAC verification, provider-specific), `PaymentWebhookRepository` (idempotency via
   `payment_webhook_events`, UPDATE `donation_transactions`), `PROVIDER_SIGNATURE_HEADERS` map.
@@ -191,6 +198,7 @@ The Worker now has (as of 2026-06-08):
 - `DonationStatusClient` (authenticated read — `loadDonationStatus(donationId)`)
 - `SponsorshipClient` (authenticated write — `submitSponsorship` with `recurringInterval`)
 - `SponsorshipListClient` (authenticated read — `loadSponsorships(shelterId, query?)` with pagination)
+- `SponsorshipManageClient` (authenticated write — `manageSponsorship(sponsorshipId, status)`)
 - no client-side Supabase service-role keys or R2 credentials
 
 Web/Mobile now have tested product boundaries for: media upload, pet media upload+attach,
@@ -199,7 +207,8 @@ adoption application, adoption list (shelter-side review), donation, donation li
 (shelter-side, 6 states including dedicated `forbidden`), donation status (6 states
 including dedicated `not_found` + `forbidden`), sponsorship (recurring / padrinhos,
 4 states including idle/submitting/submitted/failed), sponsorship list (shelter-side,
-6 states including dedicated `forbidden`).
+6 states including dedicated `forbidden`), sponsorship manage (cancel/pause/resume,
+4 states: idle/submitting/succeeded/failed, dual access: shelter manager OR donor).
 
 The adopter end-to-end flow is fully wired at the boundary layer:
 **feed → pet profile → shelter profile → submit adoption application**.
@@ -216,28 +225,23 @@ The full sponsorship slice (padrinhos) is wired end-to-end:
 The full sponsorship list slice is wired end-to-end:
 **`GET /shelters/:shelterId/sponsorships` Worker route → `SponsorshipListClient` → Web + Mobile product boundaries** (6 states including dedicated `forbidden`).
 
+The full sponsorship manage slice is wired end-to-end:
+**`PATCH /sponsorships/:sponsorshipId` Worker route → `SponsorshipManageClient` → Web + Mobile product boundaries** (4 states, dual access: shelter manager OR donor).
+
 Payment state is always driven by verified server-side webhook. The `paymentWebhookVerifier`
 is intentionally left unset by the factory — provider-specific HMAC adapters must be wired
 per deployment.
 
 ## 5. Recommended Next Work Item
 
-The full sponsorship list slice is complete (PRs #64–#67). The foundation now covers:
-- All write paths (pet drafts, media, adoption, donation, sponsorship)
+The full sponsorship manage slice is complete (PRs #68–#71). The foundation now covers:
+- All write paths (pet drafts, media, adoption, donation, sponsorship, sponsorship manage)
 - All read paths (pet feed, pet profile, shelter profile)
 - All shelter-side list views (adoption list, donation list, sponsorship list)
 - Full payment confirmation pipeline (webhook → donor status polling)
+- Sponsorship lifecycle management (cancel/pause/resume — dual access: shelter OR donor)
 
-**Suggested next: `SPONSORSHIP-MANAGE-WORKER-001`** — Shelter-side sponsorship state management.
-
-Design sketch:
-- `PATCH /sponsorships/:sponsorshipId` — authenticated, cancel/pause/resume a sponsorship
-- `SponsorshipManageRepository` interface: `updateSponsorshipStatus({ sponsorshipId, status })`
-- Shelter membership check: requester must manage the shelter that owns the sponsorship
-- Returns `{ status: 'ok', sponsorshipId, status: SponsorshipStatus }`
-- Mirrors donation/adoption action patterns
-
-Alternatively, begin a new domain slice (e.g. shelter member management, notifications, or pet status transitions).
+**Suggested next**: Begin a new domain slice such as shelter member management, notifications, pet status transitions, or a donor-facing sponsorship list view.
 
 ## 6. Handoff Prompt For Codex
 
