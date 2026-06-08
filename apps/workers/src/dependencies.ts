@@ -32,6 +32,8 @@ import type { SponsorshipListRepository } from './sponsorship-list';
 import { createSupabaseSponsorshipListRepositories } from './sponsorship-list-supabase';
 import type { SponsorshipManageRepository } from './sponsorship-manage';
 import { createSupabaseSponsorshipManageRepositories } from './sponsorship-manage-supabase';
+import type { SponsorshipDonorListRepository } from './sponsorship-donor-list';
+import { createSupabaseSponsorshipDonorListRepositories } from './sponsorship-donor-list-supabase';
 import type {
   PetDraftRepository,
   PetMediaAttachRepository,
@@ -75,6 +77,7 @@ export type WorkerRequestDependencies = {
   sponsorshipRepository?: SponsorshipRepository;
   sponsorshipListRepository?: SponsorshipListRepository;
   sponsorshipManageRepository?: SponsorshipManageRepository;
+  sponsorshipDonorListRepository?: SponsorshipDonorListRepository;
   supabaseClientFactory?: WorkerSupabaseClientFactory;
   now?: () => string;
 };
@@ -124,6 +127,7 @@ export const createWorkerSupabaseDependencies = ({
     const sponsorshipRepositories = createSupabaseSponsorshipRepositories({ client });
     const sponsorshipListRepositories = createSupabaseSponsorshipListRepositories({ client });
     const sponsorshipManageRepositories = createSupabaseSponsorshipManageRepositories({ client });
+    const sponsorshipDonorListRepositories = createSupabaseSponsorshipDonorListRepositories({ client });
 
     return {
       mediaUploadSigner,
@@ -144,6 +148,7 @@ export const createWorkerSupabaseDependencies = ({
       sponsorshipRepository: sponsorshipRepositories.sponsorshipRepository,
       sponsorshipListRepository: sponsorshipListRepositories.sponsorshipListRepository,
       sponsorshipManageRepository: sponsorshipManageRepositories.sponsorshipManageRepository,
+      sponsorshipDonorListRepository: sponsorshipDonorListRepositories.sponsorshipDonorListRepository,
       // paymentWebhookVerifier is intentionally NOT set here — it is provider-SDK-specific
       // and must be injected by the production fetch handler or tests
       now,
@@ -214,5 +219,8 @@ export const resolveWorkerRequestDependencies = ({
       dependencies.sponsorshipListRepository ?? supabaseDependencies.sponsorshipListRepository,
     sponsorshipManageRepository:
       dependencies.sponsorshipManageRepository ?? supabaseDependencies.sponsorshipManageRepository,
+    sponsorshipDonorListRepository:
+      dependencies.sponsorshipDonorListRepository ??
+      supabaseDependencies.sponsorshipDonorListRepository,
   };
 };

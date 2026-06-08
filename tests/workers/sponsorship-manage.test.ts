@@ -272,20 +272,21 @@ describe('PATCH /sponsorships/:sponsorshipId — sponsorship manage', () => {
     expect(body.status).toBe('sponsorship_manage_repository_not_configured');
   });
 
-  it('manage route does not conflict with POST /sponsorships create route', async () => {
-    // POST to exact /sponsorships should still work (method check on create handler)
-    const createRequest = new Request('https://workers.pic4paws.pt/sponsorships', {
+  it('manage route does not conflict with GET /sponsorships donor list route', async () => {
+    // GET /sponsorships routes to the donor list handler (not create, not manage)
+    const donorListRequest = new Request('https://workers.pic4paws.pt/sponsorships', {
       method: 'GET',
       headers: { Authorization: 'Bearer valid-token' },
     });
 
-    const response = await handleWorkerRequest(createRequest, validEnv, {
+    const response = await handleWorkerRequest(donorListRequest, validEnv, {
       petDraftAuthenticator: fakeMemberAuth,
+      // no sponsorshipDonorListRepository
     });
     const body = await response.json();
 
-    // GET on /sponsorships → 405 (create route is POST-only)
-    expect(response.status).toBe(405);
-    expect(body.status).toBe('method_not_allowed');
+    // Hits donor list handler — 501 when repo not configured (not 405 method_not_allowed)
+    expect(response.status).toBe(501);
+    expect(body.status).toBe('sponsorship_donor_list_repository_not_configured');
   });
 });
