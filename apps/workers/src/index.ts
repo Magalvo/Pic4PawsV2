@@ -55,6 +55,10 @@ import {
   handleWorkerPetDraftRequest,
   matchWorkerPetDraftRoute,
 } from './pet-drafts';
+import {
+  handleWorkerPetArchiveRequest,
+  matchWorkerPetArchiveId,
+} from './pet-archive';
 import { createR2UploadSignerWorkerDependencies } from './r2-signer';
 import { createSupabaseSdkWorkerDependencies } from './supabase-sdk';
 export {
@@ -249,6 +253,24 @@ export type {
   CreateSupabaseShelterMemberRepositoriesInput,
   CreateSupabaseShelterMemberRepositoriesResult,
 } from './shelter-member-supabase';
+export {
+  handleWorkerPetArchiveRequest,
+  matchWorkerPetArchiveId,
+  validatePetArchivePayload,
+} from './pet-archive';
+export type {
+  HandleWorkerPetArchiveRequestInput,
+  PetArchiveRecord,
+  PetArchiveRepository,
+} from './pet-archive';
+export {
+  createSupabasePetArchiveRepositories,
+  SupabasePetArchiveRepositoryError,
+} from './pet-archive-supabase';
+export type {
+  CreateSupabasePetArchiveRepositoriesInput,
+  CreateSupabasePetArchiveRepositoriesResult,
+} from './pet-archive-supabase';
 export {
   createR2UploadSigner,
   createR2UploadSignerWorkerDependencies,
@@ -658,6 +680,20 @@ export const handleWorkerRequest = async (
         petPublishRepository: resolvedDependencies.petPublishRepository,
         now: resolvedDependencies.now,
       },
+    });
+  }
+
+  const archivePetId = matchWorkerPetArchiveId(url.pathname, config.workers.petFeedPath);
+
+  if (archivePetId !== null) {
+    const archivePayload = await parseJsonBody(request);
+    return handleWorkerPetArchiveRequest({
+      request,
+      petId: archivePetId,
+      payload: archivePayload,
+      petArchiveRepository: dependencies.petArchiveRepository,
+      authenticator: dependencies.petDraftAuthenticator,
+      now: dependencies.now?.() ?? new Date().toISOString(),
     });
   }
 
