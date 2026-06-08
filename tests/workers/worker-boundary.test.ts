@@ -71,7 +71,9 @@ describe('worker payment webhook boundary', () => {
     });
   });
 
-  it('rejects invalid JSON webhook payloads', async () => {
+  it('reads raw body and defers to verifier — non-JSON body still reaches 501 without adapter', async () => {
+    // The webhook handler reads the raw body as text for signature verification.
+    // Without a PaymentWebhookVerifier injected, any body (even non-JSON) → 501.
     const response = await handleWorkerRequest(
       new Request('https://worker.test/webhooks/payments', {
         method: 'POST',
@@ -80,9 +82,10 @@ describe('worker payment webhook boundary', () => {
       validEnv,
     );
 
-    expect(response.status).toBe(400);
+    expect(response.status).toBe(501);
     await expect(json(response)).resolves.toEqual({
-      status: 'invalid_json',
+      status: 'provider_adapter_not_configured',
+      provider: 'eupago',
     });
   });
 

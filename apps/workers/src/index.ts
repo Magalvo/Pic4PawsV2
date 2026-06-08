@@ -25,6 +25,7 @@ import {
   handleWorkerDonationListRequest,
   matchWorkerDonationListShelterId,
 } from './donation-list';
+import { handleWorkerPaymentWebhookRequest } from './payment-webhook';
 import {
   handleWorkerPetDraftRequest,
   matchWorkerPetDraftRoute,
@@ -206,6 +207,27 @@ export type {
   CreateSupabaseDonationListRepositoriesInput,
   CreateSupabaseDonationListRepositoriesResult,
 } from './donation-list-supabase';
+export {
+  handleWorkerPaymentWebhookRequest,
+  PROVIDER_SIGNATURE_HEADERS,
+} from './payment-webhook';
+export type {
+  DonationWebhookStatus,
+  HandleWorkerPaymentWebhookRequestInput,
+  ParsedWebhookEvent,
+  PaymentWebhookRepository,
+  PaymentWebhookVerifier,
+  RecordWebhookEventInput,
+  UpdateDonationStatusInput,
+} from './payment-webhook';
+export {
+  createSupabasePaymentWebhookRepositories,
+  SupabasePaymentWebhookRepositoryError,
+} from './payment-webhook-supabase';
+export type {
+  CreateSupabasePaymentWebhookRepositoriesInput,
+  CreateSupabasePaymentWebhookRepositoriesResult,
+} from './payment-webhook-supabase';
 export type {
   CreateR2UploadSignerInput,
   R2UploadPresigner,
@@ -318,19 +340,24 @@ export const handleWorkerRequest = async (
       );
     }
 
-    const payload = await parseJsonBody(request);
+    const rawBody = await request.text();
+    const provider = config.payments.primaryProvider;
+    const webhookSecretMap: Record<string, string | null> = {
+      eupago: config.payments.eupagoWebhookSecret,
+      ifthenpay: config.payments.ifthenpayWebhookSecret,
+      stripe: config.payments.stripeWebhookSecret,
+    };
+    const webhookSecret = webhookSecretMap[provider] ?? '';
 
-    if (payload === null) {
-      return jsonResponse({ status: 'invalid_json' }, { status: 400 });
-    }
-
-    return jsonResponse(
-      {
-        status: 'provider_adapter_not_configured',
-        provider: config.payments.primaryProvider,
-      },
-      { status: 501 },
-    );
+    return handleWorkerPaymentWebhookRequest({
+      request,
+      rawBody,
+      provider,
+      webhookSecret,
+      paymentWebhookVerifier: dependencies.paymentWebhookVerifier,
+      paymentWebhookRepository: dependencies.paymentWebhookRepository,
+      now: dependencies.now?.() ?? new Date().toISOString(),
+    });
   }
 
   if (url.pathname === config.workers.mediaUploadPath) {

@@ -39,22 +39,22 @@ Shelter-side adoption review (Worker + client + Web/Mobile):
 Donation slice (Worker + client + Web/Mobile):
 `DONATION-WORKER-001`, `DONATION-CLIENT-001`, `WEB-DONATION-001`, `MOBILE-DONATION-001`.
 
+Shelter-side donation list (Worker + client + Web/Mobile):
+`DONATION-LIST-WORKER-001`, `DONATION-LIST-CLIENT-001`, `WEB-DONATION-LIST-001`, `MOBILE-DONATION-LIST-001`.
+
 ## Current Focus
 
-The full donation intent slice is merged. The donation flow is wired end-to-end:
-`POST /donations` → `createDonationClient` → Web + Mobile product boundaries.
+The full donation list slice is merged. The shelter can now view received donations.
+`GET /shelters/:shelterId/donations` → `createDonationListClient` → Web + Mobile boundaries.
 
-Next: shelter-side donation list (each on its own `agent/<WORK-ITEM-ID>` branch):
+Next: payment webhook handling (Worker only — server-to-server, no client/UI boundary needed):
 
-1. `DONATION-LIST-WORKER-001` — `GET /shelters/:shelterId/donations` Worker route
-   - Auth: shelter membership check, pagination (limit/offset)
-   - Repository: `DonationListRepository.listDonations(shelterId, query)`
-   - Response: `{ status: 'donation_list_loaded', donations, total }`
-2. `DONATION-LIST-CLIENT-001` — `createDonationListClient` in `@pic4paws/client`
-3. `WEB-DONATION-LIST-001` — Web donation list product boundary with PT-PT states
-4. `MOBILE-DONATION-LIST-001` — Mobile donation list product boundary
-
-`donationTransactions` table already defined in `packages/database/src/schema.ts`.
+1. `PAYMENT-WEBHOOK-WORKER-001` — `POST /webhooks/payments` payment webhook handler
+   - Replace existing 501 stub in `index.ts` with real `handleWorkerPaymentWebhookRequest`
+   - `PaymentWebhookVerifier` interface: `({ rawBody, signatureHeader, secret }) => ParsedWebhookEvent | null`
+   - `PaymentWebhookRepository`: idempotency check + record event + update donation status
+   - Supabase impl: INSERT `payment_webhook_events` + UPDATE `donation_transactions`
+   - Config already has `paymentWebhookPath`, provider secrets, `primaryProvider`
 
 ## Branching Convention
 
