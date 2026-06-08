@@ -36,6 +36,10 @@ import {
   mobileDonationStatusUiContent,
   type MobileDonationStatusUiContent,
 } from './donation-status';
+import {
+  mobileSponsorshipUiContent,
+  type MobileSponsorshipUiContent,
+} from './sponsorship';
 
 export type MobileFoundationStatus = 'contract-ready';
 
@@ -63,6 +67,7 @@ export type MobileFoundationContent = {
   donation: Pick<MobileDonationUiContent, 'title' | 'description' | 'status'>;
   donationList: Pick<MobileDonationListUiContent, 'title' | 'description' | 'status'>;
   donationStatus: Pick<MobileDonationStatusUiContent, 'title' | 'description' | 'status'>;
+  sponsorship: Pick<MobileSponsorshipUiContent, 'title' | 'description' | 'status'>;
   readiness: Array<{
     id: 'database' | 'auth' | 'pets' | 'payments' | 'media' | 'workers';
     label: string;
@@ -147,6 +152,11 @@ export const mobileFoundationContent: MobileFoundationContent = {
     title: mobileDonationStatusUiContent.title,
     description: mobileDonationStatusUiContent.description,
     status: mobileDonationStatusUiContent.status,
+  },
+  sponsorship: {
+    title: mobileSponsorshipUiContent.title,
+    description: mobileSponsorshipUiContent.description,
+    status: mobileSponsorshipUiContent.status,
   },
   readiness: [
     {
