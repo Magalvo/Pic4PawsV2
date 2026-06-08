@@ -27,6 +27,10 @@ import {
 } from './donation-list';
 import { handleWorkerPaymentWebhookRequest } from './payment-webhook';
 import {
+  handleWorkerDonationStatusRequest,
+  matchWorkerDonationStatusId,
+} from './donation-status';
+import {
   handleWorkerPetDraftRequest,
   matchWorkerPetDraftRoute,
 } from './pet-drafts';
@@ -228,6 +232,23 @@ export type {
   CreateSupabasePaymentWebhookRepositoriesInput,
   CreateSupabasePaymentWebhookRepositoriesResult,
 } from './payment-webhook-supabase';
+export {
+  handleWorkerDonationStatusRequest,
+  matchWorkerDonationStatusId,
+} from './donation-status';
+export type {
+  DonationStatusRecord,
+  DonationStatusRepository,
+  HandleWorkerDonationStatusRequestInput,
+} from './donation-status';
+export {
+  createSupabaseDonationStatusRepositories,
+  SupabaseDonationStatusRepositoryError,
+} from './donation-status-supabase';
+export type {
+  CreateSupabaseDonationStatusRepositoriesInput,
+  CreateSupabaseDonationStatusRepositoriesResult,
+} from './donation-status-supabase';
 export type {
   CreateR2UploadSignerInput,
   R2UploadPresigner,
@@ -553,6 +574,20 @@ export const handleWorkerRequest = async (
       adoptionRepository: dependencies.adoptionRepository,
       authenticator: dependencies.petDraftAuthenticator,
       now: dependencies.now?.() ?? new Date().toISOString(),
+    });
+  }
+
+  const donationStatusId = matchWorkerDonationStatusId(
+    url.pathname,
+    config.workers.donationsPath,
+  );
+
+  if (donationStatusId !== null) {
+    return handleWorkerDonationStatusRequest({
+      request,
+      donationId: donationStatusId,
+      donationStatusRepository: dependencies.donationStatusRepository,
+      authenticator: dependencies.petDraftAuthenticator,
     });
   }
 
