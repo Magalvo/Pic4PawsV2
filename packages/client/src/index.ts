@@ -2794,6 +2794,159 @@ export const createSponsorshipListClient = ({
   },
 });
 
+// ─── Sponsorship Manage Client ───────────────────────────────────────────────
+
+export type SponsorshipManageClientInput = {
+  sponsorshipId: string;
+  status: SponsorshipClientStatus;
+};
+
+export type SponsorshipManageClientSuccess = {
+  ok: true;
+  status: 'ok';
+  sponsorshipId: string;
+  newStatus: SponsorshipClientStatus;
+};
+
+export type SponsorshipManageClientFailureStatus =
+  | 'unauthenticated'
+  | 'forbidden'
+  | 'sponsorship_not_found'
+  | 'invalid_sponsorship_manage'
+  | 'sponsorship_manage_repository_not_configured'
+  | 'auth_adapter_not_configured'
+  | 'worker_request_failed'
+  | 'worker_response_invalid';
+
+export type SponsorshipManageClientFailure = {
+  ok: false;
+  status: SponsorshipManageClientFailureStatus;
+  reasons: string[];
+};
+
+export type SponsorshipManageClientResult =
+  | SponsorshipManageClientSuccess
+  | SponsorshipManageClientFailure;
+
+export type CreateSponsorshipManageClientInput = {
+  workerBaseUrl: string;
+  sponsorshipsPath: `/${string}`;
+  getAccessToken: () => Promise<string | null>;
+  fetch: MediaUploadClientFetch;
+};
+
+export type SponsorshipManageClient = {
+  manageSponsorship: (
+    sponsorshipId: string,
+    status: SponsorshipClientStatus,
+  ) => Promise<SponsorshipManageClientResult>;
+};
+
+const parseSponsorshipManageSuccess = (
+  body: Record<string, unknown> | null,
+): SponsorshipManageClientSuccess | null => {
+  if (
+    !body ||
+    body.status !== 'ok' ||
+    typeof body.sponsorshipId !== 'string' ||
+    typeof body.newStatus !== 'string'
+  ) {
+    return null;
+  }
+
+  return {
+    ok: true,
+    status: 'ok',
+    sponsorshipId: body.sponsorshipId,
+    newStatus: body.newStatus as SponsorshipClientStatus,
+  };
+};
+
+const parseSponsorshipManageFailureStatus = (
+  body: Record<string, unknown> | null,
+): SponsorshipManageClientFailureStatus => {
+  const status = body?.status;
+
+  if (
+    status === 'unauthenticated' ||
+    status === 'forbidden' ||
+    status === 'sponsorship_not_found' ||
+    status === 'invalid_sponsorship_manage' ||
+    status === 'sponsorship_manage_repository_not_configured' ||
+    status === 'auth_adapter_not_configured'
+  ) {
+    return status;
+  }
+
+  return 'worker_request_failed';
+};
+
+export const createSponsorshipManageClient = ({
+  workerBaseUrl,
+  sponsorshipsPath,
+  getAccessToken,
+  fetch,
+}: CreateSponsorshipManageClientInput): SponsorshipManageClient => ({
+  manageSponsorship: async (sponsorshipId, status) => {
+    const accessToken = await getAccessToken();
+
+    if (!accessToken?.trim()) {
+      return {
+        ok: false,
+        status: 'unauthenticated',
+        reasons: ['missing_access_token'],
+      };
+    }
+
+    let response: Response;
+
+    try {
+      response = await fetch(
+        createWorkerSubUrl(workerBaseUrl, sponsorshipsPath, sponsorshipId),
+        {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ status }),
+        },
+      );
+    } catch {
+      return {
+        ok: false,
+        status: 'worker_request_failed',
+        reasons: ['network_error'],
+      };
+    }
+
+    const body = await parseJsonResponse(response);
+
+    if (!response.ok) {
+      const failureStatus = parseSponsorshipManageFailureStatus(body);
+      const reasons = Array.isArray(body?.reasons) ? parseReasons(body) : [failureStatus];
+
+      return {
+        ok: false,
+        status: failureStatus,
+        reasons: sanitizeReasons(reasons, failureStatus),
+      };
+    }
+
+    const success = parseSponsorshipManageSuccess(body);
+
+    if (!success) {
+      return {
+        ok: false,
+        status: 'worker_response_invalid',
+        reasons: ['invalid_worker_response'],
+      };
+    }
+
+    return success;
+  },
+});
+
 // ─── Media Upload Flow Client ─────────────────────────────────────────────────
 
 export const createMediaUploadFlowClient = (
