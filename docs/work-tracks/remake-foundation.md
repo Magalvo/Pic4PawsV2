@@ -42,19 +42,20 @@ Donation slice (Worker + client + Web/Mobile):
 Shelter-side donation list (Worker + client + Web/Mobile):
 `DONATION-LIST-WORKER-001`, `DONATION-LIST-CLIENT-001`, `WEB-DONATION-LIST-001`, `MOBILE-DONATION-LIST-001`.
 
+Payment confirmation + donor status polling (Worker + client + Web/Mobile):
+`PAYMENT-WEBHOOK-WORKER-001`, `DONATION-STATUS-WORKER-001`, `DONATION-STATUS-CLIENT-001`,
+`WEB-DONATION-STATUS-001`, `MOBILE-DONATION-STATUS-001`.
+
 ## Current Focus
 
-The full donation list slice is merged. The shelter can now view received donations.
-`GET /shelters/:shelterId/donations` → `createDonationListClient` → Web + Mobile boundaries.
+The full donation status slice is merged. Payment state is driven by verified server-side webhook.
+Donors can poll their donation status. The `paymentWebhookVerifier` is intentionally unset by the
+factory — provider-specific HMAC adapters must be wired per deployment.
 
-Next: payment webhook handling (Worker only — server-to-server, no client/UI boundary needed):
+Next: recurring sponsorship (padrinhos) slice:
 
-1. `PAYMENT-WEBHOOK-WORKER-001` — `POST /webhooks/payments` payment webhook handler
-   - Replace existing 501 stub in `index.ts` with real `handleWorkerPaymentWebhookRequest`
-   - `PaymentWebhookVerifier` interface: `({ rawBody, signatureHeader, secret }) => ParsedWebhookEvent | null`
-   - `PaymentWebhookRepository`: idempotency check + record event + update donation status
-   - Supabase impl: INSERT `payment_webhook_events` + UPDATE `donation_transactions`
-   - Config already has `paymentWebhookPath`, provider secrets, `primaryProvider`
+1. `SPONSORSHIP-WORKER-001` — `POST /sponsorships` Worker route (similar to `POST /donations`
+   but with `recurringInterval: monthly | quarterly | annual`)
 
 ## Branching Convention
 
