@@ -36,21 +36,23 @@ Adopter write path (Worker + client + Web/Mobile):
 Shelter-side adoption review (Worker + client + Web/Mobile):
 `ADOPTION-LIST-WORKER-001`, `ADOPTION-LIST-CLIENT-001`, `WEB-ADOPTION-LIST-001`, `MOBILE-ADOPTION-LIST-001`.
 
-Donation slice (Worker):
-`DONATION-WORKER-001`.
+Donation slice (Worker + client + Web/Mobile):
+`DONATION-WORKER-001`, `DONATION-CLIENT-001`, `WEB-DONATION-001`, `MOBILE-DONATION-001`.
 
 ## Current Focus
 
-`DONATION-WORKER-001` is merged. The donation Worker route is live at `POST /donations`
-with `amountCents ≥ 100` validation, GDPR gate, and `DonationRepository` interface.
+The full donation intent slice is merged. The donation flow is wired end-to-end:
+`POST /donations` → `createDonationClient` → Web + Mobile product boundaries.
 
-Remaining donation slice (each on its own `agent/<WORK-ITEM-ID>` branch):
+Next: shelter-side donation list (each on its own `agent/<WORK-ITEM-ID>` branch):
 
-1. `DONATION-CLIENT-001` — `createDonationClient` in `@pic4paws/client`
-   (`submitDonation(shelterId, input)` → `DonationClientResult`)
-2. `WEB-DONATION-001` — Web donation product boundary with PT-PT states
-   (states: `idle`, `submitting`, `submitted`, `failed`)
-3. `MOBILE-DONATION-001` — Mobile donation product boundary (mirrors Web with `Mobile` prefix)
+1. `DONATION-LIST-WORKER-001` — `GET /shelters/:shelterId/donations` Worker route
+   - Auth: shelter membership check, pagination (limit/offset)
+   - Repository: `DonationListRepository.listDonations(shelterId, query)`
+   - Response: `{ status: 'donation_list_loaded', donations, total }`
+2. `DONATION-LIST-CLIENT-001` — `createDonationListClient` in `@pic4paws/client`
+3. `WEB-DONATION-LIST-001` — Web donation list product boundary with PT-PT states
+4. `MOBILE-DONATION-LIST-001` — Mobile donation list product boundary
 
 `donationTransactions` table already defined in `packages/database/src/schema.ts`.
 

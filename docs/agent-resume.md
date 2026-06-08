@@ -114,6 +114,9 @@ Completed foundation items (all merged to `main`):
 - `WEB-ADOPTION-LIST-001` — Web adoption list product boundary with PT-PT states
 - `MOBILE-ADOPTION-LIST-001` — Mobile adoption list product boundary with PT-PT states
 - `DONATION-WORKER-001` — authenticated `POST /donations` Worker route (donation intent initiation)
+- `DONATION-CLIENT-001` — `createDonationClient` in `@pic4paws/client`
+- `WEB-DONATION-001` — Web donation product boundary with PT-PT states
+- `MOBILE-DONATION-001` — Mobile donation product boundary with PT-PT states
 
 The Worker now has:
 
@@ -153,11 +156,12 @@ The Worker now has:
 - `ShelterProfileClient` (public read, no auth)
 - `AdoptionApplicationClient` (authenticated write — `submitApplication`)
 - `AdoptionListClient` (authenticated read — `loadApplications` with pagination)
+- `DonationClient` (authenticated write — `submitDonation`)
 - no client-side Supabase service-role keys or R2 credentials
 
 Web/Mobile now have tested product boundaries for: media upload, pet media upload+attach,
 pet publish, pet draft, pet draft save flow, pet feed, pet profile, shelter profile,
-adoption application, adoption list (shelter-side review).
+adoption application, adoption list (shelter-side review), donation.
 
 The adopter end-to-end flow is fully wired at the boundary layer:
 **feed → pet profile → shelter profile → submit adoption application**.
@@ -165,22 +169,26 @@ The adopter end-to-end flow is fully wired at the boundary layer:
 The shelter-side adoption review flow is fully wired at the boundary layer:
 **Worker route → client → Web + Mobile product boundaries**.
 
-The donation Worker route is implemented. Remaining donation slice items need the client
-and both product boundaries.
+The full donation intent flow is wired end-to-end:
+**Worker route → client → Web + Mobile product boundaries**.
+
+Payment state transitions (webhook handling) and the shelter-side donation list are the
+next items.
 
 ## 5. Recommended Next Work Item
 
-The donation Worker route (`DONATION-WORKER-001`) is merged. Continue the donation slice:
+The full donation slice is merged. Continue with the shelter-side donation list:
 
-1. `DONATION-CLIENT-001` — `createDonationClient` in `@pic4paws/client`
-   - `loadApplications` → `createDonation(shelterId, query)` → `DonationClientResult`
-   - URL: `POST {workerBaseUrl}/donations`
-   - Bearer auth, credential sanitization, `forbidden` as a dedicated failure status
-2. `WEB-DONATION-001` — Web donation product boundary with PT-PT states
-   - `createWebDonationUi({ donationClient })` with `getInitialState` + `submitDonation`
-   - States: `idle`, `submitting`, `submitted`, `failed` (+ `canRetry: true`)
-   - `webDonationUiContent` + `webFoundationContent.donation` entry
-3. `MOBILE-DONATION-001` — Mobile donation product boundary (mirrors Web with `Mobile` prefix)
+1. `DONATION-LIST-WORKER-001` — `GET /shelters/:shelterId/donations` Worker route
+   - Auth: shelter membership check (mirrors ADOPTION-LIST-WORKER-001)
+   - Pagination: `limit` / `offset` query params
+   - Repository: `DonationListRepository.listDonations(shelterId, query)`
+   - Response: `{ status: 'donation_list_loaded', donations: [...], total: number }`
+   - Each item: donationId, kind, status, amountCents, currency, paymentMethod,
+     anonymous, donorDisplayName, publicMessage, createdAt
+2. `DONATION-LIST-CLIENT-001` — `createDonationListClient` in `@pic4paws/client`
+3. `WEB-DONATION-LIST-001` — Web donation list product boundary with PT-PT states
+4. `MOBILE-DONATION-LIST-001` — Mobile donation list product boundary
 
 Start each on its own `agent/<WORK-ITEM-ID>` branch per the convention in Section 3.
 
