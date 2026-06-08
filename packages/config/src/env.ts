@@ -27,6 +27,7 @@ const environmentSchema = z
     WORKER_SHELTER_PATH: z.string().startsWith('/').default('/shelters'),
     WORKER_ADOPTIONS_PATH: z.string().startsWith('/').default('/adoptions'),
     WORKER_DONATIONS_PATH: z.string().startsWith('/').default('/donations'),
+    WORKER_SPONSORSHIPS_PATH: z.string().startsWith('/').default('/sponsorships'),
     PAYMENT_PRIMARY_PROVIDER: z.enum(['eupago', 'ifthenpay', 'stripe']),
     EUPAGO_API_KEY: optionalSecret,
     EUPAGO_WEBHOOK_SECRET: optionalSecret,
@@ -81,6 +82,7 @@ export type EnvironmentConfig = {
     shelterPath: string;
     adoptionsPath: string;
     donationsPath: string;
+    sponsorshipsPath: string;
   };
   payments: {
     primaryProvider: PrimaryPaymentProvider;
@@ -152,6 +154,7 @@ export const parseEnvironmentConfig = (
         shelterPath: env.WORKER_SHELTER_PATH,
         adoptionsPath: env.WORKER_ADOPTIONS_PATH,
         donationsPath: env.WORKER_DONATIONS_PATH,
+        sponsorshipsPath: env.WORKER_SPONSORSHIPS_PATH,
       },
       payments: {
         primaryProvider: env.PAYMENT_PRIMARY_PROVIDER,
