@@ -3401,6 +3401,306 @@ export const createAdoptionViewClient = ({
   },
 });
 
+// ─── Shelter Member Client ────────────────────────────────────────────────────
+
+export type ShelterMemberClientRole = 'shelter_owner' | 'shelter_member';
+
+export type ShelterMemberClientSummary = {
+  memberId: string;
+  userId: string;
+  role: ShelterMemberClientRole;
+  joinedAt: string;
+};
+
+export type ShelterMemberLoadSuccess = {
+  ok: true;
+  status: 'ok';
+  members: ShelterMemberClientSummary[];
+  total: number;
+};
+
+export type ShelterMemberAddSuccess = {
+  ok: true;
+  status: 'ok';
+  memberId: string;
+  userId: string;
+  role: ShelterMemberClientRole;
+};
+
+export type ShelterMemberRemoveSuccess = {
+  ok: true;
+  status: 'ok';
+  memberId: string;
+};
+
+export type ShelterMemberClientFailureStatus =
+  | 'unauthenticated'
+  | 'forbidden'
+  | 'member_not_found'
+  | 'member_already_exists'
+  | 'shelter_member_repository_not_configured'
+  | 'auth_adapter_not_configured'
+  | 'worker_request_failed'
+  | 'worker_response_invalid';
+
+export type ShelterMemberClientFailure = {
+  ok: false;
+  status: ShelterMemberClientFailureStatus;
+  reasons: string[];
+};
+
+export type ShelterMemberLoadResult = ShelterMemberLoadSuccess | ShelterMemberClientFailure;
+export type ShelterMemberAddResult = ShelterMemberAddSuccess | ShelterMemberClientFailure;
+export type ShelterMemberRemoveResult = ShelterMemberRemoveSuccess | ShelterMemberClientFailure;
+
+export type ShelterMemberListQuery = {
+  limit?: number | null;
+  offset?: number | null;
+};
+
+export type CreateShelterMemberClientInput = {
+  workerBaseUrl: string;
+  shelterPath: `/${string}`;
+  getAccessToken: () => Promise<string | null>;
+  fetch: MediaUploadClientFetch;
+};
+
+export type ShelterMemberClient = {
+  loadShelterMembers: (
+    shelterId: string,
+    query?: ShelterMemberListQuery,
+  ) => Promise<ShelterMemberLoadResult>;
+  addShelterMember: (
+    shelterId: string,
+    input: { userId: string; role: ShelterMemberClientRole },
+  ) => Promise<ShelterMemberAddResult>;
+  removeShelterMember: (
+    shelterId: string,
+    memberId: string,
+  ) => Promise<ShelterMemberRemoveResult>;
+};
+
+const parseShelterMemberLoadSuccess = (
+  body: Record<string, unknown> | null,
+): ShelterMemberLoadSuccess | null => {
+  if (
+    !body ||
+    body.status !== 'ok' ||
+    !Array.isArray(body.members) ||
+    typeof body.total !== 'number'
+  ) {
+    return null;
+  }
+
+  const members: ShelterMemberClientSummary[] = [];
+
+  for (const m of body.members) {
+    if (!m || typeof m !== 'object') return null;
+
+    const member = m as Record<string, unknown>;
+
+    if (
+      typeof member.memberId !== 'string' ||
+      typeof member.userId !== 'string' ||
+      typeof member.role !== 'string' ||
+      typeof member.joinedAt !== 'string'
+    ) {
+      return null;
+    }
+
+    members.push({
+      memberId: member.memberId,
+      userId: member.userId,
+      role: member.role as ShelterMemberClientRole,
+      joinedAt: member.joinedAt,
+    });
+  }
+
+  return { ok: true, status: 'ok', members, total: body.total };
+};
+
+const parseShelterMemberAddSuccess = (
+  body: Record<string, unknown> | null,
+): ShelterMemberAddSuccess | null => {
+  if (
+    !body ||
+    body.status !== 'ok' ||
+    typeof body.memberId !== 'string' ||
+    typeof body.userId !== 'string' ||
+    typeof body.role !== 'string'
+  ) {
+    return null;
+  }
+
+  return {
+    ok: true,
+    status: 'ok',
+    memberId: body.memberId,
+    userId: body.userId,
+    role: body.role as ShelterMemberClientRole,
+  };
+};
+
+const parseShelterMemberRemoveSuccess = (
+  body: Record<string, unknown> | null,
+): ShelterMemberRemoveSuccess | null => {
+  if (!body || body.status !== 'ok' || typeof body.memberId !== 'string') {
+    return null;
+  }
+
+  return { ok: true, status: 'ok', memberId: body.memberId };
+};
+
+const parseShelterMemberClientFailureStatus = (
+  body: Record<string, unknown> | null,
+): ShelterMemberClientFailureStatus => {
+  const status = body?.status;
+
+  if (
+    status === 'unauthenticated' ||
+    status === 'forbidden' ||
+    status === 'member_not_found' ||
+    status === 'member_already_exists' ||
+    status === 'shelter_member_repository_not_configured' ||
+    status === 'auth_adapter_not_configured'
+  ) {
+    return status;
+  }
+
+  return 'worker_request_failed';
+};
+
+export const createShelterMemberClient = ({
+  workerBaseUrl,
+  shelterPath,
+  getAccessToken,
+  fetch,
+}: CreateShelterMemberClientInput): ShelterMemberClient => ({
+  loadShelterMembers: async (shelterId, query = {}) => {
+    const accessToken = await getAccessToken();
+
+    if (!accessToken?.trim()) {
+      return { ok: false, status: 'unauthenticated', reasons: ['missing_access_token'] };
+    }
+
+    const base = createWorkerSubUrl(workerBaseUrl, shelterPath, shelterId, 'members');
+    const url = new URL(base);
+
+    if (query?.limit != null) url.searchParams.set('limit', String(query.limit));
+    if (query?.offset != null) url.searchParams.set('offset', String(query.offset));
+
+    let response: Response;
+
+    try {
+      response = await fetch(url.toString(), {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+    } catch {
+      return { ok: false, status: 'worker_request_failed', reasons: ['network_error'] };
+    }
+
+    const body = await parseJsonResponse(response);
+
+    if (!response.ok) {
+      const failureStatus = parseShelterMemberClientFailureStatus(body);
+      const reasons = Array.isArray(body?.reasons) ? parseReasons(body) : [failureStatus];
+
+      return { ok: false, status: failureStatus, reasons: sanitizeReasons(reasons, failureStatus) };
+    }
+
+    const success = parseShelterMemberLoadSuccess(body);
+
+    if (!success) {
+      return { ok: false, status: 'worker_response_invalid', reasons: ['invalid_worker_response'] };
+    }
+
+    return success;
+  },
+
+  addShelterMember: async (shelterId, input) => {
+    const accessToken = await getAccessToken();
+
+    if (!accessToken?.trim()) {
+      return { ok: false, status: 'unauthenticated', reasons: ['missing_access_token'] };
+    }
+
+    let response: Response;
+
+    try {
+      response = await fetch(
+        createWorkerSubUrl(workerBaseUrl, shelterPath, shelterId, 'members'),
+        {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(input),
+        },
+      );
+    } catch {
+      return { ok: false, status: 'worker_request_failed', reasons: ['network_error'] };
+    }
+
+    const body = await parseJsonResponse(response);
+
+    if (!response.ok) {
+      const failureStatus = parseShelterMemberClientFailureStatus(body);
+      const reasons = Array.isArray(body?.reasons) ? parseReasons(body) : [failureStatus];
+
+      return { ok: false, status: failureStatus, reasons: sanitizeReasons(reasons, failureStatus) };
+    }
+
+    const success = parseShelterMemberAddSuccess(body);
+
+    if (!success) {
+      return { ok: false, status: 'worker_response_invalid', reasons: ['invalid_worker_response'] };
+    }
+
+    return success;
+  },
+
+  removeShelterMember: async (shelterId, memberId) => {
+    const accessToken = await getAccessToken();
+
+    if (!accessToken?.trim()) {
+      return { ok: false, status: 'unauthenticated', reasons: ['missing_access_token'] };
+    }
+
+    let response: Response;
+
+    try {
+      response = await fetch(
+        createWorkerSubUrl(workerBaseUrl, shelterPath, shelterId, 'members', memberId),
+        {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${accessToken}` },
+        },
+      );
+    } catch {
+      return { ok: false, status: 'worker_request_failed', reasons: ['network_error'] };
+    }
+
+    const body = await parseJsonResponse(response);
+
+    if (!response.ok) {
+      const failureStatus = parseShelterMemberClientFailureStatus(body);
+      const reasons = Array.isArray(body?.reasons) ? parseReasons(body) : [failureStatus];
+
+      return { ok: false, status: failureStatus, reasons: sanitizeReasons(reasons, failureStatus) };
+    }
+
+    const success = parseShelterMemberRemoveSuccess(body);
+
+    if (!success) {
+      return { ok: false, status: 'worker_response_invalid', reasons: ['invalid_worker_response'] };
+    }
+
+    return success;
+  },
+});
+
 // ─── Media Upload Flow Client ─────────────────────────────────────────────────
 
 export const createMediaUploadFlowClient = (
