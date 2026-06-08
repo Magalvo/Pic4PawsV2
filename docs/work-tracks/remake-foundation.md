@@ -58,22 +58,27 @@ Sponsorship lifecycle management — cancel/pause/resume (Worker + client + Web/
 Donor-facing sponsorship list — `GET /sponsorships` (Worker + client + Web/Mobile):
 `SPONSORSHIP-DONOR-LIST-WORKER-001`, `SPONSORSHIP-DONOR-LIST-CLIENT-001`, `WEB-SPONSORSHIP-DONOR-LIST-001`, `MOBILE-SPONSORSHIP-DONOR-LIST-001`.
 
-Adoption status management — `PATCH /adoptions/:applicationId` (Worker only so far):
-`ADOPTION-STATUS-WORKER-001`.
+Adoption status management — full slice (Worker + client + Web/Mobile):
+`ADOPTION-STATUS-WORKER-001`, `ADOPTION-STATUS-CLIENT-001`, `WEB-ADOPTION-STATUS-001`, `MOBILE-ADOPTION-STATUS-001`.
+
+Adoption view — `GET /adoptions/:applicationId` (Worker only so far):
+`ADOPTION-VIEW-WORKER-001`.
 
 ## Current Focus
 
-`ADOPTION-STATUS-WORKER-001` is merged (PR #76). Shelter admins can now move adoption
-applications through the review lifecycle: `submitted → under_review → more_info_requested
-→ approved / rejected`. The `PATCH /adoptions/:applicationId` route is shelter-only (no
-dual access), with the same `matchWorkerAdoptionStatusId` path-matcher pattern as manage routes.
+`ADOPTION-VIEW-WORKER-001` implements `GET /adoptions/:applicationId` — dual access (applicant
+OR shelter member). The route is method-switched at the same path as the PATCH route using
+`matchWorkerAdoptionStatusId`. `applicantUserId` is used only for access control and is omitted
+from the response. 14 tests.
+
+The adoption status management slice is now fully wired end-to-end (Worker + client + Web + Mobile).
 
 The foundation now covers all write paths, all public read paths, all shelter-side list
-views (adoption, donation, sponsorship), the donor-facing sponsorship list, and the full
-sponsorship lifecycle including adoption status management at the Worker level.
+views (adoption, donation, sponsorship), the donor-facing sponsorship list, the full
+sponsorship lifecycle, adoption status management (full slice), and the adoption view Worker route.
 
 Suggested next:
-1. Complete adoption status slice: `ADOPTION-STATUS-CLIENT-001` + `WEB-ADOPTION-STATUS-001` + `MOBILE-ADOPTION-STATUS-001`.
+1. Complete adoption view slice: `ADOPTION-VIEW-CLIENT-001` + `WEB-ADOPTION-VIEW-001` + `MOBILE-ADOPTION-VIEW-001`.
 2. Or begin a new domain slice (shelter member management, notifications, pet status transitions).
 
 ## Branching Convention

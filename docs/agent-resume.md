@@ -143,8 +143,12 @@ Completed foundation items (all merged to `main`):
 - `WEB-SPONSORSHIP-DONOR-LIST-001` — Web donor sponsorship list product boundary (5 states, no `forbidden`)
 - `MOBILE-SPONSORSHIP-DONOR-LIST-001` — Mobile donor sponsorship list product boundary with PT-PT states
 - `ADOPTION-STATUS-WORKER-001` — authenticated `PATCH /adoptions/:applicationId` shelter-only status management route, `AdoptionStatusRepository` + Supabase impl, shelter-settable statuses: `under_review | more_info_requested | approved | rejected`
+- `ADOPTION-STATUS-CLIENT-001` — `createAdoptionStatusClient` in `@pic4paws/client`
+- `WEB-ADOPTION-STATUS-001` — Web adoption status product boundary for shelter staff (4 states: idle/submitting/succeeded/failed)
+- `MOBILE-ADOPTION-STATUS-001` — Mobile adoption status product boundary for shelter staff
+- `ADOPTION-VIEW-WORKER-001` — `GET /adoptions/:applicationId` dual-access Worker route (applicant OR shelter member), `AdoptionViewRepository` + Supabase impl, `applicantUserId` omitted from response
 
-The Worker now has (as of 2026-06-08, updated through PR #76):
+The Worker now has (as of 2026-06-08, updated through PR #80):
 
 - server-side Supabase SDK dependency composition
 - server-side R2/S3-compatible upload signer factory
@@ -176,6 +180,9 @@ The Worker now has (as of 2026-06-08, updated through PR #76):
 - adoption status management (`PATCH /adoptions/:applicationId`) with `AdoptionStatusRepository`
   interface — shelter membership only, `matchWorkerAdoptionStatusId` path matcher,
   shelter-settable statuses: `under_review | more_info_requested | approved | rejected`
+- adoption view (`GET /adoptions/:applicationId`) with `AdoptionViewRepository` interface —
+  dual access (applicant OR shelter member), `applicantUserId` omitted from 200 response,
+  method-switched at the same path as PATCH using `matchWorkerAdoptionStatusId`
 - `POST /webhooks/payments` payment webhook handler — `PaymentWebhookVerifier` interface
   (HMAC verification, provider-specific), `PaymentWebhookRepository` (idempotency via
   `payment_webhook_events`, UPDATE `donation_transactions`), `PROVIDER_SIGNATURE_HEADERS` map.
@@ -210,6 +217,7 @@ The Worker now has (as of 2026-06-08, updated through PR #76):
 - `SponsorshipListClient` (authenticated read — `loadSponsorships(shelterId, query?)` with pagination)
 - `SponsorshipManageClient` (authenticated write — `manageSponsorship(sponsorshipId, status)`)
 - `SponsorshipDonorListClient` (authenticated read — `loadDonorSponsorships(query?)` — donor's own list)
+- `AdoptionStatusClient` (authenticated write — `manageAdoptionStatus(applicationId, status)`)
 - no client-side Supabase service-role keys or R2 credentials
 
 Web/Mobile now have tested product boundaries for: media upload, pet media upload+attach,
@@ -220,7 +228,8 @@ including dedicated `not_found` + `forbidden`), sponsorship (recurring / padrinh
 4 states including idle/submitting/submitted/failed), sponsorship list (shelter-side,
 6 states including dedicated `forbidden`), sponsorship manage (cancel/pause/resume,
 4 states: idle/submitting/succeeded/failed, dual access: shelter manager OR donor),
-sponsorship donor list (donor-facing, 5 states: idle/loading/loaded/empty/failed, no `forbidden`).
+sponsorship donor list (donor-facing, 5 states: idle/loading/loaded/empty/failed, no `forbidden`),
+adoption status management (shelter staff approve/reject/review, 4 states: idle/submitting/succeeded/failed).
 
 The adopter end-to-end flow is fully wired at the boundary layer:
 **feed → pet profile → shelter profile → submit adoption application**.
@@ -243,8 +252,11 @@ The full sponsorship manage slice is wired end-to-end:
 The donor-facing sponsorship list slice is wired end-to-end:
 **`GET /sponsorships` Worker route → `SponsorshipDonorListClient` → Web + Mobile product boundaries** (5 states, no `forbidden`).
 
-The adoption status management Worker route is implemented:
-**`PATCH /adoptions/:applicationId` Worker route** — shelter membership only, statuses: `under_review | more_info_requested | approved | rejected`. Client + UI boundaries not yet built.
+The adoption status management slice is fully wired end-to-end:
+**`PATCH /adoptions/:applicationId` Worker route → `AdoptionStatusClient` → Web + Mobile product boundaries**.
+
+The adoption view Worker route is implemented:
+**`GET /adoptions/:applicationId` Worker route** — dual access (applicant OR shelter member), `applicantUserId` omitted from response. Client + UI boundaries not yet built.
 
 Payment state is always driven by verified server-side webhook. The `paymentWebhookVerifier`
 is intentionally left unset by the factory — provider-specific HMAC adapters must be wired
@@ -252,16 +264,17 @@ per deployment.
 
 ## 5. Recommended Next Work Item
 
-The adoption status Worker route is complete (PR #76). The foundation now covers:
+The adoption view Worker route is complete (PR TBD). The foundation now covers:
 - All write paths (pet drafts, media, adoption, donation, sponsorship, sponsorship manage, adoption status management)
-- All read paths (pet feed, pet profile, shelter profile)
+- All read paths (pet feed, pet profile, shelter profile, adoption view)
 - All shelter-side list views (adoption list, donation list, sponsorship list)
 - Donor-facing sponsorship list (GET /sponsorships)
 - Full payment confirmation pipeline (webhook → donor status polling)
 - Sponsorship lifecycle management (cancel/pause/resume — dual access: shelter OR donor)
+- Adoption status management — full slice (Worker + client + Web + Mobile)
 
 **Suggested next** (in priority order):
-1. Continue the adoption status slice: `ADOPTION-STATUS-CLIENT-001` → `createAdoptionStatusClient` in `@pic4paws/client`, then `WEB-ADOPTION-STATUS-001` + `MOBILE-ADOPTION-STATUS-001` product boundaries.
+1. Continue the adoption view slice: `ADOPTION-VIEW-CLIENT-001` → `createAdoptionViewClient` in `@pic4paws/client`, then `WEB-ADOPTION-VIEW-001` + `MOBILE-ADOPTION-VIEW-001` product boundaries.
 2. Begin a new domain slice: shelter member management, notifications, or pet status transitions.
 
 ## 6. Handoff Prompt For Codex
