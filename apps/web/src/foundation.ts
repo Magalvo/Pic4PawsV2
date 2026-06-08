@@ -23,6 +23,10 @@ import {
   type WebSponsorshipListUiContent,
 } from './sponsorship-list';
 import {
+  webSponsorshipManageUiContent,
+  type WebSponsorshipManageUiContent,
+} from './sponsorship-manage';
+import {
   webSponsorshipDonorListUiContent,
   type WebSponsorshipDonorListUiContent,
 } from './sponsorship-donor-list';
@@ -59,6 +63,7 @@ export type WebFoundationContent = {
   donationStatus: Pick<WebDonationStatusUiContent, 'title' | 'description' | 'status'>;
   sponsorship: Pick<WebSponsorshipUiContent, 'title' | 'description' | 'status'>;
   sponsorshipList: Pick<WebSponsorshipListUiContent, 'title' | 'description' | 'status'>;
+  sponsorshipManage: Pick<WebSponsorshipManageUiContent, 'title' | 'description' | 'status'>;
   sponsorshipDonorList: Pick<WebSponsorshipDonorListUiContent, 'title' | 'description' | 'status'>;
   adoptionStatus: Pick<WebAdoptionStatusUiContent, 'title' | 'description' | 'status'>;
   readiness: Array<{
@@ -155,6 +160,11 @@ export const webFoundationContent: WebFoundationContent = {
     title: webSponsorshipListUiContent.title,
     description: webSponsorshipListUiContent.description,
     status: webSponsorshipListUiContent.status,
+  },
+  sponsorshipManage: {
+    title: webSponsorshipManageUiContent.title,
+    description: webSponsorshipManageUiContent.description,
+    status: webSponsorshipManageUiContent.status,
   },
   sponsorshipDonorList: {
     title: webSponsorshipDonorListUiContent.title,
