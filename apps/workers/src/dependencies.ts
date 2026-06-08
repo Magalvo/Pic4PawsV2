@@ -20,6 +20,8 @@ import type { AdoptionListRepository } from './adoption-list';
 import { createSupabaseAdoptionListRepositories } from './adoption-list-supabase';
 import type { DonationRepository } from './donation';
 import { createSupabaseDonationRepositories } from './donation-supabase';
+import type { DonationListRepository } from './donation-list';
+import { createSupabaseDonationListRepositories } from './donation-list-supabase';
 import type {
   PetDraftRepository,
   PetMediaAttachRepository,
@@ -56,6 +58,7 @@ export type WorkerRequestDependencies = {
   adoptionRepository?: AdoptionApplicationRepository;
   adoptionListRepository?: AdoptionListRepository;
   donationRepository?: DonationRepository;
+  donationListRepository?: DonationListRepository;
   supabaseClientFactory?: WorkerSupabaseClientFactory;
   now?: () => string;
 };
@@ -99,6 +102,7 @@ export const createWorkerSupabaseDependencies = ({
     const adoptionRepositories = createSupabaseAdoptionRepositories({ client });
     const adoptionListRepositories = createSupabaseAdoptionListRepositories({ client });
     const donationRepositories = createSupabaseDonationRepositories({ client });
+    const donationListRepositories = createSupabaseDonationListRepositories({ client });
 
     return {
       mediaUploadSigner,
@@ -113,6 +117,7 @@ export const createWorkerSupabaseDependencies = ({
       adoptionRepository: adoptionRepositories.adoptionRepository,
       adoptionListRepository: adoptionListRepositories.adoptionListRepository,
       donationRepository: donationRepositories.donationRepository,
+      donationListRepository: donationListRepositories.donationListRepository,
       now,
     };
   } catch {
@@ -168,5 +173,7 @@ export const resolveWorkerRequestDependencies = ({
       dependencies.adoptionListRepository ?? supabaseDependencies.adoptionListRepository,
     donationRepository:
       dependencies.donationRepository ?? supabaseDependencies.donationRepository,
+    donationListRepository:
+      dependencies.donationListRepository ?? supabaseDependencies.donationListRepository,
   };
 };
