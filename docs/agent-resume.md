@@ -150,8 +150,12 @@ Completed foundation items (all merged to `main`):
 - `ADOPTION-VIEW-CLIENT-001` — `createAdoptionViewClient` in `@pic4paws/client`
 - `WEB-ADOPTION-VIEW-001` — Web adoption view product boundary (6 states: idle/loading/loaded/not_found/forbidden/failed)
 - `MOBILE-ADOPTION-VIEW-001` — Mobile adoption view product boundary with PT-PT states
+- `SHELTER-MEMBER-WORKER-001` — `GET/POST /shelters/:shelterId/members` + `DELETE /shelters/:shelterId/members/:memberId` Worker routes, `ShelterMemberRepository` + Supabase impl, soft-delete pattern, route ordering enforced
+- `SHELTER-MEMBER-CLIENT-001` — `createShelterMemberClient` in `@pic4paws/client` (loadShelterMembers / addShelterMember / removeShelterMember)
+- `WEB-SHELTER-MEMBER-001` — Web shelter member product boundary (8 states: idle/loading/loaded/forbidden/failed + member_added/member_removed/action_failed — first combined read+write boundary)
+- `MOBILE-SHELTER-MEMBER-001` — Mobile shelter member product boundary with PT-PT states (8 states)
 
-The Worker now has (as of 2026-06-08, updated through PR #83):
+The Worker now has (as of 2026-06-08, updated through PR #88):
 
 - server-side Supabase SDK dependency composition
 - server-side R2/S3-compatible upload signer factory
@@ -186,6 +190,12 @@ The Worker now has (as of 2026-06-08, updated through PR #83):
 - adoption view (`GET /adoptions/:applicationId`) with `AdoptionViewRepository` interface —
   dual access (applicant OR shelter member), `applicantUserId` omitted from 200 response,
   method-switched at the same path as PATCH using `matchWorkerAdoptionStatusId`
+- shelter member list+add (`GET/POST /shelters/:shelterId/members`) with
+  `ShelterMemberRepository` interface — paginated list, membership check via `canManageShelter`,
+  409 on duplicate add, `matchWorkerShelterMemberShelterId` path matcher
+- shelter member remove (`DELETE /shelters/:shelterId/members/:memberId`) with soft-delete
+  (`deleted_at` timestamp), 404 on not-found, `matchWorkerShelterMemberRemoveIds` path matcher —
+  registered BEFORE the list/add check, which is BEFORE the shelter profile check
 - `POST /webhooks/payments` payment webhook handler — `PaymentWebhookVerifier` interface
   (HMAC verification, provider-specific), `PaymentWebhookRepository` (idempotency via
   `payment_webhook_events`, UPDATE `donation_transactions`), `PROVIDER_SIGNATURE_HEADERS` map.
@@ -222,6 +232,7 @@ The Worker now has (as of 2026-06-08, updated through PR #83):
 - `SponsorshipDonorListClient` (authenticated read — `loadDonorSponsorships(query?)` — donor's own list)
 - `AdoptionStatusClient` (authenticated write — `manageAdoptionStatus(applicationId, status)`)
 - `AdoptionViewClient` (authenticated read — `loadAdoptionView(applicationId)`, 7 failure statuses)
+- `ShelterMemberClient` (authenticated read+write — `loadShelterMembers(shelterId, query?)`, `addShelterMember(shelterId, input)`, `removeShelterMember(shelterId, memberId)`)
 - no client-side Supabase service-role keys or R2 credentials
 
 Web/Mobile now have tested product boundaries for: media upload, pet media upload+attach,
@@ -234,7 +245,9 @@ including dedicated `not_found` + `forbidden`), sponsorship (recurring / padrinh
 4 states: idle/submitting/succeeded/failed, dual access: shelter manager OR donor),
 sponsorship donor list (donor-facing, 5 states: idle/loading/loaded/empty/failed, no `forbidden`),
 adoption status management (shelter staff approve/reject/review, 4 states: idle/submitting/succeeded/failed),
-adoption view (adopter + shelter read, 6 states: idle/loading/loaded/not_found/forbidden/failed).
+adoption view (adopter + shelter read, 6 states: idle/loading/loaded/not_found/forbidden/failed),
+shelter member management (shelter staff, 8 states: idle/loading/loaded/forbidden/failed +
+member_added/member_removed/action_failed — first combined read+write boundary).
 
 The adopter end-to-end flow is fully wired at the boundary layer:
 **feed → pet profile → shelter profile → submit adoption application → view adoption status**.
@@ -269,7 +282,7 @@ per deployment.
 
 ## 5. Recommended Next Work Item
 
-The adoption view slice is complete (PRs #80–#83). The foundation now covers:
+The shelter member slice is complete (PRs #85–#88). The foundation now covers:
 - All write paths (pet drafts, media, adoption, donation, sponsorship, sponsorship manage, adoption status management)
 - All read paths (pet feed, pet profile, shelter profile, adoption view — all 4 layers)
 - All shelter-side list views (adoption list, donation list, sponsorship list)
@@ -278,11 +291,11 @@ The adoption view slice is complete (PRs #80–#83). The foundation now covers:
 - Sponsorship lifecycle management (cancel/pause/resume — dual access: shelter OR donor)
 - Adoption status management — full slice (Worker + client + Web + Mobile)
 - Adoption view — full slice (Worker + client + Web + Mobile)
+- Shelter member management — full slice (Worker + client + Web + Mobile, first 8-state combined read+write boundary)
 
 **Suggested next** (in priority order):
-1. **Shelter member management** — `SHELTER-MEMBER-WORKER-001` (`GET /shelters/:shelterId/members` + `POST` + `DELETE`), client + Web/Mobile boundaries.
-2. **Pet archival / status transitions** — `PET-ARCHIVE-WORKER-001` (`PATCH /pets/:petId/status` to `archived`), client + Web/Mobile boundaries.
-3. **Notification delivery** — Worker-side notification dispatch + client read boundary.
+1. **Pet archival** — `PET-ARCHIVE-WORKER-001` (`PATCH /pets/:petId/status` → `{ status: 'archived' }`), shelter-membership-gated, client + Web/Mobile boundaries.
+2. **Notification delivery** — Worker-side notification dispatch + client read boundary.
 
 ## 6. Handoff Prompt For Codex
 

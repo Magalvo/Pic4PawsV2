@@ -64,19 +64,23 @@ Adoption status management — full slice (Worker + client + Web/Mobile):
 Adoption view — full slice (Worker + client + Web/Mobile):
 `ADOPTION-VIEW-WORKER-001`, `ADOPTION-VIEW-CLIENT-001`, `WEB-ADOPTION-VIEW-001`, `MOBILE-ADOPTION-VIEW-001`.
 
+Shelter member management — full slice (Worker + client + Web/Mobile, first 8-state combined read+write boundary):
+`SHELTER-MEMBER-WORKER-001`, `SHELTER-MEMBER-CLIENT-001`, `WEB-SHELTER-MEMBER-001`, `MOBILE-SHELTER-MEMBER-001`.
+
 ## Current Focus
 
-The adoption view slice is now fully wired end-to-end (Worker + client + Web + Mobile, PRs #80–#83).
-`applicantUserId` is omitted from the response. 6-state read boundary (idle/loading/loaded/not_found/forbidden/failed). 850 tests.
+The shelter member slice is now fully wired end-to-end (Worker + client + Web + Mobile, PRs #85–#88).
+First combined read+write 8-state boundary. Soft-delete for removal. Route ordering enforced.
+938 tests.
 
 The foundation now covers all write paths, all public read paths, all shelter-side list
 views (adoption, donation, sponsorship), the donor-facing sponsorship list, the full
-sponsorship lifecycle, adoption status management (full slice), and the full adoption view slice.
+sponsorship lifecycle, adoption status management, the adoption view slice, and shelter
+member management (first 8-state combined read+write boundary).
 
 Suggested next:
-1. **Shelter member management** — `SHELTER-MEMBER-WORKER-001` (`GET/POST/DELETE /shelters/:shelterId/members`), client + Web/Mobile.
-2. **Pet archival** — `PET-ARCHIVE-WORKER-001` (`PATCH /pets/:petId/status` → `archived`), client + Web/Mobile.
-3. **Notification delivery** — Worker-side dispatch + client read boundary.
+1. **Pet archival** — `PET-ARCHIVE-WORKER-001` (`PATCH /pets/:petId/status` → `{ status: 'archived' }`), shelter-membership-gated, client + Web/Mobile.
+2. **Notification delivery** — Worker-side dispatch + client read boundary.
 
 ## Branching Convention
 
