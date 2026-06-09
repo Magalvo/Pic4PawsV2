@@ -1,5 +1,6 @@
 import type { DonationProvider } from './donation';
 import type { DonationStatus } from './donation-list';
+import type { NotificationRepository } from './notification';
 
 export type DonationWebhookStatus = Extract<
   DonationStatus,
@@ -57,6 +58,7 @@ export type HandleWorkerPaymentWebhookRequestInput = {
   webhookSecret: string;
   paymentWebhookVerifier?: PaymentWebhookVerifier;
   paymentWebhookRepository?: PaymentWebhookRepository;
+  notificationRepository?: NotificationRepository;
   now: string;
 };
 
@@ -70,6 +72,7 @@ export const handleWorkerPaymentWebhookRequest = async ({
   webhookSecret,
   paymentWebhookVerifier,
   paymentWebhookRepository,
+  notificationRepository,
   now,
 }: HandleWorkerPaymentWebhookRequestInput): Promise<Response> => {
   // 1. Verifier configured
@@ -118,6 +121,16 @@ export const handleWorkerPaymentWebhookRequest = async ({
     newStatus: parsed.newStatus,
     providerEventId: parsed.providerEventId,
   });
+
+  // 7. Dispatch notification for paid events (fire-and-forget)
+  if (found && parsed.newStatus === 'paid' && notificationRepository) {
+    notificationRepository
+      .notifyDonationPaid({
+        providerPaymentId: parsed.providerPaymentId,
+        provider,
+      })
+      .catch(() => undefined);
+  }
 
   return jsonResponse({ status: 'webhook_accepted', donationFound: found }, { status: 200 });
 };

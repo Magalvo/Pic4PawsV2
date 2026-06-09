@@ -48,6 +48,7 @@ describe('parseEnvironmentConfig', () => {
           adoptionsPath: '/adoptions',
           donationsPath: '/donations',
           sponsorshipsPath: '/sponsorships',
+          notificationsPath: '/notifications',
         },
         payments: {
           primaryProvider: 'eupago',

@@ -1,5 +1,6 @@
 import type { AuthenticatedActor } from '@pic4paws/domain';
 import type { WorkerPetDraftAuthenticator } from './pet-drafts';
+import type { NotificationRepository } from './notification';
 
 export type HousingType = 'apartment' | 'house' | 'farm' | 'other';
 
@@ -164,6 +165,7 @@ export type HandleWorkerAdoptionRequestInput = {
   adoptionRepository?: AdoptionApplicationRepository;
   authenticator?: WorkerPetDraftAuthenticator;
   actor?: AuthenticatedActor;
+  notificationRepository?: NotificationRepository;
   now: string;
 };
 
@@ -172,6 +174,7 @@ export const handleWorkerAdoptionRequest = async ({
   payload,
   adoptionRepository,
   authenticator,
+  notificationRepository,
   now,
 }: HandleWorkerAdoptionRequestInput): Promise<Response> => {
   // 1. Method check
@@ -247,6 +250,18 @@ export const handleWorkerAdoptionRequest = async ({
     consentVersion: validation.data.consentVersion,
     consentAcceptedAt: validation.data.consentAcceptedAt,
   });
+
+  // 9. Dispatch notification (fire-and-forget)
+  if (notificationRepository) {
+    notificationRepository
+      .notifyNewAdoptionApplication({
+        shelterId: petContext.shelterId,
+        applicationId: result.applicationId,
+        petId: petContext.petId,
+        applicantName: validation.data.applicantFullName,
+      })
+      .catch(() => undefined);
+  }
 
   return jsonResponse(
     {

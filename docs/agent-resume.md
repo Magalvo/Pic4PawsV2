@@ -62,9 +62,17 @@ Do not batch items that can be reviewed or merged independently.
 
 ## 4. Current State As Of 2026-06-09
 
-**Repository status**: 700+ tests passing (105 test files), full foundation complete through adoption view, shelter member management, and pet archive slices.
+**Repository status**: 1044 tests passing (123 test files), full foundation complete through notifications slice.
 
 **Main branch HEAD** (commit `729c39b`): PR #93 (MOBILE-PET-ARCHIVE-001) merged
+
+**In-flight branch** `agent/notifications-batch` (4 commits, pending PR):
+- `8d1c2ed` — NOTIFICATION-WORKER-001 (21 tests)
+- `5c175d1` — NOTIFICATION-CLIENT-001 (10 tests)
+- `31c656c` — WEB-NOTIFICATION-001 (9 tests)
+- `7e0f1bd` — MOBILE-NOTIFICATION-001 (9 tests)
+
+All 4 commits pass full validation:
 - `npm run typecheck` ✅
 - `npm run lint` ✅
 - `npm run test` ✅
@@ -163,8 +171,12 @@ Do not batch items that can be reviewed or merged independently.
 - `SHELTER-MEMBER-CLIENT-001` — `createShelterMemberClient` in `@pic4paws/client` (loadShelterMembers / addShelterMember / removeShelterMember)
 - `WEB-SHELTER-MEMBER-001` — Web shelter member product boundary (8 states: idle/loading/loaded/forbidden/failed + member_added/member_removed/action_failed — first combined read+write boundary)
 - `MOBILE-SHELTER-MEMBER-001` — Mobile shelter member product boundary with PT-PT states (8 states)
+- `NOTIFICATION-WORKER-001` — migration `0002_notifications`, `NotificationRepository` + Supabase impl, fire-and-forget dispatch into 4 handlers, `GET /notifications` + `PATCH /notifications/:id/read` routes *(in `agent/notifications-batch`, pending merge)*
+- `NOTIFICATION-CLIENT-001` — `createNotificationClient` in `@pic4paws/client` (`listNotifications` + `markNotificationRead`) *(in `agent/notifications-batch`, pending merge)*
+- `WEB-NOTIFICATION-001` — Web notification product boundary (4 states: idle/loading/loaded/failed, optimistic markRead) *(in `agent/notifications-batch`, pending merge)*
+- `MOBILE-NOTIFICATION-001` — Mobile notification product boundary with PT-PT states *(in `agent/notifications-batch`, pending merge)*
 
-The Worker now has (as of 2026-06-08, updated through PR #88):
+The Worker now has (as of 2026-06-09, updated through `agent/notifications-batch`):
 
 - server-side Supabase SDK dependency composition
 - server-side R2/S3-compatible upload signer factory
@@ -218,6 +230,14 @@ The Worker now has (as of 2026-06-08, updated through PR #88):
 - `WORKER_DONATIONS_PATH` config (default `/donations`)
 - private shelter fields (taxId, registrationNumber, precise address, paymentAccountStatus)
   deliberately excluded from the public shelter profile response
+- `GET /notifications` list route (authenticated, `limit`/`offset` query params, returns `notifications`, `total`, `unreadCount`)
+- `PATCH /notifications/:id/read` mark-as-read route (authenticated, 200 or 404)
+- `NotificationRepository` interface with 6 methods (`listNotifications`, `markNotificationRead`, `notifyAdoptionStatusChanged`, `notifyNewAdoptionApplication`, `notifyDonationPaid`, `notifySponsorshipStatusChanged`)
+- Supabase `notifyNewAdoptionApplication` fans out to all active shelter members
+- Supabase `notifyDonationPaid` resolves donor from `donation_transactions` by `providerPaymentId` + `provider`
+- fire-and-forget dispatch wired into adoption-status, adoption, payment-webhook, and sponsorship-manage handlers
+- `WORKER_NOTIFICATIONS_PATH` config key (default `/notifications`)
+- migration `0002_notifications`: `notification_type` enum, `notifications` table, index on `(user_id, created_at desc)`, RLS policy
 - tests that keep Supabase and Cloudflare calls mocked/injected
 
 `@pic4paws/client` now has:
@@ -242,6 +262,7 @@ The Worker now has (as of 2026-06-08, updated through PR #88):
 - `AdoptionStatusClient` (authenticated write — `manageAdoptionStatus(applicationId, status)`)
 - `AdoptionViewClient` (authenticated read — `loadAdoptionView(applicationId)`, 7 failure statuses)
 - `ShelterMemberClient` (authenticated read+write — `loadShelterMembers(shelterId, query?)`, `addShelterMember(shelterId, input)`, `removeShelterMember(shelterId, memberId)`)
+- `NotificationClient` (authenticated read+write — `listNotifications(query?)`, `markNotificationRead(notificationId)`) *(pending merge)*
 - no client-side Supabase service-role keys or R2 credentials
 
 Web/Mobile now have tested product boundaries for: media upload, pet media upload+attach,
@@ -256,7 +277,8 @@ sponsorship donor list (donor-facing, 5 states: idle/loading/loaded/empty/failed
 adoption status management (shelter staff approve/reject/review, 4 states: idle/submitting/succeeded/failed),
 adoption view (adopter + shelter read, 6 states: idle/loading/loaded/not_found/forbidden/failed),
 shelter member management (shelter staff, 8 states: idle/loading/loaded/forbidden/failed +
-member_added/member_removed/action_failed — first combined read+write boundary).
+member_added/member_removed/action_failed — first combined read+write boundary),
+notifications (in-app, 4 states: idle/loading/loaded/failed, optimistic markRead, 4 trigger events) *(pending merge)*.
 
 The adopter end-to-end flow is fully wired at the boundary layer:
 **feed → pet profile → shelter profile → submit adoption application → view adoption status**.
@@ -304,12 +326,12 @@ The pet archive slice is complete (PRs #90–#93). The foundation now covers:
 - Pet archival — full slice (Worker + client + Web + Mobile, `PATCH /pets/:petId` with status: `archived | published`)
 
 **Suggested next** (in priority order, updated 2026-06-09):
-1. **Notification delivery framework** — Worker notification dispatch + client read boundary (push notifications)
+1. **Donor-facing adoption list** — Donor sees their own adoption applications (`GET /adoptions` donor-only, separate from shelter list)
 2. **Pet status transitions** — Archive/re-publish workflows, audit logging, status history
 3. **Payment reconciliation dashboard** — Shelter-side reporting for donations and sponsorships by date/status
-4. **Donor-facing adoption list** — Donor sees their own adoption applications (`GET /adoptions` donor-only, separate from shelter list)
+4. **Notification preferences** — Opt-out per notification type, user preferences table
 
-> **Note**: `DONOR-SPONSORSHIP-LIST` (= `SPONSORSHIP-DONOR-LIST-*`) was completed in PRs #72–#75 and is **not** a pending item. The 4 open remote branches (`ADOPTION-LIST-WORKER-001`, `MOBILE-PET-PROFILE-001`, `PET-FEED-WORKER-001`, `SHELTER-PROFILE-WORKER-001`) are all fully merged to main and can be deleted.
+> **Note**: `DONOR-SPONSORSHIP-LIST` (= `SPONSORSHIP-DONOR-LIST-*`) was completed in PRs #72–#75 and is **not** a pending item. The 4 open remote branches (`ADOPTION-LIST-WORKER-001`, `MOBILE-PET-PROFILE-001`, `PET-FEED-WORKER-001`, `SHELTER-PROFILE-WORKER-001`) are all fully merged to main and can be deleted. The `agent/notifications-batch` branch is pending merge as PR #94.
 
 ## 6. Handoff Prompt For New Agent Session
 
@@ -322,6 +344,10 @@ Continue Pic4Paws V2 development from main using strict SDD/TDD:
 - 1 branch per work item: agent/<WORK-ITEM-ID>
 - Failing test first, then implementation
 - Validate: npm run typecheck, lint, test, build
+
+The `agent/notifications-batch` branch (PR #94) adds the full in-app notifications slice
+(NOTIFICATION-WORKER-001, NOTIFICATION-CLIENT-001, WEB-NOTIFICATION-001, MOBILE-NOTIFICATION-001).
+Merge it before starting the next item.
 
 Pick the next recommended item or ask which to start.
 ```

@@ -25,6 +25,7 @@ type AdoptionStatusRow = {
   id: string;
   shelter_id: string;
   status: AdoptionApplicationStatus;
+  applicant_user_id: string;
 };
 
 export const createSupabaseAdoptionStatusRepositories = ({
@@ -34,7 +35,7 @@ export const createSupabaseAdoptionStatusRepositories = ({
     getAdoptionForStatus: async (applicationId: string): Promise<AdoptionStatusRecord | null> => {
       const result = (await client
         .from('adoption_applications')
-        .select('id,shelter_id,status')
+        .select('id,shelter_id,status,applicant_user_id')
         .eq('id', applicationId)
         .single()) as SupabaseQueryResult<AdoptionStatusRow>;
 
@@ -44,6 +45,7 @@ export const createSupabaseAdoptionStatusRepositories = ({
         applicationId: result.data.id,
         shelterId: result.data.shelter_id,
         currentStatus: result.data.status,
+        applicantUserId: result.data.applicant_user_id,
       };
     },
 
