@@ -60,12 +60,21 @@ Do not batch items that can be reviewed or merged independently.
 - `npm run test`
 - `npm run build`
 
-## 4. Current State As Of 2026-06-08
+## 4. Current State As Of 2026-06-09
 
-All foundation work, the full public read path, the full shelter-side adoption review
-slice, and the first item of the donation slice merged into `main`.
+**Repository status**: 700+ tests passing (105 test files), full foundation complete through adoption view, shelter member management, and pet archive slices.
 
-Completed foundation items (all merged to `main`):
+**Main branch HEAD** (commit `729c39b`): PR #93 (MOBILE-PET-ARCHIVE-001) merged
+- `npm run typecheck` ✅
+- `npm run lint` ✅
+- `npm run test` ✅
+- `npm run build` ✅
+
+**Latest checkpoint**: [2026-06-09-pet-archive-adoption-view-shelter-member-complete.md](docs/checkpoints/2026-06-09-pet-archive-adoption-view-shelter-member-complete.md)
+
+### Merged Work Items (up to 2026-06-09)
+
+**All of these are merged to `main` and passing validation**:
 
 - `AUTH-SUPABASE-001`
 - `SEC-001`
@@ -292,15 +301,30 @@ The shelter member slice is complete (PRs #85–#88). The foundation now covers:
 - Adoption status management — full slice (Worker + client + Web + Mobile)
 - Adoption view — full slice (Worker + client + Web + Mobile)
 - Shelter member management — full slice (Worker + client + Web + Mobile, first 8-state combined read+write boundary)
+- Pet archival — full slice (Worker + client + Web + Mobile, `PATCH /pets/:petId` with status: `archived | published`)
 
-**Suggested next** (in priority order):
-1. **Pet archival** — `PET-ARCHIVE-WORKER-001` (`PATCH /pets/:petId/status` → `{ status: 'archived' }`), shelter-membership-gated, client + Web/Mobile boundaries.
-2. **Notification delivery** — Worker-side notification dispatch + client read boundary.
+**Suggested next** (in priority order, updated 2026-06-09):
+1. **Donor-facing sponsorship list** — `DONOR-SPONSORSHIP-LIST` slice (new Worker route + client + Web/Mobile boundaries) — donor sees their own active sponsorships
+2. **Notification delivery framework** — Worker notification dispatch + client read boundary (push notifications)
+3. **Pet status transitions** — Archive/re-publish workflows, status workflows
+4. **Payment reconciliation dashboard** — Shelter-side reporting for donations and sponsorships by date/status
+5. **Open branches** to review:
+   - `origin/agent/ADOPTION-LIST-WORKER-001` 
+   - `origin/agent/MOBILE-PET-PROFILE-001`
+   - `origin/agent/PET-FEED-WORKER-001`
+   - `origin/agent/SHELTER-PROFILE-WORKER-001`
 
-## 6. Handoff Prompt For Codex
+## 6. Handoff Prompt For New Agent Session
 
-Use this prompt in a new Codex thread:
+Use this prompt in a new AI agent session (Claude Web UI):
 
 ```text
-Read AGENTS.md, docs/codex-resume.md, docs/work-tracks/remake-foundation.md and the latest docs/checkpoints file. Continue Pic4Paws V2 from main using strict SDD/TDD. Do not work on main. Start the next recommended work item unless I specify another one.
+Read AGENTS.md, docs/agent-resume.md, docs/canonical/architecture-proposal.md, docs/canonical/sdd.md, and the latest checkpoint at docs/checkpoints/2026-06-09-pet-archive-adoption-view-shelter-member-complete.md.
+
+Continue Pic4Paws V2 development from main using strict SDD/TDD:
+- 1 branch per work item: agent/<WORK-ITEM-ID>
+- Failing test first, then implementation
+- Validate: npm run typecheck, lint, test, build
+
+Pick the next recommended item or ask which to start.
 ```
