@@ -68,6 +68,32 @@ export const createSupabasePetArchiveRepositories = ({
 
       return { petId };
     },
+
+    republishPet: async ({
+      petId,
+    }: {
+      petId: string;
+      now: string;
+    }): Promise<{ petId: string } | null> => {
+      const result = (await client
+        .from('pets')
+        .update({ lifecycle_status: 'published', archived_at: null })
+        .eq('id', petId)
+        .eq('lifecycle_status', 'archived')) as SupabaseQueryResult<PetArchiveRow[]>;
+
+      if (result.error) {
+        throw new SupabasePetArchiveRepositoryError(
+          `Failed to republish pet: ${result.error.message ?? 'unknown error'}`,
+        );
+      }
+
+      // If no rows were updated the pet was not archived
+      const updated = Array.isArray(result.data) ? result.data : [];
+
+      if (updated.length === 0) return null;
+
+      return { petId };
+    },
   };
 
   return { petArchiveRepository };

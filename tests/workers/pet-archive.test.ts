@@ -44,6 +44,7 @@ const makePetRecord = (overrides?: Partial<PetArchiveRecord>): PetArchiveRecord 
 const makeRepository = (overrides?: Partial<PetArchiveRepository>): PetArchiveRepository => ({
   getPetForArchive: async () => makePetRecord(),
   archivePet: async ({ petId }) => ({ petId }),
+  republishPet: async ({ petId }) => ({ petId }),
   ...overrides,
 });
 
@@ -92,8 +93,8 @@ describe('validatePetArchivePayload', () => {
     expect(validatePetArchivePayload({ status: 'archived' })).toBe('archived');
   });
 
-  it('returns null for { status: "published" }', () => {
-    expect(validatePetArchivePayload({ status: 'published' })).toBeNull();
+  it('returns "published" for { status: "published" }', () => {
+    expect(validatePetArchivePayload({ status: 'published' })).toBe('published');
   });
 
   it('returns null for empty object', () => {
@@ -190,11 +191,11 @@ describe('handleWorkerPetArchiveRequest', () => {
     expect(body.status).toBe('unauthenticated');
   });
 
-  it('returns 400 when payload status is not "archived"', async () => {
+  it('returns 400 when payload status is an invalid value', async () => {
     const response = await handleWorkerPetArchiveRequest({
-      request: makePatchRequest({ status: 'published' }),
+      request: makePatchRequest({ status: 'draft' }),
       petId: 'pet-001',
-      payload: { status: 'published' },
+      payload: { status: 'draft' },
       petArchiveRepository: makeRepository(),
       authenticator: makeAuthenticator(makeShelterMemberActor('shelter-001')),
       now: '2026-06-08T00:00:00Z',
@@ -294,5 +295,39 @@ describe('handleWorkerPetArchiveRequest', () => {
     });
     expect(response.status).toBe(200);
     expect(capturedNow).toBe('2026-06-08T12:00:00Z');
+  });
+
+  it('returns 200 with petId on republish success', async () => {
+    const response = await handleWorkerPetArchiveRequest({
+      request: makePatchRequest({ status: 'published' }),
+      petId: 'pet-001',
+      payload: { status: 'published' },
+      petArchiveRepository: makeRepository({
+        getPetForArchive: async () => makePetRecord({ lifecycleStatus: 'archived' }),
+      }),
+      authenticator: makeAuthenticator(makeShelterMemberActor('shelter-001')),
+      now: '2026-06-08T00:00:00Z',
+    });
+    expect(response.status).toBe(200);
+    const body = await response.json() as Record<string, unknown>;
+    expect(body.status).toBe('ok');
+    expect(body.petId).toBe('pet-001');
+  });
+
+  it('returns 409 pet_not_archived when republishPet returns null', async () => {
+    const response = await handleWorkerPetArchiveRequest({
+      request: makePatchRequest({ status: 'published' }),
+      petId: 'pet-001',
+      payload: { status: 'published' },
+      petArchiveRepository: makeRepository({
+        getPetForArchive: async () => makePetRecord({ lifecycleStatus: 'archived' }),
+        republishPet: async () => null,
+      }),
+      authenticator: makeAuthenticator(makeShelterMemberActor('shelter-001')),
+      now: '2026-06-08T00:00:00Z',
+    });
+    expect(response.status).toBe(409);
+    const body = await response.json() as Record<string, unknown>;
+    expect(body.status).toBe('pet_not_archived');
   });
 });
