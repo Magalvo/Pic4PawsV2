@@ -7,12 +7,15 @@ import { mobileFoundationContent } from '../../apps/mobile/src/foundation';
 import type {
   PetArchiveClient,
   PetArchiveClientResult,
+  PetRepublishClientResult,
 } from '../../packages/client/src/index';
 
 const makeClient = (
-  result: PetArchiveClientResult,
-): Pick<PetArchiveClient, 'archivePet'> => ({
-  archivePet: async () => result,
+  archiveResult: PetArchiveClientResult,
+  republishResult: PetRepublishClientResult = { ok: true, status: 'ok', petId: 'pet-001' },
+): Pick<PetArchiveClient, 'archivePet' | 'republishPet'> => ({
+  archivePet: async () => archiveResult,
+  republishPet: async () => republishResult,
 });
 
 describe('mobile pet archive UI', () => {
@@ -33,14 +36,15 @@ describe('mobile pet archive UI', () => {
     expect(mobilePetArchiveUiContent.status).toBe('product-flow-ready');
   });
 
-  it('mobilePetArchiveUiContent has all 4 required states', () => {
+  it('mobilePetArchiveUiContent has all 5 required states', () => {
     const stateNames = mobilePetArchiveUiContent.states.map((s) => s.state);
 
     expect(stateNames).toContain('idle');
     expect(stateNames).toContain('submitting');
     expect(stateNames).toContain('archived');
+    expect(stateNames).toContain('published');
     expect(stateNames).toContain('failed');
-    expect(stateNames).toHaveLength(4);
+    expect(stateNames).toHaveLength(5);
   });
 
   it('archivePet success returns archived state with petId', async () => {
@@ -187,5 +191,65 @@ describe('mobile pet archive UI', () => {
     if (state.state === 'archived') {
       expect(state.petId).toBe('pet-xyz');
     }
+  });
+});
+
+describe('mobile pet archive UI — republishPet', () => {
+  it('republishPet success returns published state with petId', async () => {
+    const ui = createMobilePetArchiveUi({
+      petArchiveClient: makeClient(
+        { ok: true, status: 'ok', petId: 'pet-001' },
+        { ok: true, status: 'ok', petId: 'pet-001' },
+      ),
+    });
+
+    const state = await ui.republishPet('pet-001');
+
+    expect(state.state).toBe('published');
+    if (state.state === 'published') {
+      expect(state.petId).toBe('pet-001');
+      expect(state.title).toBeTruthy();
+      expect(state.message).toBeTruthy();
+    }
+  });
+
+  it('republishPet pet_not_archived returns failed state', async () => {
+    const ui = createMobilePetArchiveUi({
+      petArchiveClient: makeClient(
+        { ok: true, status: 'ok', petId: 'pet-001' },
+        { ok: false, status: 'pet_not_archived', reasons: ['pet_not_archived'] },
+      ),
+    });
+
+    const state = await ui.republishPet('pet-001');
+
+    expect(state.state).toBe('failed');
+    if (state.state === 'failed') {
+      expect(state.status).toBe('pet_not_archived');
+      expect(state.canRetry).toBe(true);
+    }
+  });
+
+  it('republishPet worker_request_failed returns failed state with canRetry', async () => {
+    const ui = createMobilePetArchiveUi({
+      petArchiveClient: makeClient(
+        { ok: true, status: 'ok', petId: 'pet-001' },
+        { ok: false, status: 'worker_request_failed', reasons: ['network_error'] },
+      ),
+    });
+
+    const state = await ui.republishPet('pet-001');
+
+    expect(state.state).toBe('failed');
+    if (state.state === 'failed') {
+      expect(state.status).toBe('worker_request_failed');
+      expect(state.canRetry).toBe(true);
+    }
+  });
+
+  it('mobilePetArchiveUiContent states includes published state', () => {
+    const stateNames = mobilePetArchiveUiContent.states.map((s) => s.state);
+
+    expect(stateNames).toContain('published');
   });
 });
