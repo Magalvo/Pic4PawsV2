@@ -67,6 +67,10 @@ import {
   matchWorkerNotificationsPath,
   matchWorkerNotificationReadId,
 } from './notification';
+import {
+  handleWorkerNotificationPreferencesRequest,
+  matchWorkerNotificationPreferencesPath,
+} from './notification-preferences';
 import { createR2UploadSignerWorkerDependencies } from './r2-signer';
 import { createSupabaseSdkWorkerDependencies } from './supabase-sdk';
 export {
@@ -317,6 +321,17 @@ export type {
   CreateSupabaseNotificationRepositoriesInput,
   CreateSupabaseNotificationRepositoriesResult,
 } from './notification-supabase';
+export {
+  handleWorkerNotificationPreferencesRequest,
+  matchWorkerNotificationPreferencesPath,
+} from './notification-preferences';
+export type {
+  NotificationPreference,
+  GetNotificationPreferencesResult,
+  NotificationPreferencesRepository,
+  HandleWorkerNotificationPreferencesRequestInput,
+} from './notification-preferences';
+export { createSupabaseNotificationPreferencesRepositories } from './notification-preferences-supabase';
 export {
   createR2UploadSigner,
   createR2UploadSignerWorkerDependencies,
@@ -985,6 +1000,14 @@ export const handleWorkerRequest = async (
       request,
       notificationId: notificationReadId,
       notificationRepository: dependencies.notificationRepository,
+      authenticator: dependencies.petDraftAuthenticator,
+    });
+  }
+
+  if (matchWorkerNotificationPreferencesPath(url.pathname, config.workers.notificationsPath)) {
+    return handleWorkerNotificationPreferencesRequest({
+      request,
+      notificationPreferencesRepository: dependencies.notificationPreferencesRepository,
       authenticator: dependencies.petDraftAuthenticator,
     });
   }

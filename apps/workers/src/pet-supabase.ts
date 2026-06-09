@@ -35,6 +35,7 @@ export type SupabaseQueryResult<TData> = {
 export type SupabaseTableQueryLike = PromiseLike<SupabaseQueryResult<unknown>> & {
   select: (columns?: string, options?: { count?: 'exact' }) => SupabaseTableQueryLike;
   insert: (payload: unknown) => SupabaseTableQueryLike;
+  upsert: (payload: unknown, options?: { onConflict?: string }) => SupabaseTableQueryLike;
   update: (payload: unknown) => SupabaseTableQueryLike;
   eq: (column: string, value: unknown) => SupabaseTableQueryLike;
   neq: (column: string, value: unknown) => SupabaseTableQueryLike;
