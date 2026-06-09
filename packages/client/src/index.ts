@@ -4301,6 +4301,189 @@ export const createNotificationClient = ({
   },
 });
 
+// ─── Notification Preferences Client ─────────────────────────────────────────
+
+export type NotificationPreferenceItem = {
+  type: NotificationClientType;
+  enabled: boolean;
+};
+
+export type LoadNotificationPreferencesClientSuccess = {
+  ok: true;
+  status: 'ok';
+  preferences: NotificationPreferenceItem[];
+};
+
+export type LoadNotificationPreferencesClientFailureStatus =
+  | 'unauthenticated'
+  | 'notification_preferences_repository_not_configured'
+  | 'auth_adapter_not_configured'
+  | 'worker_request_failed'
+  | 'worker_response_invalid';
+
+export type LoadNotificationPreferencesClientFailure = {
+  ok: false;
+  status: LoadNotificationPreferencesClientFailureStatus;
+  reasons: string[];
+};
+
+export type LoadNotificationPreferencesClientResult =
+  | LoadNotificationPreferencesClientSuccess
+  | LoadNotificationPreferencesClientFailure;
+
+export type UpdateNotificationPreferencesClientSuccess = {
+  ok: true;
+  status: 'ok';
+  preferences: NotificationPreferenceItem[];
+};
+
+export type UpdateNotificationPreferencesClientFailureStatus =
+  | 'unauthenticated'
+  | 'invalid_body'
+  | 'notification_preferences_repository_not_configured'
+  | 'auth_adapter_not_configured'
+  | 'worker_request_failed'
+  | 'worker_response_invalid';
+
+export type UpdateNotificationPreferencesClientFailure = {
+  ok: false;
+  status: UpdateNotificationPreferencesClientFailureStatus;
+  reasons: string[];
+};
+
+export type UpdateNotificationPreferencesClientResult =
+  | UpdateNotificationPreferencesClientSuccess
+  | UpdateNotificationPreferencesClientFailure;
+
+export type CreateNotificationPreferencesClientInput = {
+  workerBaseUrl: string;
+  notificationsPath: `/${string}`;
+  getAccessToken: () => Promise<string | null>;
+  fetch: MediaUploadClientFetch;
+};
+
+export type NotificationPreferencesClient = {
+  loadPreferences: () => Promise<LoadNotificationPreferencesClientResult>;
+  updatePreferences: (
+    preferences: NotificationPreferenceItem[],
+  ) => Promise<UpdateNotificationPreferencesClientResult>;
+};
+
+const parsePreferencesSuccess = (
+  body: Record<string, unknown> | null,
+): LoadNotificationPreferencesClientSuccess | null => {
+  if (!body || body.status !== 'ok' || !Array.isArray(body.preferences)) return null;
+  return { ok: true, status: 'ok', preferences: body.preferences as NotificationPreferenceItem[] };
+};
+
+const parseLoadPreferencesFailureStatus = (
+  body: Record<string, unknown> | null,
+): LoadNotificationPreferencesClientFailureStatus => {
+  const status = body?.status;
+  if (
+    status === 'unauthenticated' ||
+    status === 'notification_preferences_repository_not_configured' ||
+    status === 'auth_adapter_not_configured'
+  ) {
+    return status;
+  }
+  return 'worker_request_failed';
+};
+
+const parseUpdatePreferencesFailureStatus = (
+  body: Record<string, unknown> | null,
+): UpdateNotificationPreferencesClientFailureStatus => {
+  const status = body?.status;
+  if (status === 'invalid_body') return 'invalid_body';
+  if (
+    status === 'unauthenticated' ||
+    status === 'notification_preferences_repository_not_configured' ||
+    status === 'auth_adapter_not_configured'
+  ) {
+    return status;
+  }
+  return 'worker_request_failed';
+};
+
+export const createNotificationPreferencesClient = ({
+  workerBaseUrl,
+  notificationsPath,
+  getAccessToken,
+  fetch,
+}: CreateNotificationPreferencesClientInput): NotificationPreferencesClient => ({
+  loadPreferences: async () => {
+    const accessToken = await getAccessToken();
+    if (!accessToken?.trim()) {
+      return { ok: false, status: 'unauthenticated', reasons: ['missing_access_token'] };
+    }
+
+    const url = createWorkerSubUrl(workerBaseUrl, notificationsPath, 'preferences');
+    let response: Response;
+
+    try {
+      response = await fetch(url, {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+    } catch {
+      return { ok: false, status: 'worker_request_failed', reasons: ['network_error'] };
+    }
+
+    const body = await parseJsonResponse(response);
+
+    if (!response.ok) {
+      const failureStatus = parseLoadPreferencesFailureStatus(body);
+      const reasons = Array.isArray(body?.reasons) ? parseReasons(body) : [failureStatus];
+      return { ok: false, status: failureStatus, reasons: sanitizeReasons(reasons, failureStatus) };
+    }
+
+    const success = parsePreferencesSuccess(body);
+    if (!success) {
+      return { ok: false, status: 'worker_response_invalid', reasons: ['invalid_worker_response'] };
+    }
+
+    return success;
+  },
+
+  updatePreferences: async (preferences: NotificationPreferenceItem[]) => {
+    const accessToken = await getAccessToken();
+    if (!accessToken?.trim()) {
+      return { ok: false, status: 'unauthenticated', reasons: ['missing_access_token'] };
+    }
+
+    const url = createWorkerSubUrl(workerBaseUrl, notificationsPath, 'preferences');
+    let response: Response;
+
+    try {
+      response = await fetch(url, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ preferences }),
+      });
+    } catch {
+      return { ok: false, status: 'worker_request_failed', reasons: ['network_error'] };
+    }
+
+    const body = await parseJsonResponse(response);
+
+    if (!response.ok) {
+      const failureStatus = parseUpdatePreferencesFailureStatus(body);
+      const reasons = Array.isArray(body?.reasons) ? parseReasons(body) : [failureStatus];
+      return { ok: false, status: failureStatus, reasons: sanitizeReasons(reasons, failureStatus) };
+    }
+
+    const success = parsePreferencesSuccess(body);
+    if (!success) {
+      return { ok: false, status: 'worker_response_invalid', reasons: ['invalid_worker_response'] };
+    }
+
+    return success as UpdateNotificationPreferencesClientSuccess;
+  },
+});
+
 // ─── Adoption Donor List Client ───────────────────────────────────────────────
 
 export type AdoptionDonorListItem = {
