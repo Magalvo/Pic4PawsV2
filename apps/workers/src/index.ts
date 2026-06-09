@@ -15,6 +15,7 @@ import {
   handleWorkerShelterProfileRequest,
   matchWorkerShelterProfileId,
 } from './shelter-profile';
+import { handleWorkerShelterSearchRequest } from './shelter-search';
 import { handleWorkerAdoptionRequest } from './adoption';
 import {
   handleWorkerAdoptionListRequest,
@@ -164,6 +165,21 @@ export type {
   CreateSupabaseShelterRepositoriesInput,
   CreateSupabaseShelterRepositoriesResult,
 } from './shelter-supabase';
+export { handleWorkerShelterSearchRequest } from './shelter-search';
+export type {
+  PublicShelterSummary,
+  ShelterSearchQuery,
+  ShelterSearchRepository,
+  ShelterSearchResult,
+} from './shelter-search';
+export {
+  createSupabaseShelterSearchRepositories,
+  SupabaseShelterSearchRepositoryError,
+} from './shelter-search-supabase';
+export type {
+  CreateSupabaseShelterSearchRepositoriesInput,
+  CreateSupabaseShelterSearchRepositoriesResult,
+} from './shelter-search-supabase';
 export { handleWorkerAdoptionRequest, validateAdoptionPayload } from './adoption';
 export type {
   AdoptionApplicationPetContext,
@@ -735,6 +751,13 @@ export const handleWorkerRequest = async (
       request,
       petId: profilePetId,
       petProfileRepository: dependencies.petProfileRepository,
+    });
+  }
+
+  if (url.pathname === config.workers.shelterPath) {
+    return handleWorkerShelterSearchRequest({
+      request,
+      shelterSearchRepository: dependencies.shelterSearchRepository,
     });
   }
 

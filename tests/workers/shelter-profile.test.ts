@@ -134,13 +134,15 @@ describe('GET /shelters/:shelterId — shelter profile', () => {
     expect(serialized).not.toContain('r2-access-key');
   });
 
-  it('does not route exact /shelters to the profile handler — falls through to 404', async () => {
+  it('routes exact /shelters to the shelter search handler, not the profile handler', async () => {
     // matchWorkerShelterProfileId requires a segment after the base path.
-    // Exact /shelters has no segment, so it must not match and must return 404.
+    // Exact /shelters is handled by the shelter search route instead.
     const request = new Request('https://workers.pic4paws.pt/shelters');
 
     const response = await handleWorkerRequest(request, validEnv, {});
+    const body = await response.json();
 
-    expect(response.status).toBe(404);
+    expect(response.status).toBe(501);
+    expect(body.status).toBe('shelter_search_repository_not_configured');
   });
 });
