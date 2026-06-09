@@ -1,6 +1,7 @@
 import { canManageShelter } from '@pic4paws/domain';
 import type { WorkerPetDraftAuthenticator } from './pet-drafts';
 import type { AdoptionApplicationStatus } from './adoption-list';
+import type { NotificationRepository } from './notification';
 
 // ─── Repository types ─────────────────────────────────────────────────────────
 
@@ -8,6 +9,7 @@ export type AdoptionStatusRecord = {
   applicationId: string;
   shelterId: string;
   currentStatus: AdoptionApplicationStatus;
+  applicantUserId: string;
 };
 
 export type UpdateAdoptionStatusInput = {
@@ -107,6 +109,7 @@ export type HandleWorkerAdoptionStatusRequestInput = {
   payload: unknown;
   adoptionStatusRepository?: AdoptionStatusRepository;
   authenticator?: WorkerPetDraftAuthenticator;
+  notificationRepository?: NotificationRepository;
 };
 
 export const handleWorkerAdoptionStatusRequest = async ({
@@ -115,6 +118,7 @@ export const handleWorkerAdoptionStatusRequest = async ({
   payload,
   adoptionStatusRepository,
   authenticator,
+  notificationRepository,
 }: HandleWorkerAdoptionStatusRequestInput): Promise<Response> => {
   // 1. Method check
   if (request.method !== 'PATCH') {
@@ -176,7 +180,18 @@ export const handleWorkerAdoptionStatusRequest = async ({
     status: validation.data.status,
   });
 
-  // 10. Success
+  // 10. Dispatch notification (fire-and-forget)
+  if (notificationRepository) {
+    notificationRepository
+      .notifyAdoptionStatusChanged({
+        applicantUserId: adoption.applicantUserId,
+        applicationId,
+        newStatus: validation.data.status,
+      })
+      .catch(() => undefined);
+  }
+
+  // 11. Success
   return jsonResponse(
     {
       status: 'ok',

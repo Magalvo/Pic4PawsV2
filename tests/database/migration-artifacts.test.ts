@@ -3,6 +3,7 @@ import {
   assertNonDestructiveMigration,
   initialDatabaseMigration,
   migrationArtifacts,
+  notificationsMigration,
   renderMigrationArtifact,
 } from '../../packages/database/src/index';
 
@@ -11,7 +12,7 @@ describe('database migration artifacts', () => {
     expect(initialDatabaseMigration.id).toBe('0001_initial_core_schema_and_rls');
     expect(initialDatabaseMigration.filename).toBe('0001_initial_core_schema_and_rls.sql');
     expect(initialDatabaseMigration.destructive).toBe(false);
-    expect(migrationArtifacts).toEqual([initialDatabaseMigration]);
+    expect(migrationArtifacts).toEqual([initialDatabaseMigration, notificationsMigration]);
   });
 
   it('renders approved enum types and core tables', () => {

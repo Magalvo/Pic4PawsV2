@@ -59,6 +59,12 @@ import {
   handleWorkerPetArchiveRequest,
   matchWorkerPetArchiveId,
 } from './pet-archive';
+import {
+  handleWorkerNotificationListRequest,
+  handleWorkerNotificationReadRequest,
+  matchWorkerNotificationsPath,
+  matchWorkerNotificationReadId,
+} from './notification';
 import { createR2UploadSignerWorkerDependencies } from './r2-signer';
 import { createSupabaseSdkWorkerDependencies } from './supabase-sdk';
 export {
@@ -271,6 +277,29 @@ export type {
   CreateSupabasePetArchiveRepositoriesInput,
   CreateSupabasePetArchiveRepositoriesResult,
 } from './pet-archive-supabase';
+export {
+  handleWorkerNotificationListRequest,
+  handleWorkerNotificationReadRequest,
+  matchWorkerNotificationsPath,
+  matchWorkerNotificationReadId,
+} from './notification';
+export type {
+  HandleWorkerNotificationListRequestInput,
+  HandleWorkerNotificationReadRequestInput,
+  ListNotificationsQuery,
+  ListNotificationsResult,
+  NotificationRecord,
+  NotificationRepository,
+  NotificationType,
+} from './notification';
+export {
+  createSupabaseNotificationRepositories,
+  SupabaseNotificationRepositoryError,
+} from './notification-supabase';
+export type {
+  CreateSupabaseNotificationRepositoriesInput,
+  CreateSupabaseNotificationRepositoriesResult,
+} from './notification-supabase';
 export {
   createR2UploadSigner,
   createR2UploadSignerWorkerDependencies,
@@ -550,6 +579,7 @@ export const handleWorkerRequest = async (
       webhookSecret,
       paymentWebhookVerifier: dependencies.paymentWebhookVerifier,
       paymentWebhookRepository: dependencies.paymentWebhookRepository,
+      notificationRepository: dependencies.notificationRepository,
       now: dependencies.now?.() ?? new Date().toISOString(),
     });
   }
@@ -792,6 +822,7 @@ export const handleWorkerRequest = async (
         payload,
         adoptionStatusRepository: dependencies.adoptionStatusRepository,
         authenticator: dependencies.petDraftAuthenticator,
+        notificationRepository: dependencies.notificationRepository,
       });
     }
     if (request.method === 'GET') {
@@ -820,6 +851,7 @@ export const handleWorkerRequest = async (
       payload,
       adoptionRepository: dependencies.adoptionRepository,
       authenticator: dependencies.petDraftAuthenticator,
+      notificationRepository: dependencies.notificationRepository,
       now: dependencies.now?.() ?? new Date().toISOString(),
     });
   }
@@ -882,6 +914,7 @@ export const handleWorkerRequest = async (
       payload,
       sponsorshipManageRepository: dependencies.sponsorshipManageRepository,
       authenticator: dependencies.petDraftAuthenticator,
+      notificationRepository: dependencies.notificationRepository,
     });
   }
 
@@ -907,6 +940,28 @@ export const handleWorkerRequest = async (
       authenticator: dependencies.petDraftAuthenticator,
       provider: config.payments.primaryProvider,
       now: dependencies.now?.() ?? new Date().toISOString(),
+    });
+  }
+
+  const notificationReadId = matchWorkerNotificationReadId(
+    url.pathname,
+    config.workers.notificationsPath,
+  );
+
+  if (notificationReadId !== null) {
+    return handleWorkerNotificationReadRequest({
+      request,
+      notificationId: notificationReadId,
+      notificationRepository: dependencies.notificationRepository,
+      authenticator: dependencies.petDraftAuthenticator,
+    });
+  }
+
+  if (matchWorkerNotificationsPath(url.pathname, config.workers.notificationsPath)) {
+    return handleWorkerNotificationListRequest({
+      request,
+      notificationRepository: dependencies.notificationRepository,
+      authenticator: dependencies.petDraftAuthenticator,
     });
   }
 

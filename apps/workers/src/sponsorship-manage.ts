@@ -1,6 +1,7 @@
 import { canManageShelter } from '@pic4paws/domain';
 import type { WorkerPetDraftAuthenticator } from './pet-drafts';
 import type { SponsorshipStatus } from './sponsorship-list';
+import type { NotificationRepository } from './notification';
 
 // ─── Repository types ─────────────────────────────────────────────────────────
 
@@ -105,6 +106,7 @@ export type HandleWorkerSponsorshipManageRequestInput = {
   payload: unknown;
   sponsorshipManageRepository?: SponsorshipManageRepository;
   authenticator?: WorkerPetDraftAuthenticator;
+  notificationRepository?: NotificationRepository;
 };
 
 export const handleWorkerSponsorshipManageRequest = async ({
@@ -113,6 +115,7 @@ export const handleWorkerSponsorshipManageRequest = async ({
   payload,
   sponsorshipManageRepository,
   authenticator,
+  notificationRepository,
 }: HandleWorkerSponsorshipManageRequestInput): Promise<Response> => {
   // 1. Method check
   if (request.method !== 'PATCH') {
@@ -177,7 +180,18 @@ export const handleWorkerSponsorshipManageRequest = async ({
     status: validation.data.status,
   });
 
-  // 10. Success
+  // 10. Dispatch notification (fire-and-forget)
+  if (notificationRepository) {
+    notificationRepository
+      .notifySponsorshipStatusChanged({
+        donorUserId: sponsorship.donorUserId,
+        sponsorshipId,
+        newStatus: validation.data.status,
+      })
+      .catch(() => undefined);
+  }
+
+  // 11. Success
   return jsonResponse(
     {
       status: 'ok',
