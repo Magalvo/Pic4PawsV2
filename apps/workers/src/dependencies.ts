@@ -48,6 +48,8 @@ import type { AdoptionDonorListRepository } from './adoption-donor-list';
 import { createSupabaseAdoptionDonorListRepositories } from './adoption-donor-list-supabase';
 import type { ShelterSearchRepository } from './shelter-search';
 import { createSupabaseShelterSearchRepositories } from './shelter-search-supabase';
+import type { NotificationPreferencesRepository } from './notification-preferences';
+import { createSupabaseNotificationPreferencesRepositories } from './notification-preferences-supabase';
 import type {
   PetDraftRepository,
   PetMediaAttachRepository,
@@ -99,6 +101,7 @@ export type WorkerRequestDependencies = {
   notificationRepository?: NotificationRepository;
   adoptionDonorListRepository?: AdoptionDonorListRepository;
   shelterSearchRepository?: ShelterSearchRepository;
+  notificationPreferencesRepository?: NotificationPreferencesRepository;
   supabaseClientFactory?: WorkerSupabaseClientFactory;
   now?: () => string;
 };
@@ -156,6 +159,7 @@ export const createWorkerSupabaseDependencies = ({
     const notificationRepositories = createSupabaseNotificationRepositories({ client });
     const adoptionDonorListRepositories = createSupabaseAdoptionDonorListRepositories({ client });
     const shelterSearchRepositories = createSupabaseShelterSearchRepositories({ client });
+    const notificationPreferencesRepositories = createSupabaseNotificationPreferencesRepositories({ client });
 
     return {
       mediaUploadSigner,
@@ -184,6 +188,7 @@ export const createWorkerSupabaseDependencies = ({
       notificationRepository: notificationRepositories.notificationRepository,
       adoptionDonorListRepository: adoptionDonorListRepositories.adoptionDonorListRepository,
       shelterSearchRepository: shelterSearchRepositories.shelterSearchRepository,
+      notificationPreferencesRepository: notificationPreferencesRepositories.notificationPreferencesRepository,
       // paymentWebhookVerifier is intentionally NOT set here — it is provider-SDK-specific
       // and must be injected by the production fetch handler or tests
       now,
@@ -271,5 +276,7 @@ export const resolveWorkerRequestDependencies = ({
       dependencies.adoptionDonorListRepository ?? supabaseDependencies.adoptionDonorListRepository,
     shelterSearchRepository:
       dependencies.shelterSearchRepository ?? supabaseDependencies.shelterSearchRepository,
+    notificationPreferencesRepository:
+      dependencies.notificationPreferencesRepository ?? supabaseDependencies.notificationPreferencesRepository,
   };
 };
