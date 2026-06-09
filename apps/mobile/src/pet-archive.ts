@@ -1,6 +1,7 @@
 import type {
   PetArchiveClient,
   PetArchiveClientFailureStatus,
+  PetRepublishClientFailureStatus,
 } from '@pic4paws/client';
 
 export type MobilePetArchiveUiContent = {
@@ -33,6 +34,11 @@ export const mobilePetArchiveUiContent: MobilePetArchiveUiContent = {
       message: 'O animal foi arquivado com sucesso.',
     },
     {
+      state: 'published',
+      title: 'Animal publicado!',
+      message: 'O animal voltou a estar disponível para adoção.',
+    },
+    {
       state: 'failed',
       title: 'Não foi possível arquivar',
       message: 'Verifica a tua ligação e tenta de novo.',
@@ -62,17 +68,25 @@ export type MobilePetArchiveArchivedState = {
   petId: string;
 };
 
+export type MobilePetArchivePublishedState = {
+  state: 'published';
+  title: string;
+  message: string;
+  petId: string;
+};
+
 export type MobilePetArchiveFailedState = {
   state: 'failed';
   title: string;
   message: string;
-  status: PetArchiveClientFailureStatus;
+  status: PetArchiveClientFailureStatus | PetRepublishClientFailureStatus;
   reasons: string[];
   canRetry: true;
 };
 
 export type MobilePetArchiveResultViewModel =
   | MobilePetArchiveArchivedState
+  | MobilePetArchivePublishedState
   | MobilePetArchiveFailedState;
 
 // ─── Credential sanitization ──────────────────────────────────────────────────
@@ -105,7 +119,7 @@ const sanitizeReasons = (reasons: string[], fallback: string): string[] => {
 export const createMobilePetArchiveUi = ({
   petArchiveClient,
 }: {
-  petArchiveClient: Pick<PetArchiveClient, 'archivePet'>;
+  petArchiveClient: Pick<PetArchiveClient, 'archivePet' | 'republishPet'>;
 }) => ({
   getInitialState: (): MobilePetArchiveIdleState => ({
     state: 'idle',
@@ -129,6 +143,28 @@ export const createMobilePetArchiveUi = ({
     return {
       state: 'failed',
       title: 'Não foi possível arquivar',
+      message: 'Verifica a tua ligação e tenta de novo.',
+      status: result.status,
+      reasons: sanitizeReasons(result.reasons, result.status),
+      canRetry: true,
+    };
+  },
+
+  republishPet: async (petId: string): Promise<MobilePetArchiveResultViewModel> => {
+    const result = await petArchiveClient.republishPet(petId);
+
+    if (result.ok) {
+      return {
+        state: 'published',
+        title: 'Animal publicado!',
+        message: 'O animal voltou a estar disponível para adoção.',
+        petId: result.petId,
+      };
+    }
+
+    return {
+      state: 'failed',
+      title: 'Não foi possível publicar o animal',
       message: 'Verifica a tua ligação e tenta de novo.',
       status: result.status,
       reasons: sanitizeReasons(result.reasons, result.status),
