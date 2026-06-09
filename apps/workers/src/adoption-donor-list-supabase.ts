@@ -1,6 +1,6 @@
 import type { SupabaseClientLike, SupabaseQueryResult } from './pet-supabase';
+import type { AdoptionApplicationStatus } from './adoption-list';
 import type {
-  AdoptionApplicationStatus,
   AdoptionDonorListRepository,
   AdoptionDonorListSummary,
   ListDonorAdoptionsQuery,
