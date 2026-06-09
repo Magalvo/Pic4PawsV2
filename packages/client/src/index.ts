@@ -4068,6 +4068,159 @@ export const createNotificationClient = ({
   },
 });
 
+// ─── Adoption Donor List Client ───────────────────────────────────────────────
+
+export type AdoptionDonorListItem = {
+  applicationId: string;
+  petId: string;
+  shelterId: string;
+  status: AdoptionApplicationStatus;
+  submittedAt: string | null;
+};
+
+export type AdoptionDonorListQuery = {
+  limit?: number | null;
+  offset?: number | null;
+};
+
+export type AdoptionDonorListClientSuccess = {
+  ok: true;
+  status: 'ok';
+  applications: AdoptionDonorListItem[];
+  total: number;
+};
+
+export type AdoptionDonorListClientFailureStatus =
+  | 'unauthenticated'
+  | 'adoption_donor_list_repository_not_configured'
+  | 'auth_adapter_not_configured'
+  | 'worker_request_failed'
+  | 'worker_response_invalid';
+
+export type AdoptionDonorListClientFailure = {
+  ok: false;
+  status: AdoptionDonorListClientFailureStatus;
+  reasons: string[];
+};
+
+export type AdoptionDonorListClientResult =
+  | AdoptionDonorListClientSuccess
+  | AdoptionDonorListClientFailure;
+
+export type CreateAdoptionDonorListClientInput = {
+  workerBaseUrl: string;
+  adoptionsPath: `/${string}`;
+  getAccessToken: () => Promise<string | null>;
+  fetch: MediaUploadClientFetch;
+};
+
+export type AdoptionDonorListClient = {
+  loadDonorAdoptions: (query?: AdoptionDonorListQuery) => Promise<AdoptionDonorListClientResult>;
+};
+
+const parseAdoptionDonorListSuccess = (
+  body: Record<string, unknown> | null,
+): AdoptionDonorListClientSuccess | null => {
+  if (
+    !body ||
+    body.status !== 'ok' ||
+    !Array.isArray(body.applications) ||
+    typeof body.total !== 'number'
+  ) {
+    return null;
+  }
+
+  return {
+    ok: true,
+    status: 'ok',
+    applications: body.applications as AdoptionDonorListItem[],
+    total: body.total,
+  };
+};
+
+const parseAdoptionDonorListFailureStatus = (
+  body: Record<string, unknown> | null,
+): AdoptionDonorListClientFailureStatus => {
+  const status = body?.status;
+
+  if (
+    status === 'unauthenticated' ||
+    status === 'adoption_donor_list_repository_not_configured' ||
+    status === 'auth_adapter_not_configured'
+  ) {
+    return status;
+  }
+
+  return 'worker_request_failed';
+};
+
+export const createAdoptionDonorListClient = ({
+  workerBaseUrl,
+  adoptionsPath,
+  getAccessToken,
+  fetch,
+}: CreateAdoptionDonorListClientInput): AdoptionDonorListClient => ({
+  loadDonorAdoptions: async (query = {}) => {
+    const accessToken = await getAccessToken();
+
+    if (!accessToken?.trim()) {
+      return {
+        ok: false,
+        status: 'unauthenticated',
+        reasons: ['missing_access_token'],
+      };
+    }
+
+    const base = createWorkerUrl(workerBaseUrl, adoptionsPath);
+    const url = new URL(base);
+
+    if (query?.limit != null) url.searchParams.set('limit', String(query.limit));
+    if (query?.offset != null) url.searchParams.set('offset', String(query.offset));
+
+    let response: Response;
+
+    try {
+      response = await fetch(url.toString(), {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+    } catch {
+      return {
+        ok: false,
+        status: 'worker_request_failed',
+        reasons: ['network_error'],
+      };
+    }
+
+    const body = await parseJsonResponse(response);
+
+    if (!response.ok) {
+      const status = parseAdoptionDonorListFailureStatus(body);
+      const reasons = Array.isArray(body?.reasons) ? parseReasons(body) : [status];
+
+      return {
+        ok: false,
+        status,
+        reasons: sanitizeReasons(reasons, status),
+      };
+    }
+
+    const success = parseAdoptionDonorListSuccess(body);
+
+    if (!success) {
+      return {
+        ok: false,
+        status: 'worker_response_invalid',
+        reasons: ['invalid_worker_response'],
+      };
+    }
+
+    return success;
+  },
+});
+
 // ─── Media Upload Flow Client ─────────────────────────────────────────────────
 
 export const createMediaUploadFlowClient = (
