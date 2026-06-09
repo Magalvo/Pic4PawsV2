@@ -27,4 +27,8 @@ list their own adoption applications in PT-PT.
 
 ## 4. Completion Notes
 
-<!-- To be filled in when merged -->
+Implemented in commit `4c5d7a0` on branch `agent/donor-adoption-list-batch`.
+
+- `apps/web/src/adoption-donor-list.ts` — `WebAdoptionDonorListUiContent`, `webAdoptionDonorListUiContent` (PT-PT, `status: 'product-flow-ready'`), 5 state types, `createWebAdoptionDonorListUi` factory.
+- `apps/web/src/foundation.ts` — added import, type entry, and value entry for `adoptionDonorList`.
+- `tests/web/adoption-donor-list-ui.test.ts` — 7 tests.

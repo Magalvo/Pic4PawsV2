@@ -28,4 +28,8 @@ adapted for mobile UX conventions and PT-PT copy prefixed with `Mobile`.
 
 ## 4. Completion Notes
 
-<!-- To be filled in when merged -->
+Implemented in commit `04a3cc1` on branch `agent/donor-adoption-list-batch`.
+
+- `apps/mobile/src/adoption-donor-list.ts` — `MobileAdoptionDonorListUiContent`, `mobileAdoptionDonorListUiContent` (PT-PT, `status: 'product-flow-ready'`), 5 state types, `createMobileAdoptionDonorListUi` factory.
+- `apps/mobile/src/foundation.ts` — added import, type entry, and value entry for `adoptionDonorList`.
+- `tests/mobile/adoption-donor-list-ui.test.ts` — 7 tests.

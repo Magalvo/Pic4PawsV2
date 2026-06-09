@@ -31,4 +31,11 @@ membership requirement.
 
 ## 4. Completion Notes
 
-<!-- To be filled in when merged -->
+Implemented in commit `293dc37` on branch `agent/donor-adoption-list-batch`.
+
+- `apps/workers/src/adoption-donor-list.ts` — `AdoptionDonorListSummary` (no PII), `ListDonorAdoptionsQuery`, `ListDonorAdoptionsResult`, `AdoptionDonorListRepository`, `handleWorkerAdoptionDonorListRequest`.
+- `apps/workers/src/adoption-donor-list-supabase.ts` — Supabase impl querying `adoption_applications WHERE applicant_user_id = donorUserId ORDER BY submitted_at DESC`.
+- `apps/workers/src/dependencies.ts` — wired `createSupabaseAdoptionDonorListRepositories`, added `adoptionDonorListRepository` to `WorkerRequestDependencies`.
+- `apps/workers/src/index.ts` — GET method-switch added before existing POST adoption block.
+- `tests/workers/adoption-donor-list.test.ts` — 8 tests.
+- `tests/workers/adoption.test.ts` — updated stale 405 test to expect 501 (GET now routed to donor list handler).

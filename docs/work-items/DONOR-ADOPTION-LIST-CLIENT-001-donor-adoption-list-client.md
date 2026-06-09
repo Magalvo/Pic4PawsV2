@@ -31,4 +31,7 @@ product boundaries can list donor adoptions without coupling directly to the Wor
 
 ## 4. Completion Notes
 
-<!-- To be filled in when merged -->
+Implemented in commit `c1c7be9` on branch `agent/donor-adoption-list-batch`.
+
+- `packages/client/src/index.ts` — appended `AdoptionDonorListItem`, `AdoptionDonorListQuery`, `AdoptionDonorListClientSuccess`, `AdoptionDonorListClientFailureStatus`, `AdoptionDonorListClientFailure`, `AdoptionDonorListClientResult`, `CreateAdoptionDonorListClientInput`, `AdoptionDonorListClient`, and `createAdoptionDonorListClient` factory.
+- `tests/client/adoption-donor-list-client.test.ts` — 6 tests.
