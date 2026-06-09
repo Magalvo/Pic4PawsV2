@@ -20,6 +20,7 @@ import {
   handleWorkerAdoptionListRequest,
   matchWorkerAdoptionListShelterId,
 } from './adoption-list';
+import { handleWorkerAdoptionDonorListRequest } from './adoption-donor-list';
 import {
   handleWorkerAdoptionStatusRequest,
   matchWorkerAdoptionStatusId,
@@ -837,6 +838,14 @@ export const handleWorkerRequest = async (
       { status: 'method_not_allowed', allowedMethods: ['GET', 'PATCH'] },
       { status: 405, headers: { Allow: 'GET, PATCH' } },
     );
+  }
+
+  if (url.pathname === config.workers.adoptionsPath && request.method === 'GET') {
+    return handleWorkerAdoptionDonorListRequest({
+      request,
+      adoptionDonorListRepository: dependencies.adoptionDonorListRepository,
+      authenticator: dependencies.petDraftAuthenticator,
+    });
   }
 
   if (url.pathname === config.workers.adoptionsPath) {

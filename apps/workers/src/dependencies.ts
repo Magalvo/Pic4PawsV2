@@ -44,6 +44,8 @@ import type { PetArchiveRepository } from './pet-archive';
 import { createSupabasePetArchiveRepositories } from './pet-archive-supabase';
 import type { NotificationRepository } from './notification';
 import { createSupabaseNotificationRepositories } from './notification-supabase';
+import type { AdoptionDonorListRepository } from './adoption-donor-list';
+import { createSupabaseAdoptionDonorListRepositories } from './adoption-donor-list-supabase';
 import type {
   PetDraftRepository,
   PetMediaAttachRepository,
@@ -93,6 +95,7 @@ export type WorkerRequestDependencies = {
   shelterMemberRepository?: ShelterMemberRepository;
   petArchiveRepository?: PetArchiveRepository;
   notificationRepository?: NotificationRepository;
+  adoptionDonorListRepository?: AdoptionDonorListRepository;
   supabaseClientFactory?: WorkerSupabaseClientFactory;
   now?: () => string;
 };
@@ -148,6 +151,7 @@ export const createWorkerSupabaseDependencies = ({
     const shelterMemberRepositories = createSupabaseShelterMemberRepositories({ client });
     const petArchiveRepositories = createSupabasePetArchiveRepositories({ client });
     const notificationRepositories = createSupabaseNotificationRepositories({ client });
+    const adoptionDonorListRepositories = createSupabaseAdoptionDonorListRepositories({ client });
 
     return {
       mediaUploadSigner,
@@ -174,6 +178,7 @@ export const createWorkerSupabaseDependencies = ({
       shelterMemberRepository: shelterMemberRepositories.shelterMemberRepository,
       petArchiveRepository: petArchiveRepositories.petArchiveRepository,
       notificationRepository: notificationRepositories.notificationRepository,
+      adoptionDonorListRepository: adoptionDonorListRepositories.adoptionDonorListRepository,
       // paymentWebhookVerifier is intentionally NOT set here — it is provider-SDK-specific
       // and must be injected by the production fetch handler or tests
       now,
@@ -257,5 +262,7 @@ export const resolveWorkerRequestDependencies = ({
       dependencies.petArchiveRepository ?? supabaseDependencies.petArchiveRepository,
     notificationRepository:
       dependencies.notificationRepository ?? supabaseDependencies.notificationRepository,
+    adoptionDonorListRepository:
+      dependencies.adoptionDonorListRepository ?? supabaseDependencies.adoptionDonorListRepository,
   };
 };
