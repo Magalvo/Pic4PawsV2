@@ -74,6 +74,10 @@ import {
   type MobileAdoptionDonorListUiContent,
 } from './adoption-donor-list';
 import { mobileShelterSearchUiContent, type MobileShelterSearchUiContent } from './shelter-search';
+import {
+  mobileNotificationPreferencesUiContent,
+  type MobileNotificationPreferencesUiContent,
+} from './notification-preferences';
 
 export type MobileFoundationStatus = 'contract-ready';
 
@@ -112,6 +116,7 @@ export type MobileFoundationContent = {
   notification: Pick<MobileNotificationUiContent, 'title' | 'description' | 'status'>;
   adoptionDonorList: Pick<MobileAdoptionDonorListUiContent, 'title' | 'description' | 'status'>;
   shelterSearch: Pick<MobileShelterSearchUiContent, 'title' | 'description' | 'status'>;
+  notificationPreferences: Pick<MobileNotificationPreferencesUiContent, 'title' | 'description' | 'status'>;
   readiness: Array<{
     id: 'database' | 'auth' | 'pets' | 'payments' | 'media' | 'workers';
     label: string;
@@ -251,6 +256,11 @@ export const mobileFoundationContent: MobileFoundationContent = {
     title: mobileShelterSearchUiContent.title,
     description: mobileShelterSearchUiContent.description,
     status: mobileShelterSearchUiContent.status,
+  },
+  notificationPreferences: {
+    title: mobileNotificationPreferencesUiContent.title,
+    description: mobileNotificationPreferencesUiContent.description,
+    status: mobileNotificationPreferencesUiContent.status,
   },
   readiness: [
     {
