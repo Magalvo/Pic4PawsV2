@@ -1569,6 +1569,126 @@ export const createShelterProfileClient = ({
   },
 });
 
+// ─── Shelter Search Client ────────────────────────────────────────────────────
+
+export type ShelterSearchClientShelter = {
+  id: string;
+  name: string;
+  slug: string;
+  kind: string;
+  verificationStatus: string;
+  city: string;
+  district: string | null;
+  countryCode: string;
+  logoMediaId: string | null;
+};
+
+export type ShelterSearchClientQuery = {
+  kind?: string | null;
+  limit?: number | null;
+  offset?: number | null;
+};
+
+export type ShelterSearchClientSuccess = {
+  ok: true;
+  status: 'ok';
+  shelters: ShelterSearchClientShelter[];
+  total: number;
+};
+
+export type ShelterSearchClientFailureStatus =
+  | 'worker_request_failed'
+  | 'worker_response_invalid';
+
+export type ShelterSearchClientFailure = {
+  ok: false;
+  status: ShelterSearchClientFailureStatus;
+  reasons: string[];
+};
+
+export type ShelterSearchClientResult =
+  | ShelterSearchClientSuccess
+  | ShelterSearchClientFailure;
+
+export type CreateShelterSearchClientInput = {
+  workerBaseUrl: string;
+  shelterPath: `/${string}`;
+  fetch: MediaUploadClientFetch;
+};
+
+export type ShelterSearchClient = {
+  searchShelters: (query: ShelterSearchClientQuery) => Promise<ShelterSearchClientResult>;
+};
+
+const parseShelterSearchSuccess = (
+  body: Record<string, unknown> | null,
+): ShelterSearchClientSuccess | null => {
+  if (
+    !body ||
+    body.status !== 'ok' ||
+    !Array.isArray(body.shelters) ||
+    typeof body.total !== 'number'
+  ) {
+    return null;
+  }
+
+  return {
+    ok: true,
+    status: 'ok',
+    shelters: body.shelters as ShelterSearchClientShelter[],
+    total: body.total,
+  };
+};
+
+export const createShelterSearchClient = ({
+  workerBaseUrl,
+  shelterPath,
+  fetch,
+}: CreateShelterSearchClientInput): ShelterSearchClient => ({
+  searchShelters: async (query) => {
+    const base = createWorkerUrl(workerBaseUrl, shelterPath);
+    const url = new URL(base);
+
+    if (query.kind != null) url.searchParams.set('kind', query.kind);
+    if (query.limit != null) url.searchParams.set('limit', String(query.limit));
+    if (query.offset != null) url.searchParams.set('offset', String(query.offset));
+
+    let response: Response;
+
+    try {
+      response = await fetch(url.toString());
+    } catch {
+      return { ok: false, status: 'worker_request_failed', reasons: ['network_error'] };
+    }
+
+    const body = await parseJsonResponse(response);
+
+    if (!response.ok) {
+      const reasons = Array.isArray(body?.reasons)
+        ? parseReasons(body)
+        : ['worker_request_failed'];
+
+      return {
+        ok: false,
+        status: 'worker_request_failed',
+        reasons: sanitizeReasons(reasons, 'worker_request_failed'),
+      };
+    }
+
+    const success = parseShelterSearchSuccess(body);
+
+    if (!success) {
+      return {
+        ok: false,
+        status: 'worker_response_invalid',
+        reasons: ['invalid_worker_response'],
+      };
+    }
+
+    return success;
+  },
+});
+
 // ─── Adoption Application Client ─────────────────────────────────────────────
 
 export type HousingType = 'apartment' | 'house' | 'farm' | 'other';
