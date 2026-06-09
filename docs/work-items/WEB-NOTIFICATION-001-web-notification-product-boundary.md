@@ -30,4 +30,10 @@ copy in PT-PT.
 
 ## 4. Completion Notes
 
-<!-- To be filled in when merged -->
+Implemented in commit `31c656c` on branch `agent/notifications-batch`.
+
+- `apps/web/src/notification.ts` — `WebNotificationUiContent`, `webNotificationUiContent` (PT-PT, `status: 'product-flow-ready'`), 4 state types (`idle | loading | loaded | failed`), `createWebNotificationUi` factory with `getInitialState`, `loadNotifications`, and `markRead` (optimistic readAt update + fire-and-forget client call).
+- `apps/web/src/foundation.ts` — added import, `notification: Pick<WebNotificationUiContent, 'title' | 'description' | 'status'>` type entry, and value entry.
+- `tests/web/notification-ui.test.ts` — 9 tests: idle state, loaded state, failed state, markRead readAt update, markRead unreadCount decrement, markRead no-op for already-read, locale, status, foundation registration.
+
+Note: discriminant key is `state` (not `status`) per project convention.

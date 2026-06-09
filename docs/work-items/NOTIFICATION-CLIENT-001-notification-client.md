@@ -34,4 +34,7 @@ product boundaries can consume notifications without coupling directly to the Wo
 
 ## 4. Completion Notes
 
-<!-- To be filled in when merged -->
+Implemented in commit `5c175d1` on branch `agent/notifications-batch`.
+
+- `packages/client/src/index.ts` — appended `NotificationClientType`, `NotificationSummary`, `ListNotificationsClientSuccess`, `ListNotificationsClientFailureStatus`, `ListNotificationsClientResult`, `MarkNotificationReadClientSuccess`, `MarkNotificationReadClientFailureStatus`, `MarkNotificationReadClientResult`, `CreateNotificationClientInput`, `NotificationClient`, and `createNotificationClient` factory.
+- `tests/client/notification-client.test.ts` — 10 tests covering list success, list auth failure, list 501 variants, mark-read success, mark-read 404, mark-read auth failure, mark-read network failure.

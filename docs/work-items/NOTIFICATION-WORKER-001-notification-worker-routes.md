@@ -47,4 +47,21 @@ This worker item covers the full server-side foundation:
 
 ## 4. Completion Notes
 
-<!-- To be filled in when merged -->
+Implemented in commit `8d1c2ed` on branch `agent/notifications-batch`.
+
+- `packages/database/src/migration-artifacts.ts` — added `notificationsMigration` (`0002_notifications`) with `notification_type` enum, `notifications` table, index, RLS, and policy; updated `migrationArtifacts` array.
+- `packages/config/src/env.ts` — added `WORKER_NOTIFICATIONS_PATH` env key (default `/notifications`), `notificationsPath` field on `EnvironmentConfig.workers`.
+- `apps/workers/src/notification.ts` — `NotificationType`, `NotificationRecord`, `NotificationRepository`, path matchers, and both request handlers.
+- `apps/workers/src/notification-supabase.ts` — full Supabase implementation including member-fanout for new applications and donor-lookup-by-payment-id for donation paid.
+- `apps/workers/src/adoption-status.ts` — added `applicantUserId` to record type and fire-and-forget `notifyAdoptionStatusChanged` dispatch.
+- `apps/workers/src/adoption-status-supabase.ts` — updated select query and row mapping to include `applicant_user_id`.
+- `apps/workers/src/adoption.ts` — added fire-and-forget `notifyNewAdoptionApplication` dispatch after `createApplication`.
+- `apps/workers/src/payment-webhook.ts` — added fire-and-forget `notifyDonationPaid` dispatch when `newStatus === 'paid'`.
+- `apps/workers/src/sponsorship-manage.ts` — added fire-and-forget `notifySponsorshipStatusChanged` dispatch.
+- `apps/workers/src/dependencies.ts` — wired `createSupabaseNotificationRepositories` into dependency factory; added `notificationRepository` to `WorkerRequestDependencies`.
+- `apps/workers/src/index.ts` — wired `notificationRepository` into all 4 handler calls; added list and read routes.
+- `tests/workers/notification.test.ts` — 21 tests (path matchers, list, mark-read, 4 dispatch side-effects).
+- `tests/config/environment-contracts.test.ts` — added `notificationsPath` to workers contract expectation.
+- `tests/database/migration-artifacts.test.ts` — updated `migrationArtifacts` expectation.
+
+Key decisions: `notifyDonationPaid` takes `{ providerPaymentId, provider }` and resolves the donor user ID inside the Supabase implementation, because the payment webhook handler only returns `{ found: boolean }`. `{ count: 'exact' }` used for both total and unread count; `head: true` is not in the project's `SupabaseTableQueryLike` type.
