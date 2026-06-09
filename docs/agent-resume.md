@@ -291,11 +291,11 @@ per deployment.
 
 ## 5. Recommended Next Work Item
 
-The shelter member slice is complete (PRs #85–#88). The foundation now covers:
-- All write paths (pet drafts, media, adoption, donation, sponsorship, sponsorship manage, adoption status management)
-- All read paths (pet feed, pet profile, shelter profile, adoption view — all 4 layers)
-- All shelter-side list views (adoption list, donation list, sponsorship list)
-- Donor-facing sponsorship list (GET /sponsorships)
+The pet archive slice is complete (PRs #90–#93). The foundation now covers:
+- All write paths (pet drafts, media, adoption, donation, sponsorship, sponsorship manage, adoption status management, pet archive)
+- All read paths (pet feed, pet profile, shelter profile, adoption view, adoption list, donation list/status, sponsorship list/donor-list — all 4 layers each)
+- Shelter-side list views (adoption list, donation list, sponsorship list)
+- Donor-facing sponsorship list (`GET /sponsorships` — `SPONSORSHIP-DONOR-LIST-*`, PRs #72–#75 — **already complete**)
 - Full payment confirmation pipeline (webhook → donor status polling)
 - Sponsorship lifecycle management (cancel/pause/resume — dual access: shelter OR donor)
 - Adoption status management — full slice (Worker + client + Web + Mobile)
@@ -304,15 +304,12 @@ The shelter member slice is complete (PRs #85–#88). The foundation now covers:
 - Pet archival — full slice (Worker + client + Web + Mobile, `PATCH /pets/:petId` with status: `archived | published`)
 
 **Suggested next** (in priority order, updated 2026-06-09):
-1. **Donor-facing sponsorship list** — `DONOR-SPONSORSHIP-LIST` slice (new Worker route + client + Web/Mobile boundaries) — donor sees their own active sponsorships
-2. **Notification delivery framework** — Worker notification dispatch + client read boundary (push notifications)
-3. **Pet status transitions** — Archive/re-publish workflows, status workflows
-4. **Payment reconciliation dashboard** — Shelter-side reporting for donations and sponsorships by date/status
-5. **Open branches** to review:
-   - `origin/agent/ADOPTION-LIST-WORKER-001` 
-   - `origin/agent/MOBILE-PET-PROFILE-001`
-   - `origin/agent/PET-FEED-WORKER-001`
-   - `origin/agent/SHELTER-PROFILE-WORKER-001`
+1. **Notification delivery framework** — Worker notification dispatch + client read boundary (push notifications)
+2. **Pet status transitions** — Archive/re-publish workflows, audit logging, status history
+3. **Payment reconciliation dashboard** — Shelter-side reporting for donations and sponsorships by date/status
+4. **Donor-facing adoption list** — Donor sees their own adoption applications (`GET /adoptions` donor-only, separate from shelter list)
+
+> **Note**: `DONOR-SPONSORSHIP-LIST` (= `SPONSORSHIP-DONOR-LIST-*`) was completed in PRs #72–#75 and is **not** a pending item. The 4 open remote branches (`ADOPTION-LIST-WORKER-001`, `MOBILE-PET-PROFILE-001`, `PET-FEED-WORKER-001`, `SHELTER-PROFILE-WORKER-001`) are all fully merged to main and can be deleted.
 
 ## 6. Handoff Prompt For New Agent Session
 
