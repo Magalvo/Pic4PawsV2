@@ -64,7 +64,7 @@ Do not batch items that can be reviewed or merged independently.
 
 **Repository status**: 1044 tests passing (123 test files), full foundation complete through notifications slice.
 
-**Main branch HEAD** (commit `95f782b`): PR #95 (notifications-batch) merged
+**Main branch HEAD** (commit `509e4ac`): PR #96 (donor-adoption-list-batch) merged
 - `npm run typecheck` ✅
 - `npm run lint` ✅
 - `npm run test` ✅
@@ -167,12 +167,11 @@ Do not batch items that can be reviewed or merged independently.
 - `NOTIFICATION-CLIENT-001` — `createNotificationClient` in `@pic4paws/client` (`listNotifications` + `markNotificationRead`)
 - `WEB-NOTIFICATION-001` — Web notification product boundary (4 states: idle/loading/loaded/failed, optimistic markRead)
 - `MOBILE-NOTIFICATION-001` — Mobile notification product boundary with PT-PT states
-- `DONOR-ADOPTION-LIST-WORKER-001` — `GET /adoptions` donor-facing route (method-switched before POST), `AdoptionDonorListRepository` + Supabase impl, no `applicantUserId` in response *(in `agent/donor-adoption-list-batch`, pending merge)*
-- `DONOR-ADOPTION-LIST-CLIENT-001` — `createAdoptionDonorListClient` in `@pic4paws/client` (`loadDonorAdoptions`) *(in `agent/donor-adoption-list-batch`, pending merge)*
-- `WEB-DONOR-ADOPTION-LIST-001` — Web donor adoption list product boundary (5 states: idle/loading/loaded/empty/failed) *(in `agent/donor-adoption-list-batch`, pending merge)*
-- `MOBILE-DONOR-ADOPTION-LIST-001` — Mobile donor adoption list product boundary with PT-PT states *(in `agent/donor-adoption-list-batch`, pending merge)*
-
-The Worker now has (as of 2026-06-09, updated through `agent/notifications-batch`):
+- `DONOR-ADOPTION-LIST-WORKER-001` — `GET /adoptions` donor-facing route (method-switched before POST), `AdoptionDonorListRepository` + Supabase impl, no `applicantUserId` in response
+- `DONOR-ADOPTION-LIST-CLIENT-001` — `createAdoptionDonorListClient` in `@pic4paws/client` (`loadDonorAdoptions`)
+- `WEB-DONOR-ADOPTION-LIST-001` — Web donor adoption list product boundary (5 states: idle/loading/loaded/empty/failed)
+- `MOBILE-DONOR-ADOPTION-LIST-001` — Mobile donor adoption list product boundary with PT-PT states
+The Worker now has (as of 2026-06-09, updated through `agent/donor-adoption-list-batch`):
 
 - server-side Supabase SDK dependency composition
 - server-side R2/S3-compatible upload signer factory
@@ -326,7 +325,7 @@ The pet archive slice is complete (PRs #90–#93). The foundation now covers:
 3. **Notification preferences** — Opt-out per notification type, user preferences table
 4. **Shelter search** — Public `GET /shelters` list route with pagination
 
-> **Note**: `DONOR-SPONSORSHIP-LIST` (= `SPONSORSHIP-DONOR-LIST-*`) was completed in PRs #72–#75 and is **not** a pending item. The 4 open remote branches (`ADOPTION-LIST-WORKER-001`, `MOBILE-PET-PROFILE-001`, `PET-FEED-WORKER-001`, `SHELTER-PROFILE-WORKER-001`) are all fully merged to main and can be deleted. The `agent/notifications-batch` branch was merged as PR #95. The `agent/donor-adoption-list-batch` branch is pending merge.
+> **Note**: `DONOR-SPONSORSHIP-LIST` (= `SPONSORSHIP-DONOR-LIST-*`) was completed in PRs #72–#75 and is **not** a pending item. The 4 open remote branches (`ADOPTION-LIST-WORKER-001`, `MOBILE-PET-PROFILE-001`, `PET-FEED-WORKER-001`, `SHELTER-PROFILE-WORKER-001`) are all fully merged to main and can be deleted. The `agent/notifications-batch` branch was merged as PR #95. The `agent/donor-adoption-list-batch` branch was merged as PR #96.
 
 ## 6. Handoff Prompt For New Agent Session
 
