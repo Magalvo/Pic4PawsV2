@@ -3,6 +3,7 @@ import { createPetArchiveClient } from '../../packages/client/src/index';
 import type {
   MediaUploadClientFetch,
   PetArchiveClient,
+  PetRepublishClientResult,
 } from '../../packages/client/src/index';
 
 const workerBaseUrl = 'https://workers.pic4paws.pt';
@@ -154,5 +155,86 @@ describe('createPetArchiveClient — archivePet', () => {
 
     expect(serialized).not.toContain('service-role-secret');
     expect(serialized).not.toContain('bearer abc123');
+  });
+});
+
+describe('createPetArchiveClient — republishPet', () => {
+  it('returns unauthenticated when getAccessToken returns null', async () => {
+    const client = makeClient(makeFetch(200, {}), null);
+    const result = await client.republishPet('pet-001');
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.status).toBe('unauthenticated');
+  });
+
+  it('returns worker_request_failed with network_error when fetch throws', async () => {
+    const client = makeClient(throwingFetch);
+    const result = await client.republishPet('pet-001');
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.status).toBe('worker_request_failed');
+      expect(result.reasons).toContain('network_error');
+    }
+  });
+
+  it('returns pet_not_archived on 409 pet_not_archived', async () => {
+    const client = makeClient(makeFetch(409, { status: 'pet_not_archived' }));
+    const result = await client.republishPet('pet-001');
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.status).toBe('pet_not_archived');
+  });
+
+  it('returns unauthenticated on 401', async () => {
+    const client = makeClient(makeFetch(401, { status: 'unauthenticated' }));
+    const result = await client.republishPet('pet-001');
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.status).toBe('unauthenticated');
+  });
+
+  it('returns worker_response_invalid when 200 body is missing petId', async () => {
+    const client = makeClient(makeFetch(200, { status: 'ok' }));
+    const result = await client.republishPet('pet-001');
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.status).toBe('worker_response_invalid');
+  });
+
+  it('returns success with petId on valid 200', async () => {
+    const client = makeClient(
+      makeFetch(200, { status: 'ok', petId: 'pet-001' }),
+    );
+    const result = await client.republishPet('pet-001');
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.status).toBe('ok');
+      expect(result.petId).toBe('pet-001');
+    }
+  });
+
+  it('sends PATCH to {petFeedPath}/{petId}/status with Bearer token and published body', async () => {
+    const fetchSpy = makeFetch(200, { status: 'ok', petId: 'pet-abc' });
+    const client = makeClient(fetchSpy, 'my-token');
+    await client.republishPet('pet-abc');
+
+    expect(fetchSpy).toHaveBeenCalledOnce();
+    const [url, init] = (fetchSpy as ReturnType<typeof vi.fn>).mock.calls[0] as [
+      string,
+      RequestInit,
+    ];
+    expect(url).toContain('/pets/pet-abc/status');
+    expect(init.method).toBe('PATCH');
+    expect((init.headers as Record<string, string>)['Authorization']).toBe('Bearer my-token');
+    const parsed = JSON.parse(init.body as string) as Record<string, unknown>;
+    expect(parsed.status).toBe('published');
+  });
+
+  it('result type satisfies PetRepublishClientResult', async () => {
+    const client = makeClient(makeFetch(200, { status: 'ok', petId: 'pet-001' }));
+    const result: PetRepublishClientResult = await client.republishPet('pet-001');
+    expect(result.ok).toBe(true);
   });
 });

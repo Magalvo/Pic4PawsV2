@@ -3728,6 +3728,31 @@ export type PetArchiveClientFailure = {
 
 export type PetArchiveClientResult = PetArchiveClientSuccess | PetArchiveClientFailure;
 
+export type PetRepublishClientSuccess = {
+  ok: true;
+  status: 'ok';
+  petId: string;
+};
+
+export type PetRepublishClientFailureStatus =
+  | 'unauthenticated'
+  | 'forbidden'
+  | 'pet_not_found'
+  | 'pet_not_archived'
+  | 'invalid_payload'
+  | 'pet_archive_repository_not_configured'
+  | 'auth_adapter_not_configured'
+  | 'worker_request_failed'
+  | 'worker_response_invalid';
+
+export type PetRepublishClientFailure = {
+  ok: false;
+  status: PetRepublishClientFailureStatus;
+  reasons: string[];
+};
+
+export type PetRepublishClientResult = PetRepublishClientSuccess | PetRepublishClientFailure;
+
 export type CreatePetArchiveClientInput = {
   workerBaseUrl: string;
   petFeedPath: `/${string}`;
@@ -3737,6 +3762,7 @@ export type CreatePetArchiveClientInput = {
 
 export type PetArchiveClient = {
   archivePet: (petId: string) => Promise<PetArchiveClientResult>;
+  republishPet: (petId: string) => Promise<PetRepublishClientResult>;
 };
 
 const parsePetArchiveSuccess = (
@@ -3757,6 +3783,34 @@ const parsePetArchiveFailureStatus = (
     status === 'forbidden' ||
     status === 'pet_not_found' ||
     status === 'pet_already_archived' ||
+    status === 'invalid_payload' ||
+    status === 'pet_archive_repository_not_configured' ||
+    status === 'auth_adapter_not_configured'
+  ) {
+    return status;
+  }
+
+  return 'worker_request_failed';
+};
+
+const parsePetRepublishSuccess = (
+  body: Record<string, unknown> | null,
+): PetRepublishClientSuccess | null => {
+  if (!body || body.status !== 'ok' || typeof body.petId !== 'string') return null;
+
+  return { ok: true, status: 'ok', petId: body.petId };
+};
+
+const parsePetRepublishFailureStatus = (
+  body: Record<string, unknown> | null,
+): PetRepublishClientFailureStatus => {
+  const status = body?.status;
+
+  if (
+    status === 'unauthenticated' ||
+    status === 'forbidden' ||
+    status === 'pet_not_found' ||
+    status === 'pet_not_archived' ||
     status === 'invalid_payload' ||
     status === 'pet_archive_repository_not_configured' ||
     status === 'auth_adapter_not_configured'
@@ -3820,6 +3874,65 @@ export const createPetArchiveClient = ({
     }
 
     const success = parsePetArchiveSuccess(body);
+
+    if (!success) {
+      return {
+        ok: false,
+        status: 'worker_response_invalid',
+        reasons: ['invalid_worker_response'],
+      };
+    }
+
+    return success;
+  },
+
+  republishPet: async (petId: string): Promise<PetRepublishClientResult> => {
+    const accessToken = await getAccessToken();
+
+    if (!accessToken?.trim()) {
+      return {
+        ok: false,
+        status: 'unauthenticated',
+        reasons: ['missing_access_token'],
+      };
+    }
+
+    let response: Response;
+
+    try {
+      response = await fetch(
+        createWorkerSubUrl(workerBaseUrl, petFeedPath, petId, 'status'),
+        {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ status: 'published' }),
+        },
+      );
+    } catch {
+      return {
+        ok: false,
+        status: 'worker_request_failed',
+        reasons: ['network_error'],
+      };
+    }
+
+    const body = await parseJsonResponse(response);
+
+    if (!response.ok) {
+      const failureStatus = parsePetRepublishFailureStatus(body);
+      const reasons = Array.isArray(body?.reasons) ? parseReasons(body) : [failureStatus];
+
+      return {
+        ok: false,
+        status: failureStatus,
+        reasons: sanitizeReasons(reasons, failureStatus),
+      };
+    }
+
+    const success = parsePetRepublishSuccess(body);
 
     if (!success) {
       return {
