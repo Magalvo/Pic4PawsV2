@@ -12,6 +12,7 @@ export type PetArchiveRecord = {
 export type PetArchiveRepository = {
   getPetForArchive: (petId: string) => Promise<PetArchiveRecord | null>;
   archivePet: (input: { petId: string; now: string }) => Promise<{ petId: string } | null>;
+  republishPet: (input: { petId: string; now: string }) => Promise<{ petId: string } | null>;
 };
 
 export type HandleWorkerPetArchiveRequestInput = {
@@ -55,14 +56,17 @@ export const matchWorkerPetArchiveId = (
 
 // ─── Payload validation ───────────────────────────────────────────────────────
 
-export const validatePetArchivePayload = (payload: unknown): 'archived' | null => {
+export const validatePetArchivePayload = (
+  payload: unknown,
+): 'archived' | 'published' | null => {
   if (!payload || typeof payload !== 'object') return null;
 
   const p = payload as Record<string, unknown>;
 
-  if (p.status !== 'archived') return null;
+  if (p.status === 'archived') return 'archived';
+  if (p.status === 'published') return 'published';
 
-  return 'archived';
+  return null;
 };
 
 // ─── Handler ──────────────────────────────────────────────────────────────────
@@ -118,11 +122,11 @@ export const handleWorkerPetArchiveRequest = async ({
     return jsonResponse({ status: 'unauthenticated' }, { status: 401 });
   }
 
-  const status = validatePetArchivePayload(payload);
+  const targetStatus = validatePetArchivePayload(payload);
 
-  if (!status) {
+  if (!targetStatus) {
     return jsonResponse(
-      { status: 'invalid_payload', reasons: ['status_must_be_archived'] },
+      { status: 'invalid_payload', reasons: ['status_must_be_archived_or_published'] },
       { status: 400 },
     );
   }
@@ -135,6 +139,16 @@ export const handleWorkerPetArchiveRequest = async ({
 
   if (!canManageShelter(actor, pet.shelterId)) {
     return jsonResponse({ status: 'forbidden' }, { status: 403 });
+  }
+
+  if (targetStatus === 'published') {
+    const result = await petArchiveRepository.republishPet({ petId, now });
+
+    if (!result) {
+      return jsonResponse({ status: 'pet_not_archived' }, { status: 409 });
+    }
+
+    return jsonResponse({ status: 'ok', petId: result.petId }, { status: 200 });
   }
 
   const result = await petArchiveRepository.archivePet({ petId, now });
