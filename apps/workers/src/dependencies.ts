@@ -156,10 +156,13 @@ export const createWorkerSupabaseDependencies = ({
     const adoptionViewRepositories = createSupabaseAdoptionViewRepositories({ client });
     const shelterMemberRepositories = createSupabaseShelterMemberRepositories({ client });
     const petArchiveRepositories = createSupabasePetArchiveRepositories({ client });
-    const notificationRepositories = createSupabaseNotificationRepositories({ client });
     const adoptionDonorListRepositories = createSupabaseAdoptionDonorListRepositories({ client });
     const shelterSearchRepositories = createSupabaseShelterSearchRepositories({ client });
     const notificationPreferencesRepositories = createSupabaseNotificationPreferencesRepositories({ client });
+    const notificationRepositories = createSupabaseNotificationRepositories({
+      client,
+      notificationPreferencesRepository: notificationPreferencesRepositories.notificationPreferencesRepository,
+    });
 
     return {
       mediaUploadSigner,
