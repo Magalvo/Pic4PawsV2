@@ -1,7 +1,8 @@
 ---
 id: FINANCIALS-WORKER-001
 title: Payment reconciliation Worker route
-status: in-progress
+status: done
+pr: 110
 ---
 
 ## Goal

@@ -49,6 +49,12 @@ describe('webFinancialsDashboardUiContent', () => {
   });
 });
 
+describe('webFinancialsDashboardUiContent — loading', () => {
+  it('has non-empty loadingMessage', () => {
+    expect(webFinancialsDashboardUiContent.loadingMessage).toBeTruthy();
+  });
+});
+
 describe('createWebFinancialsDashboardUi — initial state', () => {
   it('getInitialState returns idle', () => {
     const ui = createWebFinancialsDashboardUi({
@@ -125,19 +131,21 @@ describe('createWebFinancialsDashboardUi — loadFinancials', () => {
     expect(state.state).toBe('failed');
   });
 
-  it('sanitizes reasons — does not leak service-role in failed state', async () => {
+  it('sanitizes reasons — does not leak service-role or bearer in failed state', async () => {
     const ui = createWebFinancialsDashboardUi({
       financialsClient: makeClient({
         ok: false,
         status: 'worker_request_failed',
-        reasons: ['service-role key leaked'],
+        reasons: ['safe_reason', 'service-role-secret', 'bearer abc123'],
       }),
     });
 
     const state = await ui.loadFinancials('shelter-1');
+    const serialized = JSON.stringify(state);
 
     expect(state.state).toBe('failed');
-    expect(JSON.stringify(state)).not.toContain('service-role');
+    expect(serialized).not.toContain('service-role');
+    expect(serialized).not.toContain('bearer abc123');
   });
 });
 

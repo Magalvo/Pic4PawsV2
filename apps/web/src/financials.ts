@@ -9,6 +9,7 @@ export type WebFinancialsDashboardUiContent = {
   status: 'product-flow-ready';
   title: string;
   description: string;
+  loadingMessage: string;
 };
 
 export const webFinancialsDashboardUiContent: WebFinancialsDashboardUiContent = {
@@ -16,10 +17,15 @@ export const webFinancialsDashboardUiContent: WebFinancialsDashboardUiContent = 
   status: 'product-flow-ready',
   title: 'Resumo financeiro',
   description: 'Consulta os donativos e apadrinhamentos do abrigo.',
+  loadingMessage: 'A carregar resumo financeiro…',
 };
 
 export type WebFinancialsDashboardIdleState = {
   state: 'idle';
+};
+
+export type WebFinancialsDashboardLoadingState = {
+  state: 'loading';
 };
 
 export type WebFinancialsDashboardLoadedState = {
@@ -41,6 +47,7 @@ export type WebFinancialsDashboardFailedState = {
 
 export type WebFinancialsDashboardState =
   | WebFinancialsDashboardIdleState
+  | WebFinancialsDashboardLoadingState
   | WebFinancialsDashboardLoadedState
   | WebFinancialsDashboardForbiddenState
   | WebFinancialsDashboardFailedState;
