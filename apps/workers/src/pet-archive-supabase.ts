@@ -1,5 +1,5 @@
 import type { SupabaseClientLike, SupabaseQueryResult } from './pet-supabase';
-import type { PetArchiveRecord, PetArchiveRepository } from './pet-archive';
+import type { PetArchiveRecord, PetArchiveRepository, PetLifecycleEventInput } from './pet-archive';
 
 export class SupabasePetArchiveRepositoryError extends Error {
   constructor(message: string) {
@@ -93,6 +93,32 @@ export const createSupabasePetArchiveRepositories = ({
       if (updated.length === 0) return null;
 
       return { petId };
+    },
+
+    recordLifecycleEvent: async ({
+      petId,
+      shelterId,
+      actorUserId,
+      fromStatus,
+      toStatus,
+      now,
+    }: PetLifecycleEventInput): Promise<void> => {
+      const result = (await client
+        .from('pet_lifecycle_events')
+        .insert({
+          pet_id: petId,
+          shelter_id: shelterId,
+          actor_user_id: actorUserId,
+          from_status: fromStatus,
+          to_status: toStatus,
+          created_at: now,
+        })) as SupabaseQueryResult<null>;
+
+      if (result.error) {
+        throw new SupabasePetArchiveRepositoryError(
+          `Failed to record lifecycle event: ${result.error.message ?? 'unknown error'}`,
+        );
+      }
     },
   };
 
