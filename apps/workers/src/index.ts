@@ -71,6 +71,10 @@ import {
   handleWorkerNotificationPreferencesRequest,
   matchWorkerNotificationPreferencesPath,
 } from './notification-preferences';
+import {
+  handleWorkerFinancialsRequest,
+  matchWorkerFinancialsShelterId,
+} from './financials';
 import { createR2UploadSignerWorkerDependencies } from './r2-signer';
 import { createSupabaseSdkWorkerDependencies } from './supabase-sdk';
 export {
@@ -332,6 +336,25 @@ export type {
   HandleWorkerNotificationPreferencesRequestInput,
 } from './notification-preferences';
 export { createSupabaseNotificationPreferencesRepositories } from './notification-preferences-supabase';
+export {
+  handleWorkerFinancialsRequest,
+  matchWorkerFinancialsShelterId,
+} from './financials';
+export type {
+  FinancialsDonationBreakdown,
+  FinancialsRepository,
+  FinancialsSummary,
+  GetFinancialsResult,
+  HandleWorkerFinancialsRequestInput,
+} from './financials';
+export {
+  createSupabaseFinancialsRepositories,
+  SupabaseFinancialsRepositoryError,
+} from './financials-supabase';
+export type {
+  CreateSupabaseFinancialsRepositoriesInput,
+  CreateSupabaseFinancialsRepositoriesResult,
+} from './financials-supabase';
 export {
   createR2UploadSigner,
   createR2UploadSignerWorkerDependencies,
@@ -803,6 +826,20 @@ export const handleWorkerRequest = async (
       shelterMemberRepository: dependencies.shelterMemberRepository,
       authenticator: dependencies.petDraftAuthenticator,
       now: dependencies.now?.() ?? new Date().toISOString(),
+    });
+  }
+
+  const financialsShelterId = matchWorkerFinancialsShelterId(
+    url.pathname,
+    config.workers.shelterPath,
+  );
+
+  if (financialsShelterId !== null) {
+    return handleWorkerFinancialsRequest({
+      request,
+      shelterId: financialsShelterId,
+      financialsRepository: dependencies.financialsRepository,
+      authenticator: dependencies.petDraftAuthenticator,
     });
   }
 
