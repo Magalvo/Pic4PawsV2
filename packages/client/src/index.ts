@@ -4839,3 +4839,128 @@ export const createFinancialsClient = ({
     return success;
   },
 });
+
+// ─── Pet Status History Client ────────────────────────────────────────────────
+
+export type PetStatusHistoryEvent = {
+  id: string;
+  petId: string;
+  shelterId: string;
+  actorUserId: string;
+  fromStatus: string;
+  toStatus: string;
+  createdAt: string;
+};
+
+export type LoadPetStatusHistoryClientSuccess = {
+  ok: true;
+  status: 'ok';
+  petId: string;
+  events: PetStatusHistoryEvent[];
+};
+
+export type LoadPetStatusHistoryClientFailureStatus =
+  | 'unauthenticated'
+  | 'forbidden'
+  | 'pet_not_found'
+  | 'pet_archive_repository_not_configured'
+  | 'auth_adapter_not_configured'
+  | 'worker_request_failed'
+  | 'worker_response_invalid';
+
+export type LoadPetStatusHistoryClientFailure = {
+  ok: false;
+  status: LoadPetStatusHistoryClientFailureStatus;
+  reasons: string[];
+};
+
+export type LoadPetStatusHistoryClientResult =
+  | LoadPetStatusHistoryClientSuccess
+  | LoadPetStatusHistoryClientFailure;
+
+export type CreatePetStatusHistoryClientInput = {
+  workerBaseUrl: string;
+  petFeedPath: `/${string}`;
+  getAccessToken: () => Promise<string | null>;
+  fetch: typeof globalThis.fetch;
+};
+
+export type PetStatusHistoryClient = {
+  loadStatusHistory: (petId: string) => Promise<LoadPetStatusHistoryClientResult>;
+};
+
+const parsePetStatusHistoryFailureStatus = (
+  body: Record<string, unknown> | null,
+): LoadPetStatusHistoryClientFailureStatus => {
+  const status = body?.status;
+  if (status === 'unauthenticated') return 'unauthenticated';
+  if (status === 'forbidden') return 'forbidden';
+  if (status === 'pet_not_found') return 'pet_not_found';
+  if (status === 'pet_archive_repository_not_configured') return 'pet_archive_repository_not_configured';
+  if (status === 'auth_adapter_not_configured') return 'auth_adapter_not_configured';
+  if (status === 'worker_response_invalid') return 'worker_response_invalid';
+  return 'worker_request_failed';
+};
+
+const parsePetStatusHistorySuccess = (
+  body: Record<string, unknown> | null,
+): LoadPetStatusHistoryClientSuccess | null => {
+  if (!body || body.status !== 'ok') return null;
+  if (typeof body.petId !== 'string') return null;
+  const rawEvents = Array.isArray(body.events) ? body.events : [];
+  const events: PetStatusHistoryEvent[] = rawEvents
+    .filter((e): e is Record<string, unknown> => typeof e === 'object' && e !== null)
+    .map((e) => ({
+      id: String(e.id ?? ''),
+      petId: String(e.petId ?? ''),
+      shelterId: String(e.shelterId ?? ''),
+      actorUserId: String(e.actorUserId ?? ''),
+      fromStatus: String(e.fromStatus ?? ''),
+      toStatus: String(e.toStatus ?? ''),
+      createdAt: String(e.createdAt ?? ''),
+    }));
+  return { ok: true, status: 'ok', petId: body.petId, events };
+};
+
+export const createPetStatusHistoryClient = ({
+  workerBaseUrl,
+  petFeedPath,
+  getAccessToken,
+  fetch,
+}: CreatePetStatusHistoryClientInput): PetStatusHistoryClient => ({
+  loadStatusHistory: async (petId: string) => {
+    const accessToken = await getAccessToken();
+
+    if (!accessToken?.trim()) {
+      return { ok: false, status: 'unauthenticated', reasons: ['missing_access_token'] };
+    }
+
+    const url = createWorkerSubUrl(workerBaseUrl, petFeedPath, petId, 'status-history');
+    let response: Response;
+
+    try {
+      response = await fetch(url, {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+    } catch {
+      return { ok: false, status: 'worker_request_failed', reasons: ['network_error'] };
+    }
+
+    const body = await parseJsonResponse(response);
+
+    if (!response.ok) {
+      const status = parsePetStatusHistoryFailureStatus(body);
+      const reasons = Array.isArray(body?.reasons) ? parseReasons(body) : [status];
+      return { ok: false, status, reasons: sanitizeReasons(reasons, status) };
+    }
+
+    const success = parsePetStatusHistorySuccess(body);
+
+    if (!success) {
+      return { ok: false, status: 'worker_response_invalid', reasons: ['invalid_worker_response'] };
+    }
+
+    return success;
+  },
+});
