@@ -59,7 +59,9 @@ import {
 } from './pet-drafts';
 import {
   handleWorkerPetArchiveRequest,
+  handleWorkerPetStatusHistoryRequest,
   matchWorkerPetArchiveId,
+  matchWorkerPetStatusHistoryId,
 } from './pet-archive';
 import {
   handleWorkerNotificationListRequest,
@@ -286,13 +288,18 @@ export type {
 } from './shelter-member-supabase';
 export {
   handleWorkerPetArchiveRequest,
+  handleWorkerPetStatusHistoryRequest,
   matchWorkerPetArchiveId,
+  matchWorkerPetStatusHistoryId,
   validatePetArchivePayload,
 } from './pet-archive';
 export type {
   HandleWorkerPetArchiveRequestInput,
+  HandleWorkerPetStatusHistoryRequestInput,
   PetArchiveRecord,
   PetArchiveRepository,
+  PetLifecycleEvent,
+  PetLifecycleEventInput,
 } from './pet-archive';
 export {
   createSupabasePetArchiveRepositories,
@@ -765,6 +772,17 @@ export const handleWorkerRequest = async (
         petPublishRepository: resolvedDependencies.petPublishRepository,
         now: resolvedDependencies.now,
       },
+    });
+  }
+
+  const statusHistoryPetId = matchWorkerPetStatusHistoryId(url.pathname, config.workers.petFeedPath);
+
+  if (statusHistoryPetId !== null) {
+    return handleWorkerPetStatusHistoryRequest({
+      request,
+      petId: statusHistoryPetId,
+      petArchiveRepository: dependencies.petArchiveRepository,
+      authenticator: dependencies.petDraftAuthenticator,
     });
   }
 

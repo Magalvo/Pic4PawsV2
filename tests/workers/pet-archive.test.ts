@@ -46,6 +46,7 @@ const makeRepository = (overrides?: Partial<PetArchiveRepository>): PetArchiveRe
   archivePet: async ({ petId }) => ({ petId }),
   republishPet: async ({ petId }) => ({ petId }),
   recordLifecycleEvent: async () => undefined,
+  getLifecycleEvents: async () => [],
   ...overrides,
 });
 

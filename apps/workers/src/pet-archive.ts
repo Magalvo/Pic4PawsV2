@@ -18,11 +18,22 @@ export type PetLifecycleEventInput = {
   now: string;
 };
 
+export type PetLifecycleEvent = {
+  id: string;
+  petId: string;
+  shelterId: string;
+  actorUserId: string;
+  fromStatus: string;
+  toStatus: string;
+  createdAt: string;
+};
+
 export type PetArchiveRepository = {
   getPetForArchive: (petId: string) => Promise<PetArchiveRecord | null>;
   archivePet: (input: { petId: string; now: string }) => Promise<{ petId: string } | null>;
   republishPet: (input: { petId: string; now: string }) => Promise<{ petId: string } | null>;
   recordLifecycleEvent: (input: PetLifecycleEventInput) => Promise<void>;
+  getLifecycleEvents: (petId: string) => Promise<PetLifecycleEvent[]>;
 };
 
 export type HandleWorkerPetArchiveRequestInput = {
@@ -186,4 +197,80 @@ export const handleWorkerPetArchiveRequest = async ({
   });
 
   return jsonResponse({ status: 'ok', petId: result.petId }, { status: 200 });
+};
+
+// ─── Status history read ──────────────────────────────────────────────────────
+
+export const matchWorkerPetStatusHistoryId = (
+  pathname: string,
+  petFeedPath: string,
+): string | null => {
+  const prefix = petFeedPath.endsWith('/') ? petFeedPath : `${petFeedPath}/`;
+
+  if (!pathname.startsWith(prefix)) return null;
+
+  const rest = pathname.slice(prefix.length);
+  const parts = rest.split('/');
+
+  if (parts.length !== 2 || !parts[0] || parts[1] !== 'status-history') return null;
+
+  return parts[0];
+};
+
+export type HandleWorkerPetStatusHistoryRequestInput = {
+  request: Request;
+  petId: string;
+  petArchiveRepository?: PetArchiveRepository;
+  authenticator?: WorkerPetDraftAuthenticator;
+};
+
+export const handleWorkerPetStatusHistoryRequest = async ({
+  request,
+  petId,
+  petArchiveRepository,
+  authenticator,
+}: HandleWorkerPetStatusHistoryRequestInput): Promise<Response> => {
+  if (request.method !== 'GET') {
+    return jsonResponse(
+      { status: 'method_not_allowed', allowedMethods: ['GET'] },
+      { status: 405, headers: { Allow: 'GET' } },
+    );
+  }
+
+  if (!petArchiveRepository) {
+    return jsonResponse({ status: 'pet_archive_repository_not_configured' }, { status: 501 });
+  }
+
+  if (!authenticator) {
+    return jsonResponse({ status: 'auth_adapter_not_configured' }, { status: 501 });
+  }
+
+  const authHeader = request.headers.get('Authorization') ?? '';
+  const bearerToken = authHeader.startsWith('Bearer ')
+    ? authHeader.slice('Bearer '.length).trim()
+    : null;
+
+  if (!bearerToken) {
+    return jsonResponse({ status: 'unauthenticated' }, { status: 401 });
+  }
+
+  const actor = await authenticator({ request, authorizationHeader: authHeader, bearerToken });
+
+  if (!actor) {
+    return jsonResponse({ status: 'unauthenticated' }, { status: 401 });
+  }
+
+  const pet = await petArchiveRepository.getPetForArchive(petId);
+
+  if (!pet) {
+    return jsonResponse({ status: 'pet_not_found' }, { status: 404 });
+  }
+
+  if (!canManageShelter(actor, pet.shelterId)) {
+    return jsonResponse({ status: 'forbidden' }, { status: 403 });
+  }
+
+  const events = await petArchiveRepository.getLifecycleEvents(petId);
+
+  return jsonResponse({ status: 'ok', petId, events }, { status: 200 });
 };
