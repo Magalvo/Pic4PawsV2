@@ -6,6 +6,7 @@ import type {
   NotificationRepository,
   NotificationType,
 } from './notification';
+import type { NotificationPreferencesRepository } from './notification-preferences';
 
 export class SupabaseNotificationRepositoryError extends Error {
   constructor(message: string) {
@@ -16,6 +17,7 @@ export class SupabaseNotificationRepositoryError extends Error {
 
 export type CreateSupabaseNotificationRepositoriesInput = {
   client: SupabaseClientLike;
+  notificationPreferencesRepository?: NotificationPreferencesRepository;
 };
 
 export type CreateSupabaseNotificationRepositoriesResult = {
@@ -41,7 +43,16 @@ type DonationTransactionRow = {
 
 export const createSupabaseNotificationRepositories = ({
   client,
+  notificationPreferencesRepository,
 }: CreateSupabaseNotificationRepositoriesInput): CreateSupabaseNotificationRepositoriesResult => {
+  const isOptedOut = async (userId: string, type: NotificationType): Promise<boolean> => {
+    if (!notificationPreferencesRepository) return false;
+    const result = await notificationPreferencesRepository.getPreferences(userId);
+    if (!('preferences' in result)) return false;
+    const pref = result.preferences.find((p) => p.type === type);
+    return pref !== undefined && !pref.enabled;
+  };
+
   const notificationRepository: NotificationRepository = {
     listNotifications: async (
       userId: string,
@@ -121,6 +132,8 @@ export const createSupabaseNotificationRepositories = ({
       applicationId: string;
       newStatus: string;
     }): Promise<void> => {
+      if (await isOptedOut(applicantUserId, 'adoption_status_changed')) return;
+
       const result = (await client.from('notifications').insert({
         user_id: applicantUserId,
         type: 'adoption_status_changed' as NotificationType,
@@ -157,7 +170,14 @@ export const createSupabaseNotificationRepositories = ({
         );
       }
 
-      const members = Array.isArray(membersResult.data) ? membersResult.data : [];
+      const allMembers = Array.isArray(membersResult.data) ? membersResult.data : [];
+
+      if (allMembers.length === 0) return;
+
+      const optedOutFlags = await Promise.all(
+        allMembers.map((m) => isOptedOut(m.user_id, 'new_adoption_application')),
+      );
+      const members = allMembers.filter((_, i) => !optedOutFlags[i]);
 
       if (members.length === 0) return;
 
@@ -192,6 +212,8 @@ export const createSupabaseNotificationRepositories = ({
 
       if (donationResult.error || !donationResult.data?.user_id) return;
 
+      if (await isOptedOut(donationResult.data.user_id, 'donation_paid')) return;
+
       const result = (await client.from('notifications').insert({
         user_id: donationResult.data.user_id,
         type: 'donation_paid' as NotificationType,
@@ -214,6 +236,8 @@ export const createSupabaseNotificationRepositories = ({
       sponsorshipId: string;
       newStatus: string;
     }): Promise<void> => {
+      if (await isOptedOut(donorUserId, 'sponsorship_status_changed')) return;
+
       const result = (await client.from('notifications').insert({
         user_id: donorUserId,
         type: 'sponsorship_status_changed' as NotificationType,
