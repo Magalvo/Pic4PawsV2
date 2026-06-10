@@ -23,7 +23,7 @@ const makeClient = (
     workerBaseUrl: 'https://workers.pic4paws.pt',
     shelterPath: '/shelters',
     getAccessToken,
-    fetch,
+    fetch: fetch as never,
   });
 
 const sampleSponsorship: SponsorshipListItem = {

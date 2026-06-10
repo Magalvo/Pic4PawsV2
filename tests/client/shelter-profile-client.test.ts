@@ -29,7 +29,7 @@ const makeClient = (fetch: ReturnType<typeof vi.fn>) =>
   createShelterProfileClient({
     workerBaseUrl: 'https://workers.pic4paws.pt',
     shelterPath: '/shelters',
-    fetch,
+    fetch: fetch as never,
   });
 
 describe('ShelterProfileClient contract', () => {

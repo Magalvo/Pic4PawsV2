@@ -1,0 +1,16 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "noUncheckedIndexedAccess": false,
+    "paths": {
+      "@pic4paws/client": ["../packages/client/src/index.ts"],
+      "@pic4paws/config": ["../packages/config/src/index.ts"],
+      "@pic4paws/database": ["../packages/database/src/index.ts"],
+      "@pic4paws/domain": ["../packages/domain/src/index.ts"],
+      "@pic4paws/payments": ["../packages/payments/src/index.ts"],
+      "@pic4paws/ui": ["../packages/ui/src/index.ts"]
+    }
+  },
+  "include": ["./**/*.ts"]
+}

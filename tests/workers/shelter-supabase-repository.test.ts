@@ -53,6 +53,17 @@ class FakeSupabaseQuery implements SupabaseTableQueryLike {
     return this;
   }
 
+  upsert(payload: unknown): SupabaseTableQueryLike {
+    this.action = 'update';
+    this.payload = payload;
+
+    return this;
+  }
+
+  neq(): SupabaseTableQueryLike {
+    return this;
+  }
+
   eq(column: string, value: unknown): SupabaseTableQueryLike {
     this.filters.push({ kind: 'eq', column, value });
 

@@ -16,7 +16,7 @@ const draftInput = {
   species: 'dog',
   locationLabel: 'Lisboa',
   shortDescription: 'Calmo, sociável e pronto para uma família.',
-  mediaIds: ['media-1'],
+  mediaIds: ['media-1'] as string[],
   heroMediaId: 'media-1',
   medical: {
     vaccinated: true,

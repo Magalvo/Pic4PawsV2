@@ -20,7 +20,7 @@ const makeClient = (
     workerBaseUrl: 'https://workers.pic4paws.pt',
     donationsPath: '/donations',
     getAccessToken,
-    fetch,
+    fetch: fetch as never,
   });
 
 const validInput = {

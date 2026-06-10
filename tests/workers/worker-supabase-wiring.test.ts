@@ -56,6 +56,17 @@ class FakeSupabaseQuery implements SupabaseTableQueryLike {
     return this;
   }
 
+  upsert(payload: unknown): SupabaseTableQueryLike {
+    this.action = 'update';
+    this.payload = payload;
+
+    return this;
+  }
+
+  neq(): SupabaseTableQueryLike {
+    return this;
+  }
+
   eq(column: string, value: unknown): SupabaseTableQueryLike {
     this.filters.push({ kind: 'eq', column, value });
 
@@ -68,9 +79,17 @@ class FakeSupabaseQuery implements SupabaseTableQueryLike {
     return this;
   }
 
-  is(column: string, value: null): SupabaseTableQueryLike {
+  is(column: string, value: unknown): SupabaseTableQueryLike {
     this.filters.push({ kind: 'is', column, value });
 
+    return this;
+  }
+
+  order(): SupabaseTableQueryLike {
+    return this;
+  }
+
+  range(): SupabaseTableQueryLike {
     return this;
   }
 
@@ -215,6 +234,12 @@ describe('Worker Supabase dependency wiring', () => {
           paymentWebhookPath: '/webhooks/payments',
           mediaUploadPath: '/uploads/media',
           petDraftsPath: '/pets/drafts',
+          petFeedPath: '/pets',
+          shelterPath: '/shelters',
+          adoptionsPath: '/adoptions',
+          donationsPath: '/donations',
+          sponsorshipsPath: '/sponsorships',
+          notificationsPath: '/notifications',
         },
         payments: {
           primaryProvider: 'eupago',
@@ -348,6 +373,12 @@ describe('Worker Supabase dependency wiring', () => {
             paymentWebhookPath: '/webhooks/payments',
             mediaUploadPath: '/uploads/media',
             petDraftsPath: '/pets/drafts',
+            petFeedPath: '/pets',
+            shelterPath: '/shelters',
+            adoptionsPath: '/adoptions',
+            donationsPath: '/donations',
+            sponsorshipsPath: '/sponsorships',
+            notificationsPath: '/notifications',
           },
           payments: {
             primaryProvider: 'eupago',
