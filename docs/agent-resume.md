@@ -60,17 +60,17 @@ Do not batch items that can be reviewed or merged independently.
 - `npm run test`
 - `npm run build`
 
-## 4. Current State As Of 2026-06-09
+## 4. Current State As Of 2026-06-10
 
-**Repository status**: 1044 tests passing (123 test files), full foundation complete through notifications slice.
+**Repository status**: 1210 tests passing (139 test files), full foundation complete through payment reconciliation client slice.
 
-**Main branch HEAD** (commit `509e4ac`): PR #96 (donor-adoption-list-batch) merged
+**Main branch HEAD**: PR #111 (FINANCIALS-CLIENT-001)
 - `npm run typecheck` ✅
 - `npm run lint` ✅
 - `npm run test` ✅
 - `npm run build` ✅
 
-**Latest checkpoint**: [2026-06-09-pet-archive-adoption-view-shelter-member-complete.md](docs/checkpoints/2026-06-09-pet-archive-adoption-view-shelter-member-complete.md)
+**Latest checkpoint**: [2026-06-10-financials-client-notif-prefs-shelter-search-complete.md](docs/checkpoints/2026-06-10-financials-client-notif-prefs-shelter-search-complete.md)
 
 ### Merged Work Items (up to 2026-06-09)
 
@@ -171,7 +171,22 @@ Do not batch items that can be reviewed or merged independently.
 - `DONOR-ADOPTION-LIST-CLIENT-001` — `createAdoptionDonorListClient` in `@pic4paws/client` (`loadDonorAdoptions`)
 - `WEB-DONOR-ADOPTION-LIST-001` — Web donor adoption list product boundary (5 states: idle/loading/loaded/empty/failed)
 - `MOBILE-DONOR-ADOPTION-LIST-001` — Mobile donor adoption list product boundary with PT-PT states
-The Worker now has (as of 2026-06-09, updated through `agent/donor-adoption-list-batch`):
+- `PET-REPUBLISH-WORKER-001` — `PATCH /pets/:petId/status` extended for `status: 'published'` re-publish of archived pets
+- `PET-REPUBLISH-CLIENT-001` — `republishPet(petId)` added to `PetArchiveClient`
+- `WEB-PET-REPUBLISH-001` — `republishPet` action added to `WebPetArchiveUi`
+- `MOBILE-PET-REPUBLISH-001` — `republishPet` action added to `MobilePetArchiveUi`
+- `SHELTER-SEARCH-WORKER-001` — public `GET /shelters` paginated list route with name/city/district filters, `ShelterSearchRepository` + Supabase impl
+- `SHELTER-SEARCH-CLIENT-001` — `createShelterSearchClient` in `@pic4paws/client` (`searchShelters`)
+- `WEB-SHELTER-SEARCH-001` — Web shelter search product boundary (5 states: idle/loading/loaded/empty/failed)
+- `MOBILE-SHELTER-SEARCH-001` — Mobile shelter search product boundary with PT-PT states
+- `NOTIF-PREFS-WORKER-001` — `GET/PATCH /notifications/preferences`; `NotificationPreferencesRepository` + Supabase impl; fills missing types as enabled=true; upsert with `onConflict: 'user_id,type'`
+- `NOTIF-PREFS-CLIENT-001` — `createNotificationPreferencesClient` in `@pic4paws/client` (`loadPreferences` + `updatePreferences`)
+- `WEB-NOTIF-PREFS-001` — Web notification preferences product boundary (3 states: idle/loaded/failed, optimistic updatePreference)
+- `MOBILE-NOTIF-PREFS-001` — Mobile notification preferences product boundary with PT-PT states
+- `NOTIF-PREFS-DISPATCH-001` — `notificationPreferencesRepository` injected (optional) into `createSupabaseNotificationRepositories`; `isOptedOut` helper gates each `notifyXxx`; fan-out filters per-member; backwards-compatible
+- `FINANCIALS-WORKER-001` — `GET /shelters/:shelterId/financials`; `FinancialsRepository.getFinancials(shelterId)` → `FinancialsSummary`; Supabase impl aggregates donations by status + sponsorship counts/totals; registered before shelter profile check
+- `FINANCIALS-CLIENT-001` — `createFinancialsClient` in `@pic4paws/client` (`loadFinancials(shelterId)`)
+The Worker now has (as of 2026-06-10, PR #111):
 
 - server-side Supabase SDK dependency composition
 - server-side R2/S3-compatible upload signer factory
@@ -257,7 +272,10 @@ The Worker now has (as of 2026-06-09, updated through `agent/donor-adoption-list
 - `AdoptionStatusClient` (authenticated write — `manageAdoptionStatus(applicationId, status)`)
 - `AdoptionViewClient` (authenticated read — `loadAdoptionView(applicationId)`, 7 failure statuses)
 - `ShelterMemberClient` (authenticated read+write — `loadShelterMembers(shelterId, query?)`, `addShelterMember(shelterId, input)`, `removeShelterMember(shelterId, memberId)`)
-- `NotificationClient` (authenticated read+write — `listNotifications(query?)`, `markNotificationRead(notificationId)`)- no client-side Supabase service-role keys or R2 credentials
+- `NotificationClient` (authenticated read+write — `listNotifications(query?)`, `markNotificationRead(notificationId)`)
+- `ShelterSearchClient` (public read — `searchShelters(query?)`)
+- `NotificationPreferencesClient` (authenticated read+write — `loadPreferences()`, `updatePreferences(preferences[])`)
+- `FinancialsClient` (authenticated read — `loadFinancials(shelterId)`)
 
 Web/Mobile now have tested product boundaries for: media upload, pet media upload+attach,
 pet publish, pet draft, pet draft save flow, pet feed, pet profile, shelter profile,
@@ -272,7 +290,9 @@ adoption status management (shelter staff approve/reject/review, 4 states: idle/
 adoption view (adopter + shelter read, 6 states: idle/loading/loaded/not_found/forbidden/failed),
 shelter member management (shelter staff, 8 states: idle/loading/loaded/forbidden/failed +
 member_added/member_removed/action_failed — first combined read+write boundary),
-notifications (in-app, 4 states: idle/loading/loaded/failed, optimistic markRead, 4 trigger events) *(pending merge)*.
+notifications (in-app, 4 states: idle/loading/loaded/failed, optimistic markRead, 4 trigger events),
+shelter search (public, 5 states: idle/loading/loaded/empty/failed),
+notification preferences (3 states: idle/loaded/failed, optimistic updatePreference).
 
 The adopter end-to-end flow is fully wired at the boundary layer:
 **feed → pet profile → shelter profile → submit adoption application → view adoption status**.
@@ -307,32 +327,26 @@ per deployment.
 
 ## 5. Recommended Next Work Item
 
-The pet archive slice is complete (PRs #90–#93). The foundation now covers:
-- All write paths (pet drafts, media, adoption, donation, sponsorship, sponsorship manage, adoption status management, pet archive)
-- All read paths (pet feed, pet profile, shelter profile, adoption view, adoption list, donation list/status, sponsorship list/donor-list — all 4 layers each)
-- Shelter-side list views (adoption list, donation list, sponsorship list)
-- Donor-facing sponsorship list (`GET /sponsorships` — `SPONSORSHIP-DONOR-LIST-*`, PRs #72–#75 — **already complete**)
+The foundation now covers (as of PR #111):
+- All write paths (pet drafts, media, adoption, donation, sponsorship, sponsorship manage, adoption status management, pet archive + republish)
+- All read paths (pet feed, pet profile, shelter profile + search, adoption view, adoption list, donation list/status, sponsorship list/donor-list, notifications, financials — all 4 layers each)
+- Shelter-side list views (adoption list, donation list, sponsorship list, financial summary)
 - Full payment confirmation pipeline (webhook → donor status polling)
 - Sponsorship lifecycle management (cancel/pause/resume — dual access: shelter OR donor)
-- Adoption status management — full slice (Worker + client + Web + Mobile)
-- Adoption view — full slice (Worker + client + Web + Mobile)
-- Shelter member management — full slice (Worker + client + Web + Mobile, first 8-state combined read+write boundary)
-- Pet archival — full slice (Worker + client + Web + Mobile, `PATCH /pets/:petId` with status: `archived | published`)
+- Notification dispatch gated by per-user preferences
+- Public shelter search with filters
 
-**Suggested next** (in priority order, updated 2026-06-09):
-1. **Pet status transitions** — Archive/re-publish workflows, audit logging, status history
-2. **Payment reconciliation dashboard** — Shelter-side reporting for donations and sponsorships by date/status
-3. **Notification preferences** — Opt-out per notification type, user preferences table
-4. **Shelter search** — Public `GET /shelters` list route with pagination
-
-> **Note**: `DONOR-SPONSORSHIP-LIST` (= `SPONSORSHIP-DONOR-LIST-*`) was completed in PRs #72–#75 and is **not** a pending item. The 4 open remote branches (`ADOPTION-LIST-WORKER-001`, `MOBILE-PET-PROFILE-001`, `PET-FEED-WORKER-001`, `SHELTER-PROFILE-WORKER-001`) are all fully merged to main and can be deleted. The `agent/notifications-batch` branch was merged as PR #95. The `agent/donor-adoption-list-batch` branch was merged as PR #96.
+**Suggested next** (in priority order, updated 2026-06-10):
+1. **WEB-FINANCIALS-001** — Web payment reconciliation dashboard product boundary (completes the financials slice)
+2. **MOBILE-FINANCIALS-001** — Mobile payment reconciliation dashboard product boundary
+3. **Pet status transitions** — Audit logging / status history for archive/republish lifecycle
 
 ## 6. Handoff Prompt For New Agent Session
 
 Use this prompt in a new AI agent session (Claude Web UI):
 
 ```text
-Read AGENTS.md, docs/agent-resume.md, docs/canonical/architecture-proposal.md, docs/canonical/sdd.md, and the latest checkpoint at docs/checkpoints/2026-06-09-pet-archive-adoption-view-shelter-member-complete.md.
+Read AGENTS.md, docs/agent-resume.md, docs/canonical/architecture-proposal.md, docs/canonical/sdd.md, and the latest checkpoint at docs/checkpoints/2026-06-10-financials-client-notif-prefs-shelter-search-complete.md.
 
 Continue Pic4Paws V2 development from main using strict SDD/TDD:
 - 1 branch per work item: agent/<WORK-ITEM-ID>
