@@ -62,15 +62,15 @@ Do not batch items that can be reviewed or merged independently.
 
 ## 4. Current State As Of 2026-06-10
 
-**Repository status**: 1210 tests passing (139 test files), full foundation complete through payment reconciliation client slice.
+**Repository status**: 1287 tests passing (146 test files), full foundation complete through pet status history slice.
 
-**Main branch HEAD**: PR #111 (FINANCIALS-CLIENT-001)
+**Main branch HEAD**: PR #121 (MOBILE-PET-STATUS-HISTORY-001)
 - `npm run typecheck` ✅
 - `npm run lint` ✅
 - `npm run test` ✅
 - `npm run build` ✅
 
-**Latest checkpoint**: [2026-06-10-financials-client-notif-prefs-shelter-search-complete.md](docs/checkpoints/2026-06-10-financials-client-notif-prefs-shelter-search-complete.md)
+**Latest checkpoint**: [2026-06-10-pet-status-history-complete.md](docs/checkpoints/2026-06-10-pet-status-history-complete.md)
 
 ### Merged Work Items (up to 2026-06-09)
 
@@ -186,7 +186,14 @@ Do not batch items that can be reviewed or merged independently.
 - `NOTIF-PREFS-DISPATCH-001` — `notificationPreferencesRepository` injected (optional) into `createSupabaseNotificationRepositories`; `isOptedOut` helper gates each `notifyXxx`; fan-out filters per-member; backwards-compatible
 - `FINANCIALS-WORKER-001` — `GET /shelters/:shelterId/financials`; `FinancialsRepository.getFinancials(shelterId)` → `FinancialsSummary`; Supabase impl aggregates donations by status + sponsorship counts/totals; registered before shelter profile check
 - `FINANCIALS-CLIENT-001` — `createFinancialsClient` in `@pic4paws/client` (`loadFinancials(shelterId)`)
-The Worker now has (as of 2026-06-10, PR #111):
+- `WEB-FINANCIALS-001` — Web payment reconciliation dashboard product boundary (5 states incl. loading + forbidden)
+- `MOBILE-FINANCIALS-001` — Mobile payment reconciliation dashboard product boundary
+- `PET-STATUS-HISTORY-001` — `pet_lifecycle_events` schema table; `recordLifecycleEvent` wired into archive/republish success path
+- `PET-STATUS-HISTORY-READ-001` — `GET /pets/:petId/status-history` Worker route; `getLifecycleEvents` on `PetArchiveRepository`
+- `PET-STATUS-HISTORY-CLIENT-001` — `createPetStatusHistoryClient` in `@pic4paws/client` (`loadStatusHistory(petId)`)
+- `WEB-PET-STATUS-HISTORY-001` — Web pet status history product boundary (5 states: idle/loading/loaded/forbidden/failed)
+- `MOBILE-PET-STATUS-HISTORY-001` — Mobile pet status history product boundary (5 states)
+The Worker now has (as of 2026-06-10, PR #121):
 
 - server-side Supabase SDK dependency composition
 - server-side R2/S3-compatible upload signer factory
@@ -276,6 +283,7 @@ The Worker now has (as of 2026-06-10, PR #111):
 - `ShelterSearchClient` (public read — `searchShelters(query?)`)
 - `NotificationPreferencesClient` (authenticated read+write — `loadPreferences()`, `updatePreferences(preferences[])`)
 - `FinancialsClient` (authenticated read — `loadFinancials(shelterId)`)
+- `PetStatusHistoryClient` (authenticated read — `loadStatusHistory(petId)`)
 
 Web/Mobile now have tested product boundaries for: media upload, pet media upload+attach,
 pet publish, pet draft, pet draft save flow, pet feed, pet profile, shelter profile,
@@ -292,7 +300,9 @@ shelter member management (shelter staff, 8 states: idle/loading/loaded/forbidde
 member_added/member_removed/action_failed — first combined read+write boundary),
 notifications (in-app, 4 states: idle/loading/loaded/failed, optimistic markRead, 4 trigger events),
 shelter search (public, 5 states: idle/loading/loaded/empty/failed),
-notification preferences (3 states: idle/loaded/failed, optimistic updatePreference).
+notification preferences (3 states: idle/loaded/failed, optimistic updatePreference),
+financials dashboard (shelter-side, 5 states: idle/loading/loaded/forbidden/failed),
+pet status history (shelter-side audit log, 5 states: idle/loading/loaded/forbidden/failed).
 
 The adopter end-to-end flow is fully wired at the boundary layer:
 **feed → pet profile → shelter profile → submit adoption application → view adoption status**.
@@ -337,16 +347,15 @@ The foundation now covers (as of PR #111):
 - Public shelter search with filters
 
 **Suggested next** (in priority order, updated 2026-06-10):
-1. **WEB-FINANCIALS-001** — Web payment reconciliation dashboard product boundary (completes the financials slice)
-2. **MOBILE-FINANCIALS-001** — Mobile payment reconciliation dashboard product boundary
-3. **Pet status transitions** — Audit logging / status history for archive/republish lifecycle
+1. **WORKER-ERROR-BOUNDARY-001** — Top-level try/catch in Worker dispatcher; uncaught throws return structured `{ status: 'internal_server_error' }` 500 instead of opaque Cloudflare error (audit finding 5)
+2. New feature slice TBD — all major domain areas covered at the boundary layer
 
 ## 6. Handoff Prompt For New Agent Session
 
 Use this prompt in a new AI agent session (Claude Web UI):
 
 ```text
-Read AGENTS.md, docs/agent-resume.md, docs/canonical/architecture-proposal.md, docs/canonical/sdd.md, and the latest checkpoint at docs/checkpoints/2026-06-10-financials-client-notif-prefs-shelter-search-complete.md.
+Read AGENTS.md, docs/agent-resume.md, docs/canonical/architecture-proposal.md, docs/canonical/sdd.md, and the latest checkpoint at docs/checkpoints/2026-06-10-pet-status-history-complete.md.
 
 Continue Pic4Paws V2 development from main using strict SDD/TDD:
 - 1 branch per work item: agent/<WORK-ITEM-ID>

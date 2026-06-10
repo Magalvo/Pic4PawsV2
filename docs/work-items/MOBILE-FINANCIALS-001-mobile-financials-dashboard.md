@@ -1,7 +1,8 @@
 ---
 id: MOBILE-FINANCIALS-001
 title: Mobile payment reconciliation dashboard product boundary
-status: in-progress
+status: done
+pr: 115
 ---
 
 ## Goal
