@@ -53,6 +53,10 @@ import {
   webNotificationPreferencesUiContent,
   type WebNotificationPreferencesUiContent,
 } from './notification-preferences';
+import {
+  webFinancialsDashboardUiContent,
+  type WebFinancialsDashboardUiContent,
+} from './financials';
 
 export type WebFoundationStatus = 'contract-ready';
 
@@ -92,6 +96,7 @@ export type WebFoundationContent = {
   adoptionDonorList: Pick<WebAdoptionDonorListUiContent, 'title' | 'description' | 'status'>;
   shelterSearch: Pick<WebShelterSearchUiContent, 'title' | 'description' | 'status'>;
   notificationPreferences: Pick<WebNotificationPreferencesUiContent, 'title' | 'description' | 'status'>;
+  financialsDashboard: Pick<WebFinancialsDashboardUiContent, 'title' | 'description' | 'status'>;
   readiness: Array<{
     id: 'database' | 'auth' | 'pets' | 'payments' | 'media' | 'workers';
     label: string;
@@ -236,6 +241,11 @@ export const webFoundationContent: WebFoundationContent = {
     title: webNotificationPreferencesUiContent.title,
     description: webNotificationPreferencesUiContent.description,
     status: webNotificationPreferencesUiContent.status,
+  },
+  financialsDashboard: {
+    title: webFinancialsDashboardUiContent.title,
+    description: webFinancialsDashboardUiContent.description,
+    status: webFinancialsDashboardUiContent.status,
   },
   readiness: [
     {
