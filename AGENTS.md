@@ -76,6 +76,16 @@ The legacy app under `reference/` is strictly functional reference. Use it to un
 - `npm run test`
 - `npm run build`
 
+## Periodic Audits
+
+- A full independent SDD audit runs every **15 merged PRs**, via the `/sdd-audit` command
+  in a dedicated fresh session (Fable 5) — never in the dev session that wrote the code.
+- Event-triggered audits override the counter: before merging security- or
+  payment-sensitive work (payment provider adapters, auth, RLS/migrations, GDPR data
+  handling), at work-track boundaries, and before any deploy.
+- Reports live in `docs/audits/` (dated). The auditor never remediates — findings return
+  to the dev session as prioritized next steps.
+
 ## Hard Rules
 
 - Do not hardcode secrets or API keys.
