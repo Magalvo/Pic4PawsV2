@@ -29,7 +29,7 @@ The app must support PT-PT natively, be ready for i18n, comply with GDPR, and pr
 - Authorization must exist at application and database-policy level.
 - Payment state must come from verified server-side PSP events.
 - Personal and sensitive data must be minimized, encrypted where appropriate, and separated from public feed data.
-- Every feature starts with a work item, work spec and failing test.
+- Every feature starts with an enriched work item (Goal / States / Contract / Affected files) and a failing test.
 
 ## 4. Shared Type Conventions
 

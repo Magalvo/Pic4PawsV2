@@ -23,6 +23,7 @@ describe('mobile pet archive UI', () => {
     const ui = createMobilePetArchiveUi({
       petArchiveClient: {
         archivePet: async () => { throw new Error('should not be called'); },
+        republishPet: async () => { throw new Error('should not be called'); },
       },
     });
 

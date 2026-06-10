@@ -146,7 +146,7 @@ describe('mobile pet media upload UI flow', () => {
         uploadAndAttachPetMedia: async () => ({
           ok: false,
           phase: 'upload_intent',
-          status: 'upload_intent_rejected',
+          status: 'actor_not_authorized',
           reasons: ['actor_cannot_manage_shelter', 'r2-secret-key', 'bearer user-token-marker'],
         }),
       },

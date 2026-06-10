@@ -39,13 +39,12 @@ For each new work item:
 1. `git switch main`
 2. `git pull --ff-only origin main`
 3. `git switch -c agent/<WORK-ITEM-ID>`
-4. create or update the work item in `docs/work-items/`
-5. create or update the work spec in `docs/work-specs/`
-6. write the failing test first
-7. implement the smallest change that passes
-8. run validation
-9. commit one coherent checkpoint
-10. push branch and open PR
+4. create or enrich the work item in `docs/work-items/` with Goal, States, Contract and Affected files sections
+5. write the failing test first
+6. implement the smallest change that passes
+7. run validation
+8. commit one coherent checkpoint
+9. push branch and open PR
 
 ### Exception: batch branch
 

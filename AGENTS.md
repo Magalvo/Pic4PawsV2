@@ -12,7 +12,7 @@ The agent acts as a Senior Principal Engineer, Software Architect and pair progr
 
 ## Working Method
 
-This codebase follows Spec-Driven Development. Features should start from a work item with acceptance criteria, then a work spec, then a failing test, then implementation.
+This codebase follows Spec-Driven Development. Features should start from an enriched work item (Goal / States / Contract / Affected files), then a failing test, then implementation.
 
 Current required pipeline:
 
@@ -20,7 +20,7 @@ Current required pipeline:
 2. SDD in `docs/canonical/sdd.md`. Approved.
 3. Strict TDD feature cycles.
 
-Do not implement product features without a work item, work spec and failing test first.
+Do not implement product features without an enriched work item (Goal / States / Contract / Affected files) and failing test first.
 
 ## Git Workflow
 

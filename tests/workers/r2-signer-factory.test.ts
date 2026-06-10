@@ -28,6 +28,12 @@ const validConfig: EnvironmentConfig = {
     paymentWebhookPath: '/webhooks/payments',
     mediaUploadPath: '/uploads/media',
     petDraftsPath: '/pets/drafts',
+    petFeedPath: '/pets',
+    shelterPath: '/shelters',
+    adoptionsPath: '/adoptions',
+    donationsPath: '/donations',
+    sponsorshipsPath: '/sponsorships',
+    notificationsPath: '/notifications',
   },
   payments: {
     primaryProvider: 'stripe',

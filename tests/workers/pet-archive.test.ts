@@ -20,7 +20,7 @@ const makeShelterMemberActor = (shelterId: string): AuthenticatedActor => ({
   authUserId: 'auth-user-1',
   role: 'shelter_member' as const,
   status: 'active' as const,
-  memberships: [{ shelterId, role: 'shelter_member', deletedAt: null }],
+  memberships: [{ id: 'membership-1', userId: 'actor-1', shelterId, role: 'shelter_member', deletedAt: null }],
 });
 
 const makeNonMemberActor = (): AuthenticatedActor => ({

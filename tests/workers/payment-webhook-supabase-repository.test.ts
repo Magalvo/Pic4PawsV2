@@ -6,11 +6,17 @@ const makeQueryChain = (
   overrides: Partial<SupabaseTableQueryLike> = {},
 ): SupabaseTableQueryLike => {
   const chain: SupabaseTableQueryLike = {
-    then: (resolve: (value: SupabaseQueryResult<unknown>) => unknown) =>
-      Promise.resolve(resolve({ data: null, error: null })),
+    then: (
+      onfulfilled?: ((value: SupabaseQueryResult<unknown>) => unknown) | null,
+    ) =>
+      (Promise.resolve({ data: null, error: null }) as Promise<SupabaseQueryResult<unknown>>).then(
+        onfulfilled as never,
+      ) as never,
     select: vi.fn().mockReturnThis(),
     insert: vi.fn().mockReturnThis(),
     update: vi.fn().mockReturnThis(),
+    upsert: vi.fn().mockReturnThis(),
+    neq: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
     in: vi.fn().mockReturnThis(),
     is: vi.fn().mockReturnThis(),
@@ -77,8 +83,12 @@ describe('createSupabasePaymentWebhookRepositories', () => {
 
   it('updateDonationStatus updates donation_transactions and returns found: true', async () => {
     const chain = makeQueryChain({
-      then: (resolve: (value: SupabaseQueryResult<unknown>) => unknown) =>
-        Promise.resolve(resolve({ data: [{ id: 'row' }], error: null, count: 1 } as never)),
+      then: (
+        onfulfilled?: ((value: SupabaseQueryResult<unknown>) => unknown) | null,
+      ) =>
+        (Promise.resolve({ data: [{ id: 'row' }], error: null, count: 1 }) as Promise<SupabaseQueryResult<unknown>>).then(
+          onfulfilled as never,
+        ) as never,
     });
     const client = makeClient(chain);
     const { paymentWebhookRepository } = createSupabasePaymentWebhookRepositories({

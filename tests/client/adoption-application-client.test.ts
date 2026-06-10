@@ -23,7 +23,7 @@ const makeClient = (
     workerBaseUrl: 'https://workers.pic4paws.pt',
     adoptionsPath: '/adoptions',
     getAccessToken,
-    fetch,
+    fetch: fetch as never,
   });
 
 const validInput: AdoptionApplicationClientInput = {

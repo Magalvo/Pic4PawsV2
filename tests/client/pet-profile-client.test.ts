@@ -32,7 +32,7 @@ const makeClient = (fetch: ReturnType<typeof vi.fn>) =>
   createPetProfileClient({
     workerBaseUrl: 'https://workers.pic4paws.pt',
     petFeedPath: '/pets',
-    fetch,
+    fetch: fetch as never,
   });
 
 describe('PetProfileClient contract', () => {

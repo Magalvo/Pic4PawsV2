@@ -22,7 +22,7 @@
   "scripts": {
     "dev": "turbo run dev --parallel",
     "build": "turbo run build",
-    "typecheck": "turbo run typecheck",
+    "typecheck": "turbo run typecheck && npx tsc --noEmit -p tests/tsconfig.json",
     "lint": "turbo run lint && eslint .",
     "test": "turbo run test && vitest run",
     "format": "prettier --write ."

@@ -22,7 +22,7 @@ const makeClient = (fetch: ReturnType<typeof vi.fn>, token: string | null = 'use
     workerBaseUrl: 'https://workers.pic4paws.pt',
     notificationsPath: '/notifications',
     getAccessToken: async () => token,
-    fetch,
+    fetch: fetch as never,
   });
 
 describe('NotificationPreferencesClient — loadPreferences', () => {

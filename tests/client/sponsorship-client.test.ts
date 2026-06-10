@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { createSponsorshipClient } from '../../packages/client/src/index';
 
 const makeFetch = (
-  response: Partial<Response> & { body?: unknown },
+  response: { ok?: boolean; status?: number; body?: unknown },
 ): typeof globalThis.fetch => {
   return vi.fn().mockResolvedValue({
     ok: response.ok ?? true,

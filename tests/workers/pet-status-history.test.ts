@@ -14,7 +14,7 @@ const makeShelterMemberActor = (shelterId: string, actorId = 'actor-1'): Authent
   authUserId: 'auth-user-1',
   role: 'shelter_member' as const,
   status: 'active' as const,
-  memberships: [{ shelterId, role: 'shelter_member', deletedAt: null }],
+  memberships: [{ id: 'membership-1', userId: actorId, shelterId, role: 'shelter_member', deletedAt: null }],
 });
 
 const makeAuthenticator = (actor: AuthenticatedActor | null): WorkerPetDraftAuthenticator =>
@@ -32,6 +32,7 @@ const makeRepository = (overrides?: Partial<PetArchiveRepository>): PetArchiveRe
   archivePet: async ({ petId }) => ({ petId }),
   republishPet: async ({ petId }) => ({ petId }),
   recordLifecycleEvent: vi.fn().mockResolvedValue(undefined),
+  getLifecycleEvents: async () => [],
   ...overrides,
 });
 

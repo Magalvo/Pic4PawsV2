@@ -13,7 +13,7 @@ const makeInput = (fetchFn: ReturnType<typeof vi.fn>, token: string | null = 'va
   workerBaseUrl: 'https://worker.test',
   adoptionsPath: '/adoptions' as const,
   getAccessToken: vi.fn().mockResolvedValue(token),
-  fetch: fetchFn,
+  fetch: fetchFn as never,
 });
 
 describe('createAdoptionDonorListClient', () => {
