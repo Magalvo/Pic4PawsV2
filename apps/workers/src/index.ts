@@ -582,10 +582,10 @@ const authenticateWorkerActor = async (
   return { ok: true as const, actor };
 };
 
-export const handleWorkerRequest = async (
+const _dispatchWorkerRequest = async (
   request: Request,
   env: WorkerEnv,
-  dependencies: WorkerRequestDependencies = {},
+  dependencies: WorkerRequestDependencies,
 ): Promise<Response> => {
   const parsedConfig = parseEnvironmentConfig(env);
 
@@ -1076,6 +1076,18 @@ export const handleWorkerRequest = async (
   }
 
   return jsonResponse({ message: 'Not found' }, { status: 404 });
+};
+
+export const handleWorkerRequest = async (
+  request: Request,
+  env: WorkerEnv,
+  dependencies: WorkerRequestDependencies = {},
+): Promise<Response> => {
+  try {
+    return await _dispatchWorkerRequest(request, env, dependencies);
+  } catch {
+    return jsonResponse({ status: 'internal_server_error' }, { status: 500 });
+  }
 };
 
 export default {
