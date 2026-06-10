@@ -67,20 +67,28 @@ Adoption view — full slice (Worker + client + Web/Mobile):
 Shelter member management — full slice (Worker + client + Web/Mobile, first 8-state combined read+write boundary):
 `SHELTER-MEMBER-WORKER-001`, `SHELTER-MEMBER-CLIENT-001`, `WEB-SHELTER-MEMBER-001`, `MOBILE-SHELTER-MEMBER-001`.
 
+Notification + shelter-search + notification-preferences slices (PRs #89–#108):
+`NOTIFICATION-WORKER-001`, `NOTIFICATION-CLIENT-001`, `WEB-NOTIFICATION-001`, `MOBILE-NOTIFICATION-001`,
+`DONOR-ADOPTION-LIST-WORKER-001`, `DONOR-ADOPTION-LIST-CLIENT-001`, `WEB-DONOR-ADOPTION-LIST-001`, `MOBILE-DONOR-ADOPTION-LIST-001`,
+`PET-REPUBLISH-WORKER-001`, `PET-REPUBLISH-CLIENT-001`, `WEB-PET-REPUBLISH-001`, `MOBILE-PET-REPUBLISH-001`,
+`SHELTER-SEARCH-WORKER-001`, `SHELTER-SEARCH-CLIENT-001`, `WEB-SHELTER-SEARCH-001`, `MOBILE-SHELTER-SEARCH-001`,
+`NOTIF-PREFS-WORKER-001`, `NOTIF-PREFS-CLIENT-001`, `WEB-NOTIF-PREFS-001`, `MOBILE-NOTIF-PREFS-001`,
+`NOTIF-PREFS-DISPATCH-001`.
+
+Financials + pet status history slices (PRs #110–#121):
+`FINANCIALS-WORKER-001`, `FINANCIALS-CLIENT-001`, `WEB-FINANCIALS-001`, `MOBILE-FINANCIALS-001`,
+`PET-STATUS-HISTORY-001`, `PET-STATUS-HISTORY-READ-001`, `PET-STATUS-HISTORY-CLIENT-001`,
+`WEB-PET-STATUS-HISTORY-001`, `MOBILE-PET-STATUS-HISTORY-001`.
+
 ## Current Focus
 
-The shelter member slice is now fully wired end-to-end (Worker + client + Web + Mobile, PRs #85–#88).
-First combined read+write 8-state boundary. Soft-delete for removal. Route ordering enforced.
-938 tests.
+All major domain slices are fully wired end-to-end at the boundary layer. 1287 tests (146 files).
+Main branch HEAD: PR #121.
 
-The foundation now covers all write paths, all public read paths, all shelter-side list
-views (adoption, donation, sponsorship), the donor-facing sponsorship list, the full
-sponsorship lifecycle, adoption status management, the adoption view slice, and shelter
-member management (first 8-state combined read+write boundary).
+Open: `WORKER-ERROR-BOUNDARY-001` — top-level try/catch in Worker dispatcher (audit finding 5).
 
 Suggested next:
-1. **Pet archival** — `PET-ARCHIVE-WORKER-001` (`PATCH /pets/:petId/status` → `{ status: 'archived' }`), shelter-membership-gated, client + Web/Mobile.
-2. **Notification delivery** — Worker-side dispatch + client read boundary.
+1. **WORKER-ERROR-BOUNDARY-001** — Worker dispatcher error boundary (structured 500 on uncaught throw).
 
 ## Branching Convention
 

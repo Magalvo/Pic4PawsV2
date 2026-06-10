@@ -1,7 +1,8 @@
 ---
 id: PET-STATUS-HISTORY-001
 title: Pet lifecycle event audit log
-status: in-progress
+status: done
+pr: 117
 ---
 
 ## Goal
