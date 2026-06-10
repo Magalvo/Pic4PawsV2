@@ -1,7 +1,8 @@
 ---
 id: WEB-FINANCIALS-001
 title: Web payment reconciliation dashboard product boundary
-status: in-progress
+status: done
+pr: 113
 ---
 
 ## Goal
