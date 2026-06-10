@@ -236,6 +236,22 @@ export const pets = pgTable('pets', {
   ...auditColumns,
 });
 
+export const petLifecycleEvents = pgTable('pet_lifecycle_events', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  petId: uuid('pet_id')
+    .notNull()
+    .references(() => pets.id),
+  shelterId: uuid('shelter_id')
+    .notNull()
+    .references(() => shelters.id),
+  actorUserId: uuid('actor_user_id')
+    .notNull()
+    .references(() => users.id),
+  fromStatus: text('from_status').notNull(),
+  toStatus: text('to_status').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull(),
+});
+
 export const adoptionApplications = pgTable('adoption_applications', {
   id: uuid('id').primaryKey().defaultRandom(),
   petId: uuid('pet_id')

@@ -9,10 +9,20 @@ export type PetArchiveRecord = {
   lifecycleStatus: string;
 };
 
+export type PetLifecycleEventInput = {
+  petId: string;
+  shelterId: string;
+  actorUserId: string;
+  fromStatus: string;
+  toStatus: string;
+  now: string;
+};
+
 export type PetArchiveRepository = {
   getPetForArchive: (petId: string) => Promise<PetArchiveRecord | null>;
   archivePet: (input: { petId: string; now: string }) => Promise<{ petId: string } | null>;
   republishPet: (input: { petId: string; now: string }) => Promise<{ petId: string } | null>;
+  recordLifecycleEvent: (input: PetLifecycleEventInput) => Promise<void>;
 };
 
 export type HandleWorkerPetArchiveRequestInput = {
@@ -148,6 +158,15 @@ export const handleWorkerPetArchiveRequest = async ({
       return jsonResponse({ status: 'pet_not_archived' }, { status: 409 });
     }
 
+    await petArchiveRepository.recordLifecycleEvent({
+      petId,
+      shelterId: pet.shelterId,
+      actorUserId: actor.id,
+      fromStatus: pet.lifecycleStatus,
+      toStatus: 'published',
+      now,
+    });
+
     return jsonResponse({ status: 'ok', petId: result.petId }, { status: 200 });
   }
 
@@ -156,6 +175,15 @@ export const handleWorkerPetArchiveRequest = async ({
   if (!result) {
     return jsonResponse({ status: 'pet_already_archived' }, { status: 409 });
   }
+
+  await petArchiveRepository.recordLifecycleEvent({
+    petId,
+    shelterId: pet.shelterId,
+    actorUserId: actor.id,
+    fromStatus: pet.lifecycleStatus,
+    toStatus: 'archived',
+    now,
+  });
 
   return jsonResponse({ status: 'ok', petId: result.petId }, { status: 200 });
 };
