@@ -4,7 +4,6 @@ import {
 } from '../../packages/client/src/index';
 import type {
   FinancialsClient,
-  LoadFinancialsClientResult,
   FinancialsClientSummary,
 } from '../../packages/client/src/index';
 
