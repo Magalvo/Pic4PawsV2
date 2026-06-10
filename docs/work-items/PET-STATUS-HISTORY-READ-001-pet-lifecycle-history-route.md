@@ -1,7 +1,8 @@
 ---
 id: PET-STATUS-HISTORY-READ-001
 title: Pet lifecycle history read route
-status: in-progress
+status: done
+pr: 118
 ---
 
 ## Goal
