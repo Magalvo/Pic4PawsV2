@@ -4688,3 +4688,154 @@ export const createMediaUploadFlowClient = (
     },
   };
 };
+
+// ─── Financials Client ────────────────────────────────────────────────────────
+
+export type FinancialsClientDonationBreakdown = {
+  status: string;
+  count: number;
+  totalCents: number;
+};
+
+export type FinancialsClientSummary = {
+  shelterId: string;
+  currency: string;
+  donations: {
+    count: number;
+    paidTotalCents: number;
+    byStatus: FinancialsClientDonationBreakdown[];
+  };
+  sponsorships: {
+    activeCount: number;
+    pausedCount: number;
+    cancelledCount: number;
+    activeTotalCents: number;
+  };
+};
+
+export type LoadFinancialsClientSuccess = {
+  ok: true;
+  status: 'ok';
+  summary: FinancialsClientSummary;
+};
+
+export type LoadFinancialsClientFailureStatus =
+  | 'unauthenticated'
+  | 'forbidden'
+  | 'financials_repository_not_configured'
+  | 'auth_adapter_not_configured'
+  | 'worker_request_failed'
+  | 'worker_response_invalid';
+
+export type LoadFinancialsClientFailure = {
+  ok: false;
+  status: LoadFinancialsClientFailureStatus;
+  reasons: string[];
+};
+
+export type LoadFinancialsClientResult =
+  | LoadFinancialsClientSuccess
+  | LoadFinancialsClientFailure;
+
+export type CreateFinancialsClientInput = {
+  workerBaseUrl: string;
+  shelterPath: `/${string}`;
+  getAccessToken: () => Promise<string | null>;
+  fetch: MediaUploadClientFetch;
+};
+
+export type FinancialsClient = {
+  loadFinancials: (shelterId: string) => Promise<LoadFinancialsClientResult>;
+};
+
+const parseFinancialsFailureStatus = (
+  body: Record<string, unknown> | null,
+): LoadFinancialsClientFailureStatus => {
+  const status = body?.status;
+  if (status === 'forbidden') return 'forbidden';
+  if (
+    status === 'unauthenticated' ||
+    status === 'financials_repository_not_configured' ||
+    status === 'auth_adapter_not_configured'
+  ) {
+    return status;
+  }
+  return 'worker_request_failed';
+};
+
+const parseFinancialsSuccess = (
+  body: Record<string, unknown> | null,
+): LoadFinancialsClientSuccess | null => {
+  if (!body || body.status !== 'ok') return null;
+  if (typeof body.shelterId !== 'string') return null;
+  if (typeof body.currency !== 'string') return null;
+
+  const donations = body.donations as Record<string, unknown> | undefined;
+  const sponsorships = body.sponsorships as Record<string, unknown> | undefined;
+  if (!donations || !sponsorships) return null;
+
+  return {
+    ok: true,
+    status: 'ok',
+    summary: {
+      shelterId: body.shelterId,
+      currency: body.currency,
+      donations: {
+        count: (donations.count as number) ?? 0,
+        paidTotalCents: (donations.paidTotalCents as number) ?? 0,
+        byStatus: Array.isArray(donations.byStatus)
+          ? (donations.byStatus as FinancialsClientDonationBreakdown[])
+          : [],
+      },
+      sponsorships: {
+        activeCount: (sponsorships.activeCount as number) ?? 0,
+        pausedCount: (sponsorships.pausedCount as number) ?? 0,
+        cancelledCount: (sponsorships.cancelledCount as number) ?? 0,
+        activeTotalCents: (sponsorships.activeTotalCents as number) ?? 0,
+      },
+    },
+  };
+};
+
+export const createFinancialsClient = ({
+  workerBaseUrl,
+  shelterPath,
+  getAccessToken,
+  fetch,
+}: CreateFinancialsClientInput): FinancialsClient => ({
+  loadFinancials: async (shelterId: string) => {
+    const accessToken = await getAccessToken();
+
+    if (!accessToken?.trim()) {
+      return { ok: false, status: 'unauthenticated', reasons: ['missing_access_token'] };
+    }
+
+    const url = createWorkerSubUrl(workerBaseUrl, shelterPath, shelterId, 'financials');
+    let response: Response;
+
+    try {
+      response = await fetch(url, {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+    } catch {
+      return { ok: false, status: 'worker_request_failed', reasons: ['network_error'] };
+    }
+
+    const body = await parseJsonResponse(response);
+
+    if (!response.ok) {
+      const status = parseFinancialsFailureStatus(body);
+      const reasons = Array.isArray(body?.reasons) ? parseReasons(body) : [status];
+      return { ok: false, status, reasons: sanitizeReasons(reasons, status) };
+    }
+
+    const success = parseFinancialsSuccess(body);
+
+    if (!success) {
+      return { ok: false, status: 'worker_response_invalid', reasons: ['invalid_worker_response'] };
+    }
+
+    return success;
+  },
+});
