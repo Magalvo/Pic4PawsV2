@@ -97,6 +97,7 @@ const createRepository = () => {
 
   const repository: PetDraftRepository = {
     loadMediaAssets: async (mediaIds) => (mediaIds.includes('media-1') ? [publicImage] : []),
+    loadDraft: async () => null,
     createDraft: async (insert) => {
       createdDrafts.push(insert);
 

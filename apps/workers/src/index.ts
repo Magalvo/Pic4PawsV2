@@ -57,6 +57,7 @@ import {
   handleWorkerPetDraftRequest,
   matchWorkerPetDraftRoute,
 } from './pet-drafts';
+import { handleWorkerPetDraftLoadRequest } from './pet-draft-load';
 import {
   handleWorkerPetArchiveRequest,
   handleWorkerPetStatusHistoryRequest,
@@ -143,10 +144,13 @@ export type {
 export { handleWorkerPetDraftRequest, matchWorkerPetDraftRoute } from './pet-drafts';
 export type {
   PetDraftRepository,
+  PetDraftLoadRecord,
   PetMediaAttachRepository,
   PetPublishRepository,
   WorkerPetDraftAuthenticator,
 } from './pet-drafts';
+export { handleWorkerPetDraftLoadRequest } from './pet-draft-load';
+export type { HandleWorkerPetDraftLoadRequestInput } from './pet-draft-load';
 export { handleWorkerPetFeedRequest } from './pet-feed';
 export type {
   PetFeedQuery,
@@ -766,12 +770,6 @@ const _dispatchWorkerRequest = async (
   }
 
   if (petDraftRoute.matched) {
-    const payload = await parseJsonBody(request);
-
-    if (payload === null) {
-      return jsonResponse({ status: 'invalid_json' }, { status: 400 });
-    }
-
     let resolvedDependencies: WorkerRequestDependencies;
 
     try {
@@ -782,6 +780,21 @@ const _dispatchWorkerRequest = async (
       }
 
       throw error;
+    }
+
+    if (request.method === 'GET' && petDraftRoute.operation === 'update') {
+      return handleWorkerPetDraftLoadRequest({
+        request,
+        petId: petDraftRoute.petId,
+        petDraftRepository: resolvedDependencies.petDraftRepository,
+        authenticator: resolvedDependencies.petDraftAuthenticator,
+      });
+    }
+
+    const payload = await parseJsonBody(request);
+
+    if (payload === null) {
+      return jsonResponse({ status: 'invalid_json' }, { status: 400 });
     }
 
     return handleWorkerPetDraftRequest({

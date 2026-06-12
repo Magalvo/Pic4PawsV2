@@ -27,8 +27,14 @@ export type WorkerPetDraftAuthenticator = (
   input: WorkerPetDraftAuthenticatorInput,
 ) => Promise<AuthenticatedActor | null>;
 
+export type PetDraftLoadRecord = PetDraftRecord & {
+  createdAt: string;
+  updatedAt: string;
+};
+
 export type PetDraftRepository = {
   loadMediaAssets: (mediaIds: string[], shelterId: string) => Promise<PetMediaAssetRecord[]>;
+  loadDraft: (petId: string) => Promise<PetDraftLoadRecord | null>;
   createDraft: (
     insert: PetDraftInsertContract,
     actor: AuthenticatedActor,

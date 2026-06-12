@@ -2,6 +2,8 @@ import type {
   PetDraftClient,
   PetDraftClientDraftInput,
   PetDraftClientFailureStatus,
+  LoadPetDraftClientDraft,
+  LoadPetDraftClientFailureStatus,
 } from '@pic4paws/client';
 
 export type MobilePetDraftUiState = 'ready' | 'saving' | 'saved' | 'failed';
@@ -55,14 +57,46 @@ export type MobilePetDraftResultViewModel =
       canRetry: true;
     };
 
+export type MobilePetDraftLoadedState = {
+  state: 'loaded';
+  draft: LoadPetDraftClientDraft;
+};
+
+export type MobilePetDraftLoadNotFoundState = {
+  state: 'not_found';
+  title: string;
+  message: string;
+};
+
+export type MobilePetDraftLoadForbiddenState = {
+  state: 'forbidden';
+  title: string;
+  message: string;
+};
+
+export type MobilePetDraftLoadFailedState = {
+  state: 'failed';
+  title: string;
+  message: string;
+  status: LoadPetDraftClientFailureStatus;
+  reasons: string[];
+};
+
+export type MobilePetDraftLoadViewModel =
+  | MobilePetDraftLoadedState
+  | MobilePetDraftLoadNotFoundState
+  | MobilePetDraftLoadForbiddenState
+  | MobilePetDraftLoadFailedState;
+
 export type CreateMobilePetDraftUiInput = {
-  draftClient: Pick<PetDraftClient, 'createPetDraft' | 'updatePetDraft'>;
+  draftClient: Pick<PetDraftClient, 'createPetDraft' | 'updatePetDraft' | 'loadPetDraft'>;
 };
 
 export type MobilePetDraftUi = {
   getInitialState: (context: MobilePetDraftContext) => MobilePetDraftReadyViewModel;
   createDraft: (input: { draft: PetDraftClientDraftInput }) => Promise<MobilePetDraftResultViewModel>;
   updateDraft: (input: { draft: PetDraftClientDraftInput }) => Promise<MobilePetDraftResultViewModel>;
+  loadDraft: (petId: string) => Promise<MobilePetDraftLoadViewModel>;
 };
 
 type PetNameSource = {
@@ -131,7 +165,7 @@ const isSafeReason = (reason: string): boolean => {
 
 const sanitizeReasons = (
   reasons: string[],
-  fallback: PetDraftClientFailureStatus,
+  fallback: string,
 ): string[] => {
   const safeReasons = reasons.filter(isSafeReason);
 
@@ -165,6 +199,28 @@ const failureCopyByStatus: Record<PetDraftClientFailureStatus, { title: string; 
       message: 'O serviço de rascunhos não respondeu como esperado. Tenta novamente.',
     },
   };
+
+const failureLoadCopyByStatus: Record<
+  Exclude<LoadPetDraftClientFailureStatus, 'pet_draft_not_found' | 'forbidden'>,
+  { title: string; message: string }
+> = {
+  unauthenticated: {
+    title: 'Inicia sessão para continuar',
+    message: 'Precisas de uma sessão ativa para carregar este rascunho.',
+  },
+  auth_adapter_not_configured: {
+    title: 'Carregar rascunho indisponível',
+    message: 'O serviço de autenticação ainda não está configurado.',
+  },
+  pet_draft_repository_not_configured: {
+    title: 'Carregar rascunho indisponível',
+    message: 'O serviço de rascunhos ainda não está configurado.',
+  },
+  worker_request_failed: {
+    title: 'Não foi possível carregar',
+    message: 'O serviço de rascunhos não respondeu como esperado. Tenta novamente.',
+  },
+};
 
 const sanitizeDraftInput = (draft: PetDraftClientDraftInput): PetDraftClientDraftInput => ({
   petId: draft.petId,
@@ -244,5 +300,38 @@ export const createMobilePetDraftUi = ({
     },
     createDraft: ({ draft }) => saveDraft(draft, 'create'),
     updateDraft: ({ draft }) => saveDraft(draft, 'update'),
+    loadDraft: async (petId) => {
+      const result = await draftClient.loadPetDraft(petId);
+
+      if (result.ok) {
+        return { state: 'loaded', draft: result.draft };
+      }
+
+      if (result.status === 'pet_draft_not_found') {
+        return {
+          state: 'not_found',
+          title: 'Rascunho não encontrado',
+          message: 'Este rascunho não existe ou foi eliminado.',
+        };
+      }
+
+      if (result.status === 'forbidden') {
+        return {
+          state: 'forbidden',
+          title: 'Sem permissão para ver',
+          message: 'A tua conta não tem permissão para aceder a este rascunho.',
+        };
+      }
+
+      const copy = failureLoadCopyByStatus[result.status];
+
+      return {
+        state: 'failed',
+        title: copy.title,
+        message: copy.message,
+        status: result.status,
+        reasons: sanitizeReasons(result.reasons, result.status),
+      };
+    },
   };
 };
