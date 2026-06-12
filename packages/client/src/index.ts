@@ -1374,6 +1374,7 @@ export type PetFeedPet = {
 
 export type PetFeedClientQuery = {
   species?: PetLifecycleSpecies | null;
+  location?: string | null;
   limit?: number | null;
   offset?: number | null;
 };
@@ -1435,6 +1436,7 @@ export const createPetFeedClient = ({
     const url = new URL(base);
 
     if (query.species != null) url.searchParams.set('species', query.species);
+    if (query.location != null) url.searchParams.set('location', query.location);
     if (query.limit != null) url.searchParams.set('limit', String(query.limit));
     if (query.offset != null) url.searchParams.set('offset', String(query.offset));
 

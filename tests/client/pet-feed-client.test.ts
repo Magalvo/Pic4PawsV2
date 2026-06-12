@@ -54,6 +54,35 @@ describe('PetFeedClient contract', () => {
     expect(new URL(calledUrl).searchParams.get('species')).toBe('dog');
   });
 
+  it('adds location query param when location is provided', async () => {
+    const fetch = makeFetch(200, { status: 'ok', pets: [], total: 0 });
+
+    await makeClient(fetch).loadFeed({ location: 'Lisboa' });
+
+    const calledUrl = fetch.mock.calls[0][0] as string;
+    expect(new URL(calledUrl).searchParams.get('location')).toBe('Lisboa');
+  });
+
+  it('omits location param when location is null', async () => {
+    const fetch = makeFetch(200, { status: 'ok', pets: [], total: 0 });
+
+    await makeClient(fetch).loadFeed({ location: null });
+
+    const calledUrl = fetch.mock.calls[0][0] as string;
+    expect(new URL(calledUrl).searchParams.has('location')).toBe(false);
+  });
+
+  it('adds both species and location params when both are provided', async () => {
+    const fetch = makeFetch(200, { status: 'ok', pets: [], total: 0 });
+
+    await makeClient(fetch).loadFeed({ species: 'cat', location: 'Porto' });
+
+    const calledUrl = fetch.mock.calls[0][0] as string;
+    const url = new URL(calledUrl);
+    expect(url.searchParams.get('species')).toBe('cat');
+    expect(url.searchParams.get('location')).toBe('Porto');
+  });
+
   it('adds limit and offset query params when provided', async () => {
     const fetch = makeFetch(200, { status: 'ok', pets: [], total: 0 });
 

@@ -95,6 +95,50 @@ describe('GET /pets — pet feed', () => {
     );
   });
 
+  it('passes location filter to the repository', async () => {
+    const repo = makeFeedRepo({ pets: [], total: 0 });
+    const request = new Request('https://workers.pic4paws.pt/pets?location=Lisboa');
+
+    await handleWorkerRequest(request, validEnv, { petFeedRepository: repo });
+
+    expect(repo.loadPublishedPets).toHaveBeenCalledWith(
+      expect.objectContaining({ location: 'Lisboa' }),
+    );
+  });
+
+  it('trims whitespace from location filter', async () => {
+    const repo = makeFeedRepo({ pets: [], total: 0 });
+    const request = new Request('https://workers.pic4paws.pt/pets?location=%20Porto%20');
+
+    await handleWorkerRequest(request, validEnv, { petFeedRepository: repo });
+
+    expect(repo.loadPublishedPets).toHaveBeenCalledWith(
+      expect.objectContaining({ location: 'Porto' }),
+    );
+  });
+
+  it('treats blank location as absent', async () => {
+    const repo = makeFeedRepo({ pets: [], total: 0 });
+    const request = new Request('https://workers.pic4paws.pt/pets?location=');
+
+    await handleWorkerRequest(request, validEnv, { petFeedRepository: repo });
+
+    expect(repo.loadPublishedPets).toHaveBeenCalledWith(
+      expect.objectContaining({ location: null }),
+    );
+  });
+
+  it('passes combined species and location filters to the repository', async () => {
+    const repo = makeFeedRepo({ pets: [], total: 0 });
+    const request = new Request('https://workers.pic4paws.pt/pets?species=cat&location=Braga');
+
+    await handleWorkerRequest(request, validEnv, { petFeedRepository: repo });
+
+    expect(repo.loadPublishedPets).toHaveBeenCalledWith(
+      expect.objectContaining({ species: 'cat', location: 'Braga' }),
+    );
+  });
+
   it('returns 501 when petFeedRepository is not injected', async () => {
     const request = new Request('https://workers.pic4paws.pt/pets');
 
