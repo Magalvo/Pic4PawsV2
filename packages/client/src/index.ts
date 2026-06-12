@@ -5258,3 +5258,120 @@ export const createShelterPetListClient = ({
     return success;
   },
 });
+
+// ─── Shelter Registration ─────────────────────────────────────────────────────
+
+export type ShelterRegistrationClientInput = {
+  name: string;
+  kind: string;
+  city: string;
+  publicEmail?: string | null;
+  publicPhone?: string | null;
+  description?: string | null;
+  district?: string | null;
+};
+
+export type RegisterShelterClientSuccess = {
+  ok: true;
+  status: 'registered';
+  shelterId: string;
+};
+
+export type RegisterShelterClientFailureStatus =
+  | 'unauthenticated'
+  | 'invalid_payload'
+  | 'auth_adapter_not_configured'
+  | 'shelter_registration_repository_not_configured'
+  | 'worker_request_failed';
+
+export type RegisterShelterClientFailure = {
+  ok: false;
+  status: RegisterShelterClientFailureStatus;
+  reasons: string[];
+};
+
+export type RegisterShelterClientResult = RegisterShelterClientSuccess | RegisterShelterClientFailure;
+
+export type CreateShelterRegistrationClientInput = {
+  workerBaseUrl: string;
+  shelterPath: `/${string}`;
+  getAccessToken: () => Promise<string | null>;
+  fetch: typeof globalThis.fetch;
+};
+
+export type ShelterRegistrationClient = {
+  registerShelter: (input: ShelterRegistrationClientInput) => Promise<RegisterShelterClientResult>;
+};
+
+const parseRegisterShelterFailureStatus = (
+  body: Record<string, unknown> | null,
+): RegisterShelterClientFailureStatus => {
+  const status = body?.status;
+  if (status === 'unauthenticated') return 'unauthenticated';
+  if (status === 'invalid_payload') return 'invalid_payload';
+  if (status === 'auth_adapter_not_configured') return 'auth_adapter_not_configured';
+  if (status === 'shelter_registration_repository_not_configured')
+    return 'shelter_registration_repository_not_configured';
+  return 'worker_request_failed';
+};
+
+const parseRegisterShelterSuccess = (
+  body: Record<string, unknown> | null,
+): RegisterShelterClientSuccess | null => {
+  if (!body || body.status !== 'created' || typeof body.shelterId !== 'string') return null;
+  return { ok: true, status: 'registered', shelterId: body.shelterId };
+};
+
+export const createShelterRegistrationClient = ({
+  workerBaseUrl,
+  shelterPath,
+  getAccessToken,
+  fetch,
+}: CreateShelterRegistrationClientInput): ShelterRegistrationClient => ({
+  registerShelter: async (input: ShelterRegistrationClientInput) => {
+    const accessToken = await getAccessToken();
+
+    if (!accessToken?.trim()) {
+      return { ok: false, status: 'unauthenticated', reasons: ['missing_access_token'] };
+    }
+
+    let response: Response;
+
+    try {
+      response = await fetch(createWorkerUrl(workerBaseUrl, shelterPath), {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: input.name,
+          kind: input.kind,
+          city: input.city,
+          publicEmail: input.publicEmail ?? null,
+          publicPhone: input.publicPhone ?? null,
+          description: input.description ?? null,
+          district: input.district ?? null,
+        }),
+      });
+    } catch {
+      return { ok: false, status: 'worker_request_failed', reasons: ['network_error'] };
+    }
+
+    const body = await parseJsonResponse(response);
+
+    if (!response.ok) {
+      const status = parseRegisterShelterFailureStatus(body);
+      const reasons = Array.isArray(body?.reasons) ? parseReasons(body) : [status];
+      return { ok: false, status, reasons: sanitizeReasons(reasons, status) };
+    }
+
+    const success = parseRegisterShelterSuccess(body);
+
+    if (!success) {
+      return { ok: false, status: 'worker_request_failed', reasons: ['invalid_worker_response'] };
+    }
+
+    return success;
+  },
+});

@@ -60,6 +60,8 @@ import type {
 } from './pet-drafts';
 import type { ShelterPetListRepository } from './shelter-pet-list';
 import { createSupabaseShelterPetListRepositories } from './shelter-pet-list-supabase';
+import type { ShelterRegistrationRepository } from './shelter-register';
+import { createSupabaseShelterRegistrationRepositories } from './shelter-register-supabase';
 
 export type WorkerSupabaseTableQueryLike = SupabaseAuthTableQueryLike & SupabaseTableQueryLike;
 
@@ -108,6 +110,7 @@ export type WorkerRequestDependencies = {
   notificationPreferencesRepository?: NotificationPreferencesRepository;
   financialsRepository?: FinancialsRepository;
   shelterPetListRepository?: ShelterPetListRepository;
+  shelterRegistrationRepository?: ShelterRegistrationRepository;
   supabaseClientFactory?: WorkerSupabaseClientFactory;
   now?: () => string;
 };
@@ -167,6 +170,7 @@ export const createWorkerSupabaseDependencies = ({
     const notificationPreferencesRepositories = createSupabaseNotificationPreferencesRepositories({ client });
     const financialsRepositories = createSupabaseFinancialsRepositories({ client });
     const shelterPetListRepositories = createSupabaseShelterPetListRepositories({ client });
+    const shelterRegistrationRepositories = createSupabaseShelterRegistrationRepositories({ client });
     const notificationRepositories = createSupabaseNotificationRepositories({
       client,
       notificationPreferencesRepository: notificationPreferencesRepositories.notificationPreferencesRepository,
@@ -202,6 +206,7 @@ export const createWorkerSupabaseDependencies = ({
       notificationPreferencesRepository: notificationPreferencesRepositories.notificationPreferencesRepository,
       financialsRepository: financialsRepositories.financialsRepository,
       shelterPetListRepository: shelterPetListRepositories.shelterPetListRepository,
+      shelterRegistrationRepository: shelterRegistrationRepositories.shelterRegistrationRepository,
       // paymentWebhookVerifier is intentionally NOT set here — it is provider-SDK-specific
       // and must be injected by the production fetch handler or tests
       now,
@@ -295,5 +300,7 @@ export const resolveWorkerRequestDependencies = ({
       dependencies.financialsRepository ?? supabaseDependencies.financialsRepository,
     shelterPetListRepository:
       dependencies.shelterPetListRepository ?? supabaseDependencies.shelterPetListRepository,
+    shelterRegistrationRepository:
+      dependencies.shelterRegistrationRepository ?? supabaseDependencies.shelterRegistrationRepository,
   };
 };
