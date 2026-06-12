@@ -117,6 +117,8 @@ const mediaColumns =
 const petColumns =
   'id,shelter_id,status,name,species,location_label,short_description,media_ids,hero_media_id,medical,published_at';
 
+const petLoadColumns = `${petColumns},created_at,updated_at`;
+
 const toPetInsertRow = (insert: PetDraftInsertContract): PetRow => ({
   id: insert.id,
   shelter_id: insert.shelterId,
@@ -255,6 +257,21 @@ export const createSupabasePetRepositories = ({
 
   const petDraftRepository: PetDraftRepository = {
     loadMediaAssets,
+    loadDraft: async (petId) => {
+      const result = await client
+        .from('pets')
+        .select(petLoadColumns)
+        .eq('id', petId)
+        .is('deleted_at', null)
+        .maybeSingle();
+      const row = assertSupabaseResult<PetRow | null>(result, 'Failed to load pet draft');
+      if (!row) return null;
+      return {
+        ...toPetDraftRecord(row),
+        createdAt: row.created_at ?? new Date(0).toISOString(),
+        updatedAt: row.updated_at ?? new Date(0).toISOString(),
+      };
+    },
     createDraft: async (insert, actor) => {
       void actor;
 

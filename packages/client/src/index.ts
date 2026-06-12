@@ -2,6 +2,7 @@ import type {
   MediaUploadPurpose,
   MediaVisibility,
   PetLifecycleSpecies,
+  PetLifecycleStatus,
   PublicPetMedicalStatus,
 } from '@pic4paws/domain';
 
@@ -104,6 +105,44 @@ export type PetDraftClientFailure = {
 
 export type PetDraftClientResult = PetDraftClientSuccess | PetDraftClientFailure;
 
+export type LoadPetDraftClientDraft = {
+  petId: string;
+  shelterId: string;
+  status: PetLifecycleStatus;
+  name: string | null;
+  species: PetLifecycleSpecies | null;
+  locationLabel: string | null;
+  shortDescription: string | null;
+  mediaIds: string[];
+  heroMediaId: string | null;
+  medical: PublicPetMedicalStatus;
+  publishedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type LoadPetDraftClientSuccess = {
+  ok: true;
+  status: 'pet_draft_loaded';
+  draft: LoadPetDraftClientDraft;
+};
+
+export type LoadPetDraftClientFailureStatus =
+  | 'unauthenticated'
+  | 'forbidden'
+  | 'pet_draft_not_found'
+  | 'auth_adapter_not_configured'
+  | 'pet_draft_repository_not_configured'
+  | 'worker_request_failed';
+
+export type LoadPetDraftClientFailure = {
+  ok: false;
+  status: LoadPetDraftClientFailureStatus;
+  reasons: string[];
+};
+
+export type LoadPetDraftClientResult = LoadPetDraftClientSuccess | LoadPetDraftClientFailure;
+
 export type CreatePetDraftClientInput = {
   workerBaseUrl: string;
   petDraftsPath: `/${string}`;
@@ -114,6 +153,7 @@ export type CreatePetDraftClientInput = {
 export type PetDraftClient = {
   createPetDraft: (draft: PetDraftClientDraftInput) => Promise<PetDraftClientResult>;
   updatePetDraft: (draft: PetDraftClientDraftInput) => Promise<PetDraftClientResult>;
+  loadPetDraft: (petId: string) => Promise<LoadPetDraftClientResult>;
 };
 
 export type MediaUploadBinaryFailureStatus =
@@ -619,9 +659,108 @@ export const createPetDraftClient = ({
     return success;
   };
 
+  const parseLoadPetDraftFailureStatus = (
+    body: Record<string, unknown> | null,
+  ): LoadPetDraftClientFailureStatus => {
+    const status = body?.status;
+
+    if (
+      status === 'unauthenticated' ||
+      status === 'forbidden' ||
+      status === 'pet_draft_not_found' ||
+      status === 'auth_adapter_not_configured' ||
+      status === 'pet_draft_repository_not_configured'
+    ) {
+      return status;
+    }
+
+    return 'worker_request_failed';
+  };
+
+  const parseLoadPetDraftSuccess = (
+    body: Record<string, unknown> | null,
+  ): LoadPetDraftClientSuccess | null => {
+    if (body?.status !== 'ok' || typeof body.draft !== 'object' || body.draft === null) {
+      return null;
+    }
+
+    const d = body.draft as Record<string, unknown>;
+
+    if (
+      typeof d.petId !== 'string' ||
+      typeof d.shelterId !== 'string' ||
+      typeof d.status !== 'string' ||
+      !Array.isArray(d.mediaIds) ||
+      typeof d.createdAt !== 'string' ||
+      typeof d.updatedAt !== 'string'
+    ) {
+      return null;
+    }
+
+    return {
+      ok: true,
+      status: 'pet_draft_loaded',
+      draft: {
+        petId: d.petId,
+        shelterId: d.shelterId,
+        status: d.status as PetLifecycleStatus,
+        name: typeof d.name === 'string' ? d.name : null,
+        species: typeof d.species === 'string' ? (d.species as PetLifecycleSpecies) : null,
+        locationLabel: typeof d.locationLabel === 'string' ? d.locationLabel : null,
+        shortDescription: typeof d.shortDescription === 'string' ? d.shortDescription : null,
+        mediaIds: d.mediaIds as string[],
+        heroMediaId: typeof d.heroMediaId === 'string' ? d.heroMediaId : null,
+        medical: (d.medical ?? 'unknown') as PublicPetMedicalStatus,
+        publishedAt: typeof d.publishedAt === 'string' ? d.publishedAt : null,
+        createdAt: d.createdAt,
+        updatedAt: d.updatedAt,
+      },
+    };
+  };
+
   return {
     createPetDraft: (draft) => submitDraft(draft, 'create'),
     updatePetDraft: (draft) => submitDraft(draft, 'update'),
+    loadPetDraft: async (petId) => {
+      const accessToken = await getAccessToken();
+
+      if (!accessToken?.trim()) {
+        return {
+          ok: false,
+          status: 'unauthenticated',
+          reasons: ['missing_access_token'],
+        };
+      }
+
+      const response = await fetch(createWorkerSubUrl(workerBaseUrl, petDraftsPath, petId), {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+      const body = await parseJsonResponse(response);
+
+      if (!response.ok) {
+        const status = parseLoadPetDraftFailureStatus(body);
+        const reasons = Array.isArray(body?.reasons) ? parseReasons(body) : [status];
+
+        return {
+          ok: false,
+          status,
+          reasons: sanitizeReasons(reasons, status),
+        };
+      }
+
+      const success = parseLoadPetDraftSuccess(body);
+
+      if (!success) {
+        return {
+          ok: false,
+          status: 'worker_request_failed',
+          reasons: ['invalid_worker_response'],
+        };
+      }
+
+      return success;
+    },
   };
 };
 

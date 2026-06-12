@@ -23,6 +23,10 @@ const draftInput = {
   },
 } as const;
 
+const notExpectedLoad: PetDraftClient['loadPetDraft'] = async () => {
+  throw new Error('loadPetDraft should not be called');
+};
+
 describe('web pet draft UI flow', () => {
   it('exposes a PT-PT ready state for editing a pet draft', () => {
     const ui = createWebPetDraftUi({
@@ -33,6 +37,7 @@ describe('web pet draft UI flow', () => {
         updatePetDraft: async () => {
           throw new Error('Update should not be called for ready state');
         },
+        loadPetDraft: notExpectedLoad,
       },
     });
 
@@ -67,6 +72,7 @@ describe('web pet draft UI flow', () => {
       updatePetDraft: async () => {
         throw new Error('Update should not be called for create');
       },
+      loadPetDraft: notExpectedLoad,
     };
     const ui = createWebPetDraftUi({ draftClient });
 
@@ -106,6 +112,7 @@ describe('web pet draft UI flow', () => {
           petId: draft.petId,
         };
       },
+      loadPetDraft: notExpectedLoad,
     };
     const ui = createWebPetDraftUi({ draftClient });
 
@@ -131,6 +138,7 @@ describe('web pet draft UI flow', () => {
         updatePetDraft: async () => {
           throw new Error('Update should not be called');
         },
+        loadPetDraft: notExpectedLoad,
       },
     });
 
@@ -166,6 +174,7 @@ describe('web pet draft UI flow', () => {
         updatePetDraft: async () => {
           throw new Error('Update should not be called');
         },
+        loadPetDraft: notExpectedLoad,
       },
     });
 
@@ -193,6 +202,7 @@ describe('web pet draft UI flow', () => {
         draftClient: {
           createPetDraft: async () => result,
           updatePetDraft: async () => result,
+          loadPetDraft: notExpectedLoad,
         },
       });
 
