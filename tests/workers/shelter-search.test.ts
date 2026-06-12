@@ -126,7 +126,7 @@ describe('GET /shelters — shelter search', () => {
     );
   });
 
-  it('returns 405 for POST /shelters', async () => {
+  it('routes POST /shelters to shelter registration (returns 401 when unauthenticated)', async () => {
     const repo = makeSearchRepo({ shelters: [], total: 0 });
     const request = new Request('https://workers.pic4paws.pt/shelters', { method: 'POST' });
 
@@ -135,9 +135,8 @@ describe('GET /shelters — shelter search', () => {
     });
     const body = await response.json();
 
-    expect(response.status).toBe(405);
-    expect(body.status).toBe('method_not_allowed');
-    expect(body.allowedMethods).toEqual(['GET']);
+    expect(response.status).toBe(401);
+    expect(body.status).toBe('unauthenticated');
   });
 
   it('returns 501 when shelterSearchRepository is not injected', async () => {

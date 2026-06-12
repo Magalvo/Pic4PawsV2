@@ -82,6 +82,7 @@ import {
   handleWorkerShelterPetListRequest,
   matchWorkerShelterPetsShelterId,
 } from './shelter-pet-list';
+import { handleWorkerShelterRegistrationRequest } from './shelter-register';
 import { createR2UploadSignerWorkerDependencies } from './r2-signer';
 import { createSupabaseSdkWorkerDependencies } from './supabase-sdk';
 export {
@@ -390,6 +391,24 @@ export type {
   CreateSupabaseShelterPetListRepositoriesInput,
   CreateSupabaseShelterPetListRepositoriesResult,
 } from './shelter-pet-list-supabase';
+export {
+  handleWorkerShelterRegistrationRequest,
+  validateShelterRegistrationPayload,
+  KNOWN_SHELTER_KINDS,
+} from './shelter-register';
+export type {
+  ShelterRegistrationInput,
+  ShelterRegistrationRepository,
+  HandleWorkerShelterRegistrationRequestInput,
+} from './shelter-register';
+export {
+  createSupabaseShelterRegistrationRepositories,
+  SupabaseShelterRegistrationRepositoryError,
+} from './shelter-register-supabase';
+export type {
+  CreateSupabaseShelterRegistrationRepositoriesInput,
+  CreateSupabaseShelterRegistrationRepositoriesResult,
+} from './shelter-register-supabase';
 export {
   createR2UploadSigner,
   createR2UploadSignerWorkerDependencies,
@@ -848,6 +867,15 @@ const _dispatchWorkerRequest = async (
   }
 
   if (url.pathname === config.workers.shelterPath) {
+    if (request.method === 'POST') {
+      const payload = await request.json().catch(() => null);
+      return handleWorkerShelterRegistrationRequest({
+        request,
+        payload,
+        shelterRegistrationRepository: dependencies.shelterRegistrationRepository,
+        authenticator: dependencies.petDraftAuthenticator,
+      });
+    }
     return handleWorkerShelterSearchRequest({
       request,
       shelterSearchRepository: dependencies.shelterSearchRepository,
