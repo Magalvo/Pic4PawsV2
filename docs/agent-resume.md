@@ -59,17 +59,17 @@ Do not batch items that can be reviewed or merged independently.
 - `npm run test`
 - `npm run build`
 
-## 4. Current State As Of 2026-06-10
+## 4. Current State As Of 2026-06-12
 
-**Repository status**: 1287 tests passing (146 test files), full foundation complete through pet status history slice.
+**Repository status**: 1391 tests passing (157 test files), full foundation complete through shelter-pets, pet-draft-load, and pet-feed location filter.
 
-**Main branch HEAD**: PR #121 (MOBILE-PET-STATUS-HISTORY-001)
+**Main branch HEAD**: PR #130 (audit fix — bearer pattern assertions + work item status fields)
 - `npm run typecheck` ✅
 - `npm run lint` ✅
 - `npm run test` ✅
 - `npm run build` ✅
 
-**Latest checkpoint**: [2026-06-10-pet-status-history-complete.md](docs/checkpoints/2026-06-10-pet-status-history-complete.md)
+**Latest checkpoint**: [2026-06-12-shelter-registration-ready.md](docs/checkpoints/2026-06-12-shelter-registration-ready.md)
 
 ### Merged Work Items (up to 2026-06-09)
 
@@ -192,7 +192,18 @@ Do not batch items that can be reviewed or merged independently.
 - `PET-STATUS-HISTORY-CLIENT-001` — `createPetStatusHistoryClient` in `@pic4paws/client` (`loadStatusHistory(petId)`)
 - `WEB-PET-STATUS-HISTORY-001` — Web pet status history product boundary (5 states: idle/loading/loaded/forbidden/failed)
 - `MOBILE-PET-STATUS-HISTORY-001` — Mobile pet status history product boundary (5 states)
-The Worker now has (as of 2026-06-10, PR #121):
+- `WORKER-ERROR-BOUNDARY-001` — top-level try/catch in Worker dispatcher; uncaught throws return `{ status: 'internal_server_error' }` 500 instead of opaque Cloudflare error
+- `SHELTER-PETS-WORKER-001` — authenticated `GET /shelters/:shelterId/pets` Worker route returning all pets (all statuses) newest-updated-first; `matchWorkerShelterPetsShelterId`; registered before shelter profile matcher
+- `SHELTER-PETS-CLIENT-001` — `createShelterPetListClient` in `@pic4paws/client` (`loadShelterPets(shelterId, query?)`)
+- `WEB-SHELTER-PETS-001` — Web shelter pet list product boundary (6 states: idle/loading/loaded/empty/forbidden/failed)
+- `MOBILE-SHELTER-PETS-001` — Mobile shelter pet list product boundary with PT-PT states (6 states)
+- `PET-DRAFT-LOAD-WORKER-001` — `GET /pet-drafts/:petId`; loads full draft record incl. `createdAt`/`updatedAt` for edit pre-fill; GET intercepted before body-parse block; 404 before 403 (prevents timing leak)
+- `PET-DRAFT-LOAD-CLIENT-001` — `loadPetDraft(petId)` added to `PetDraftClient`; maps 401/403/404/501
+- `WEB-PET-DRAFT-LOAD-001` — `loadDraft` method added to `WebPetDraftUi`; 4 states: loaded/not_found/forbidden/failed; PT-PT copy
+- `MOBILE-PET-DRAFT-LOAD-001` — same as web boundary with `Mobile` prefix
+- `PET-FEED-FILTERS-001` — `location` query param added to `GET /pets`; `parseLocation` trims whitespace, treats blank as null; eq filter applied to both count and data Supabase queries; `PetFeedClientQuery.location` added to `@pic4paws/client`
+
+The Worker now has (as of 2026-06-12, PR #130):
 
 - server-side Supabase SDK dependency composition
 - server-side R2/S3-compatible upload signer factory
@@ -210,6 +221,13 @@ The Worker now has (as of 2026-06-10, PR #121):
 - authenticated donation intent (`POST /donations`) with `DonationRepository` interface —
   `amountCents ≥ 100`, GDPR gate, `donorUserId` from authenticated actor, provider from
   config, stub `providerPaymentId` + `idempotencyKey` via `crypto.randomUUID()`
+- authenticated shelter pet list (`GET /shelters/:shelterId/pets`) with
+  `ShelterPetListRepository` interface — all statuses, paginated (limit 20/max 100), newest-updated-first,
+  `matchWorkerShelterPetsShelterId` path matcher; registered BEFORE shelter profile check
+- `GET /pet-drafts/:petId` load draft for edit pre-fill — `loadDraft` on `PetDraftRepository`,
+  GET intercepted before body-parse, 404 checked before 403 (prevents timing leak on existence)
+- `GET /pets` with `location` query filter (trimmed, blank=null, applied to both count + data Supabase queries)
+- top-level try/catch error boundary — uncaught throws return `{ status: 'internal_server_error' }` 500
 - authenticated shelter donation list (`GET /shelters/:shelterId/donations`) with
   `DonationListRepository` interface — paginated (limit/offset), shelter membership check,
   `matchWorkerDonationListShelterId` for URL path matching
@@ -283,6 +301,9 @@ The Worker now has (as of 2026-06-10, PR #121):
 - `NotificationPreferencesClient` (authenticated read+write — `loadPreferences()`, `updatePreferences(preferences[])`)
 - `FinancialsClient` (authenticated read — `loadFinancials(shelterId)`)
 - `PetStatusHistoryClient` (authenticated read — `loadStatusHistory(petId)`)
+- `ShelterPetListClient` (authenticated read — `loadShelterPets(shelterId, query?)` with pagination)
+- `PetDraftClient.loadPetDraft(petId)` (authenticated read — pre-fill load for edit form)
+- `PetFeedClient.loadFeed` updated — `location` filter added to `PetFeedClientQuery`
 
 Web/Mobile now have tested product boundaries for: media upload, pet media upload+attach,
 pet publish, pet draft, pet draft save flow, pet feed, pet profile, shelter profile,
@@ -301,7 +322,9 @@ notifications (in-app, 4 states: idle/loading/loaded/failed, optimistic markRead
 shelter search (public, 5 states: idle/loading/loaded/empty/failed),
 notification preferences (3 states: idle/loaded/failed, optimistic updatePreference),
 financials dashboard (shelter-side, 5 states: idle/loading/loaded/forbidden/failed),
-pet status history (shelter-side audit log, 5 states: idle/loading/loaded/forbidden/failed).
+pet status history (shelter-side audit log, 5 states: idle/loading/loaded/forbidden/failed),
+shelter-side pet list (all statuses, 6 states: idle/loading/loaded/empty/forbidden/failed),
+pet draft pre-fill load (edit form, 4 states: loaded/not_found/forbidden/failed).
 
 The adopter end-to-end flow is fully wired at the boundary layer:
 **feed → pet profile → shelter profile → submit adoption application → view adoption status**.
@@ -336,25 +359,28 @@ per deployment.
 
 ## 5. Recommended Next Work Item
 
-The foundation now covers (as of PR #111):
+The foundation now covers (as of PR #130):
 - All write paths (pet drafts, media, adoption, donation, sponsorship, sponsorship manage, adoption status management, pet archive + republish)
-- All read paths (pet feed, pet profile, shelter profile + search, adoption view, adoption list, donation list/status, sponsorship list/donor-list, notifications, financials — all 4 layers each)
-- Shelter-side list views (adoption list, donation list, sponsorship list, financial summary)
+- All read paths (pet feed + location filter, pet profile, shelter profile + search, adoption view, adoption list, donation list/status, sponsorship list/donor-list, notifications, financials, shelter-side pet list, pet draft pre-fill load — all 4 layers each)
+- Shelter-side list views (adoption list, donation list, sponsorship list, financial summary, pet list)
 - Full payment confirmation pipeline (webhook → donor status polling)
 - Sponsorship lifecycle management (cancel/pause/resume — dual access: shelter OR donor)
 - Notification dispatch gated by per-user preferences
 - Public shelter search with filters
+- Worker error boundary (structured 500 on uncaught throws)
 
-**Suggested next** (in priority order, updated 2026-06-10):
-1. **WORKER-ERROR-BOUNDARY-001** — Top-level try/catch in Worker dispatcher; uncaught throws return structured `{ status: 'internal_server_error' }` 500 instead of opaque Cloudflare error (audit finding 5)
-2. New feature slice TBD — all major domain areas covered at the boundary layer
+**Suggested next** (in priority order, updated 2026-06-12):
+1. **SHELTER-REGISTER-WORKER-001** — `POST /shelters`; authenticated; creates shelter row + first `shelter_memberships` row (role: `shelter_owner`); returns `shelterId`; no duplicate name check needed at MVP
+2. **SHELTER-REGISTER-CLIENT-001** — `registerShelter(input)` added to a new `ShelterRegistrationClient` in `@pic4paws/client`
+3. **WEB-SHELTER-REGISTER-001** — Web shelter registration boundary (4 states: idle/submitting/registered/failed)
+4. **MOBILE-SHELTER-REGISTER-001** — Mobile shelter registration boundary with PT-PT states
 
 ## 6. Handoff Prompt For New Agent Session
 
 Use this prompt in a new AI agent session (Claude Web UI):
 
 ```text
-Read AGENTS.md, docs/agent-resume.md, docs/canonical/architecture-proposal.md, docs/canonical/sdd.md, and the latest checkpoint at docs/checkpoints/2026-06-10-pet-status-history-complete.md.
+Read AGENTS.md, docs/agent-resume.md, docs/canonical/architecture-proposal.md, docs/canonical/sdd.md, and the latest checkpoint at docs/checkpoints/2026-06-12-shelter-registration-ready.md.
 
 Continue Pic4Paws V2 development from main using strict SDD/TDD:
 - 1 branch per work item: agent/<WORK-ITEM-ID>
