@@ -61,6 +61,10 @@ import {
   webPetStatusHistoryUiContent,
   type WebPetStatusHistoryUiContent,
 } from './pet-status-history';
+import {
+  webShelterPetListUiContent,
+  type WebShelterPetListUiContent,
+} from './shelter-pet-list';
 
 export type WebFoundationStatus = 'contract-ready';
 
@@ -102,6 +106,7 @@ export type WebFoundationContent = {
   notificationPreferences: Pick<WebNotificationPreferencesUiContent, 'title' | 'description' | 'status'>;
   financialsDashboard: Pick<WebFinancialsDashboardUiContent, 'title' | 'description' | 'status'>;
   petStatusHistory: Pick<WebPetStatusHistoryUiContent, 'title' | 'description' | 'status'>;
+  shelterPetList: Pick<WebShelterPetListUiContent, 'title' | 'description' | 'status'>;
   readiness: Array<{
     id: 'database' | 'auth' | 'pets' | 'payments' | 'media' | 'workers';
     label: string;
@@ -256,6 +261,11 @@ export const webFoundationContent: WebFoundationContent = {
     title: webPetStatusHistoryUiContent.title,
     description: webPetStatusHistoryUiContent.description,
     status: webPetStatusHistoryUiContent.status,
+  },
+  shelterPetList: {
+    title: webShelterPetListUiContent.title,
+    description: webShelterPetListUiContent.description,
+    status: webShelterPetListUiContent.status,
   },
   readiness: [
     {

@@ -4964,3 +4964,156 @@ export const createPetStatusHistoryClient = ({
     return success;
   },
 });
+
+// ─── Shelter Pet List Client ──────────────────────────────────────────────────
+
+export type ShelterPetStatus =
+  | 'draft'
+  | 'published'
+  | 'adoption_pending'
+  | 'adopted'
+  | 'not_available'
+  | 'archived';
+
+export type ShelterPetClientSummary = {
+  petId: string;
+  name: string | null;
+  species: string | null;
+  status: ShelterPetStatus;
+  heroMediaId: string | null;
+  locationLabel: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type ShelterPetListQuery = {
+  limit?: number;
+  offset?: number;
+};
+
+export type ShelterPetListClientSuccess = {
+  ok: true;
+  status: 'ok';
+  pets: ShelterPetClientSummary[];
+  total: number;
+};
+
+export type ShelterPetListClientFailureStatus =
+  | 'unauthenticated'
+  | 'forbidden'
+  | 'shelter_pet_list_repository_not_configured'
+  | 'auth_adapter_not_configured'
+  | 'worker_request_failed'
+  | 'worker_response_invalid';
+
+export type ShelterPetListClientFailure = {
+  ok: false;
+  status: ShelterPetListClientFailureStatus;
+  reasons: string[];
+};
+
+export type ShelterPetListClientResult = ShelterPetListClientSuccess | ShelterPetListClientFailure;
+
+export type CreateShelterPetListClientInput = {
+  workerBaseUrl: string;
+  shelterPath: `/${string}`;
+  getAccessToken: () => Promise<string | null>;
+  fetch: typeof globalThis.fetch;
+};
+
+export type ShelterPetListClient = {
+  loadShelterPets: (
+    shelterId: string,
+    query?: ShelterPetListQuery,
+  ) => Promise<ShelterPetListClientResult>;
+};
+
+const parseShelterPetListFailureStatus = (
+  body: Record<string, unknown> | null,
+): ShelterPetListClientFailureStatus => {
+  const status = body?.status;
+  if (status === 'unauthenticated') return 'unauthenticated';
+  if (status === 'forbidden') return 'forbidden';
+  if (status === 'shelter_pet_list_repository_not_configured') return 'shelter_pet_list_repository_not_configured';
+  if (status === 'auth_adapter_not_configured') return 'auth_adapter_not_configured';
+  if (status === 'worker_response_invalid') return 'worker_response_invalid';
+  return 'worker_request_failed';
+};
+
+const parseShelterPetSummary = (raw: unknown): ShelterPetClientSummary | null => {
+  if (typeof raw !== 'object' || raw === null) return null;
+  const r = raw as Record<string, unknown>;
+  if (typeof r.petId !== 'string') return null;
+  if (typeof r.createdAt !== 'string') return null;
+  if (typeof r.updatedAt !== 'string') return null;
+  return {
+    petId: r.petId,
+    name: typeof r.name === 'string' ? r.name : null,
+    species: typeof r.species === 'string' ? r.species : null,
+    status: (r.status as ShelterPetStatus) ?? 'draft',
+    heroMediaId: typeof r.heroMediaId === 'string' ? r.heroMediaId : null,
+    locationLabel: typeof r.locationLabel === 'string' ? r.locationLabel : null,
+    createdAt: r.createdAt,
+    updatedAt: r.updatedAt,
+  };
+};
+
+const parseShelterPetListSuccess = (
+  body: Record<string, unknown> | null,
+): ShelterPetListClientSuccess | null => {
+  if (!body || body.status !== 'ok') return null;
+  if (!Array.isArray(body.pets)) return null;
+  if (typeof body.total !== 'number') return null;
+  const pets = body.pets
+    .map(parseShelterPetSummary)
+    .filter((p): p is ShelterPetClientSummary => p !== null);
+  return { ok: true, status: 'ok', pets, total: body.total };
+};
+
+export const createShelterPetListClient = ({
+  workerBaseUrl,
+  shelterPath,
+  getAccessToken,
+  fetch,
+}: CreateShelterPetListClientInput): ShelterPetListClient => ({
+  loadShelterPets: async (shelterId: string, query: ShelterPetListQuery = {}) => {
+    const accessToken = await getAccessToken();
+
+    if (!accessToken?.trim()) {
+      return { ok: false, status: 'unauthenticated', reasons: ['missing_access_token'] };
+    }
+
+    const base = createWorkerSubUrl(workerBaseUrl, shelterPath, shelterId, 'pets');
+    const params = new URLSearchParams();
+    if (query.limit !== undefined) params.set('limit', String(query.limit));
+    if (query.offset !== undefined) params.set('offset', String(query.offset));
+    const url = params.size > 0 ? `${base}?${params.toString()}` : base;
+
+    let response: Response;
+
+    try {
+      response = await fetch(url, {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+    } catch {
+      return { ok: false, status: 'worker_request_failed', reasons: ['network_error'] };
+    }
+
+    const body = await parseJsonResponse(response);
+
+    if (!response.ok) {
+      const status = parseShelterPetListFailureStatus(body);
+      const reasons = Array.isArray(body?.reasons) ? parseReasons(body) : [status];
+      return { ok: false, status, reasons: sanitizeReasons(reasons, status) };
+    }
+
+    const success = parseShelterPetListSuccess(body);
+
+    if (!success) {
+      return { ok: false, status: 'worker_response_invalid', reasons: ['invalid_worker_response'] };
+    }
+
+    return success;
+  },
+});

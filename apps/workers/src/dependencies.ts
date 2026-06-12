@@ -58,6 +58,8 @@ import type {
   PetPublishRepository,
   WorkerPetDraftAuthenticator,
 } from './pet-drafts';
+import type { ShelterPetListRepository } from './shelter-pet-list';
+import { createSupabaseShelterPetListRepositories } from './shelter-pet-list-supabase';
 
 export type WorkerSupabaseTableQueryLike = SupabaseAuthTableQueryLike & SupabaseTableQueryLike;
 
@@ -105,6 +107,7 @@ export type WorkerRequestDependencies = {
   shelterSearchRepository?: ShelterSearchRepository;
   notificationPreferencesRepository?: NotificationPreferencesRepository;
   financialsRepository?: FinancialsRepository;
+  shelterPetListRepository?: ShelterPetListRepository;
   supabaseClientFactory?: WorkerSupabaseClientFactory;
   now?: () => string;
 };
@@ -163,6 +166,7 @@ export const createWorkerSupabaseDependencies = ({
     const shelterSearchRepositories = createSupabaseShelterSearchRepositories({ client });
     const notificationPreferencesRepositories = createSupabaseNotificationPreferencesRepositories({ client });
     const financialsRepositories = createSupabaseFinancialsRepositories({ client });
+    const shelterPetListRepositories = createSupabaseShelterPetListRepositories({ client });
     const notificationRepositories = createSupabaseNotificationRepositories({
       client,
       notificationPreferencesRepository: notificationPreferencesRepositories.notificationPreferencesRepository,
@@ -197,6 +201,7 @@ export const createWorkerSupabaseDependencies = ({
       shelterSearchRepository: shelterSearchRepositories.shelterSearchRepository,
       notificationPreferencesRepository: notificationPreferencesRepositories.notificationPreferencesRepository,
       financialsRepository: financialsRepositories.financialsRepository,
+      shelterPetListRepository: shelterPetListRepositories.shelterPetListRepository,
       // paymentWebhookVerifier is intentionally NOT set here — it is provider-SDK-specific
       // and must be injected by the production fetch handler or tests
       now,
@@ -288,5 +293,7 @@ export const resolveWorkerRequestDependencies = ({
       dependencies.notificationPreferencesRepository ?? supabaseDependencies.notificationPreferencesRepository,
     financialsRepository:
       dependencies.financialsRepository ?? supabaseDependencies.financialsRepository,
+    shelterPetListRepository:
+      dependencies.shelterPetListRepository ?? supabaseDependencies.shelterPetListRepository,
   };
 };
