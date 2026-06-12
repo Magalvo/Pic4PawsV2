@@ -1,6 +1,6 @@
 # Work-Item: WEB-SHELTER-PETS-001 — Web Shelter Pet List Boundary
 
-status: in-progress
+status: done
 
 ## 1. Context & Problem
 

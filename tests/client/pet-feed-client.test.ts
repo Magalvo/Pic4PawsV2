@@ -137,13 +137,13 @@ describe('PetFeedClient contract', () => {
   it('strips credential markers from failure reasons', async () => {
     const fetch = makeFetch(500, {
       status: 'worker_request_failed',
-      reasons: ['error', 'service-role-secret', 'signedUrl=https://r2.test/token'],
+      reasons: ['error', 'service-role-secret', 'bearer token-value'],
     });
 
     const result = await makeClient(fetch).loadFeed({});
     const serialized = JSON.stringify(result);
 
-    expect(serialized).not.toContain('service-role-secret');
-    expect(serialized).not.toContain('signedUrl');
+    expect(serialized).not.toContain('service-role');
+    expect(serialized).not.toContain('bearer ');
   });
 });

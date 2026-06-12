@@ -1,6 +1,6 @@
 # Work-Item: MOBILE-SHELTER-PETS-001 — Mobile Shelter Pet List Boundary
 
-status: in-progress
+status: done
 
 ## 1. Context & Problem
 

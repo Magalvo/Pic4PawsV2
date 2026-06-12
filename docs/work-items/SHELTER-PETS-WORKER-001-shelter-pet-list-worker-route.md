@@ -1,6 +1,6 @@
 # Work-Item: SHELTER-PETS-WORKER-001 — Shelter Pet List Worker Route
 
-status: in-progress
+status: done
 
 ## 1. Context & Problem
 
