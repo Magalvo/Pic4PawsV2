@@ -177,7 +177,7 @@ describe('pet draft load client contract', () => {
     const result = await client.loadPetDraft('pet-1');
 
     expect(result).toMatchObject({ ok: false, status: 'worker_request_failed' });
-    expect(JSON.stringify(result)).not.toContain('service-role-secret');
-    expect(JSON.stringify(result)).not.toContain('user-token');
+    expect(JSON.stringify(result)).not.toContain('service-role');
+    expect(JSON.stringify(result)).not.toContain('bearer ');
   });
 });

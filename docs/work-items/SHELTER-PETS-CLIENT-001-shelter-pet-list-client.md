@@ -1,6 +1,6 @@
 # Work-Item: SHELTER-PETS-CLIENT-001 — Shelter Pet List Client
 
-status: in-progress
+status: done
 
 ## 1. Context & Problem
 
