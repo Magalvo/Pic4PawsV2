@@ -77,6 +77,10 @@ import {
   handleWorkerFinancialsRequest,
   matchWorkerFinancialsShelterId,
 } from './financials';
+import {
+  handleWorkerShelterPetListRequest,
+  matchWorkerShelterPetsShelterId,
+} from './shelter-pet-list';
 import { createR2UploadSignerWorkerDependencies } from './r2-signer';
 import { createSupabaseSdkWorkerDependencies } from './supabase-sdk';
 export {
@@ -362,6 +366,26 @@ export type {
   CreateSupabaseFinancialsRepositoriesInput,
   CreateSupabaseFinancialsRepositoriesResult,
 } from './financials-supabase';
+export {
+  handleWorkerShelterPetListRequest,
+  matchWorkerShelterPetsShelterId,
+} from './shelter-pet-list';
+export type {
+  HandleWorkerShelterPetListRequestInput,
+  ListShelterPetsQuery,
+  ListShelterPetsResult,
+  ShelterPetListRepository,
+  ShelterPetStatus,
+  ShelterPetSummary,
+} from './shelter-pet-list';
+export {
+  createSupabaseShelterPetListRepositories,
+  SupabaseShelterPetListRepositoryError,
+} from './shelter-pet-list-supabase';
+export type {
+  CreateSupabaseShelterPetListRepositoriesInput,
+  CreateSupabaseShelterPetListRepositoriesResult,
+} from './shelter-pet-list-supabase';
 export {
   createR2UploadSigner,
   createR2UploadSignerWorkerDependencies,
@@ -857,6 +881,20 @@ const _dispatchWorkerRequest = async (
       request,
       shelterId: financialsShelterId,
       financialsRepository: dependencies.financialsRepository,
+      authenticator: dependencies.petDraftAuthenticator,
+    });
+  }
+
+  const shelterPetListShelterId = matchWorkerShelterPetsShelterId(
+    url.pathname,
+    config.workers.shelterPath,
+  );
+
+  if (shelterPetListShelterId !== null) {
+    return handleWorkerShelterPetListRequest({
+      request,
+      shelterId: shelterPetListShelterId,
+      shelterPetListRepository: dependencies.shelterPetListRepository,
       authenticator: dependencies.petDraftAuthenticator,
     });
   }
