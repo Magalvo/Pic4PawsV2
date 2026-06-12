@@ -445,6 +445,10 @@ export const createSupabasePetRepositories = ({
         countQuery = countQuery.eq('species', query.species);
       }
 
+      if (query.location) {
+        countQuery = countQuery.eq('location_label', query.location);
+      }
+
       const countResult = await countQuery;
       assertSupabaseResult(countResult, 'Failed to count published pets');
       const total = countResult.count ?? 0;
@@ -457,6 +461,10 @@ export const createSupabasePetRepositories = ({
 
       if (query.species) {
         dataQuery = dataQuery.eq('species', query.species);
+      }
+
+      if (query.location) {
+        dataQuery = dataQuery.eq('location_label', query.location);
       }
 
       const dataResult = await dataQuery

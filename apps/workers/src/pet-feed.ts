@@ -14,6 +14,7 @@ export type PublishedPetSummary = {
 
 export type PetFeedQuery = {
   species?: PetLifecycleSpecies | null;
+  location?: string | null;
   limit: number;
   offset: number;
 };
@@ -52,6 +53,12 @@ const parseOffset = (value: string | null): number => {
   return parsed;
 };
 
+const parseLocation = (value: string | null): string | null => {
+  if (!value) return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
+};
+
 const jsonResponse = (body: unknown, init?: ResponseInit): Response =>
   Response.json(body, init);
 
@@ -76,6 +83,7 @@ export const handleWorkerPetFeedRequest = async ({
   const url = new URL(request.url);
   const query: PetFeedQuery = {
     species: parseSpecies(url.searchParams.get('species')),
+    location: parseLocation(url.searchParams.get('location')),
     limit: parseLimit(url.searchParams.get('limit')),
     offset: parseOffset(url.searchParams.get('offset')),
   };
