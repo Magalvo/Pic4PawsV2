@@ -408,7 +408,7 @@ export const createSupabasePetRepositories = ({
   };
 
   const feedColumns =
-    'id,shelter_id,name,species,location_label,short_description,hero_media_id,media_ids,published_at,shelters!inner(deleted_at)';
+    'id,shelter_id,name,species,location_label,short_description,hero_media_id,media_ids,published_at,shelters!inner(deleted_at,verification_status)';
 
   type FeedRow = {
     id: string;
@@ -438,10 +438,11 @@ export const createSupabasePetRepositories = ({
     loadPublishedPets: async (query) => {
       let countQuery = client
         .from('pets')
-        .select('id,shelters!inner(deleted_at)', { count: 'exact' })
+        .select('id,shelters!inner(deleted_at,verification_status)', { count: 'exact' })
         .eq('status', 'published')
         .is('deleted_at', null)
-        .is('shelters.deleted_at', null);
+        .is('shelters.deleted_at', null)
+        .eq('shelters.verification_status', 'verified');
 
       if (query.species) {
         countQuery = countQuery.eq('species', query.species);
@@ -460,7 +461,8 @@ export const createSupabasePetRepositories = ({
         .select(feedColumns)
         .eq('status', 'published')
         .is('deleted_at', null)
-        .is('shelters.deleted_at', null);
+        .is('shelters.deleted_at', null)
+        .eq('shelters.verification_status', 'verified');
 
       if (query.species) {
         dataQuery = dataQuery.eq('species', query.species);
@@ -481,7 +483,7 @@ export const createSupabasePetRepositories = ({
   };
 
   const petProfileColumns =
-    'id,shelter_id,name,species,location_label,short_description,hero_media_id,media_ids,published_at,medical';
+    'id,shelter_id,name,species,location_label,short_description,hero_media_id,media_ids,published_at,medical,shelters!inner(deleted_at,verification_status)';
 
   type ProfileRow = {
     id: string;
@@ -517,6 +519,8 @@ export const createSupabasePetRepositories = ({
         .eq('id', petId)
         .eq('status', 'published')
         .is('deleted_at', null)
+        .is('shelters.deleted_at', null)
+        .eq('shelters.verification_status', 'verified')
         .maybeSingle();
       const row = assertSupabaseResult<ProfileRow | null>(
         result,

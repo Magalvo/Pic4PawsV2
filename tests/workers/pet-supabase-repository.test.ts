@@ -578,11 +578,13 @@ describe('Supabase pet repository adapters', () => {
         table: 'pets',
         action: 'select',
         columns:
-          'id,shelter_id,name,species,location_label,short_description,hero_media_id,media_ids,published_at,medical',
+          'id,shelter_id,name,species,location_label,short_description,hero_media_id,media_ids,published_at,medical,shelters!inner(deleted_at,verification_status)',
         filters: [
           { kind: 'eq', column: 'id', value: 'pet-1' },
           { kind: 'eq', column: 'status', value: 'published' },
           { kind: 'is', column: 'deleted_at', value: null },
+          { kind: 'is', column: 'shelters.deleted_at', value: null },
+          { kind: 'eq', column: 'shelters.verification_status', value: 'verified' },
         ],
         result: 'maybeSingle',
       },

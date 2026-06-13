@@ -45,9 +45,12 @@ canDeleteShelter(actor, shelterId):
 
 ### Repository — `ShelterDeletionRepository`
 
+Authorization is enforced by `canDeleteShelter` before the repository is invoked.
+The repository contract does not accept `actorUserId`.
+
 ```typescript
 type ShelterDeletionRepository = {
-  deleteShelter: (shelterId: string, actorUserId: string) => Promise<{ shelterId: string } | null>;
+  deleteShelter: (shelterId: string) => Promise<{ shelterId: string } | null>;
 };
 ```
 

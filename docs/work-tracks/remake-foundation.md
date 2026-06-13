@@ -80,15 +80,32 @@ Financials + pet status history slices (PRs #110–#121):
 `PET-STATUS-HISTORY-001`, `PET-STATUS-HISTORY-READ-001`, `PET-STATUS-HISTORY-CLIENT-001`,
 `WEB-PET-STATUS-HISTORY-001`, `MOBILE-PET-STATUS-HISTORY-001`.
 
+Worker error boundary + shelter-side pet list + pet draft load + pet feed filters + shelter registration + shelter update + atomic registration (PRs #122–#136):
+`WORKER-ERROR-BOUNDARY-001`, `SHELTER-PETS-WORKER-001`, `SHELTER-PETS-CLIENT-001`,
+`WEB-SHELTER-PETS-001`, `MOBILE-SHELTER-PETS-001`, `PET-DRAFT-LOAD-WORKER-001`,
+`PET-DRAFT-LOAD-CLIENT-001`, `WEB-PET-DRAFT-LOAD-001`, `MOBILE-PET-DRAFT-LOAD-001`,
+`PET-FEED-FILTERS-001`, `SHELTER-REGISTER-WORKER-001`, `SHELTER-REGISTER-CLIENT-001`,
+`WEB-SHELTER-REGISTER-001`, `MOBILE-SHELTER-REGISTER-001`, `SHELTER-UPDATE-001`,
+`SHELTER-REGISTER-ATOMIC-001`.
+
+Shelter deletion + audit remediation (PRs #137–#138, remediation in progress):
+`SHELTER-DELETE-001` — `DELETE /shelters/:shelterId`; owner-only soft-delete; join-filter
+cascade (pets hidden from feed without pet row changes); 4-layer slice.
+
+Audit remediation (audit-remediation-2026-06-13 branch):
+- D3+D4 fixes: pet profile and pet feed both filter by `shelters.deleted_at IS NULL` AND `shelters.verification_status = 'verified'`.
+- D6 fix: `actorUserId` removed from `ShelterDeletionRepository` contract.
+- Work items created: `SHELTER-REGISTER-RPC-HARDEN-001`, `SHELTER-PROFILE-VISIBILITY-001`, `WORKER-DISPATCH-MODULAR-001`.
+
 ## Current Focus
 
-All major domain slices are fully wired end-to-end at the boundary layer. 1287 tests (146 files).
-Main branch HEAD: PR #121.
+All major domain slices are fully wired end-to-end at the boundary layer.
+Main branch HEAD: PR #138 (SHELTER-DELETE-001).
 
-Open: `WORKER-ERROR-BOUNDARY-001` — top-level try/catch in Worker dispatcher (audit finding 5).
-
-Suggested next:
-1. **WORKER-ERROR-BOUNDARY-001** — Worker dispatcher error boundary (structured 500 on uncaught throw).
+Open priority work items:
+1. **SHELTER-REGISTER-RPC-HARDEN-001** (P0/P1) — Harden `register_shelter` RPC: `set search_path`, REVOKE/GRANT, hardcode safe params, add to migration artifacts.
+2. **SHELTER-PROFILE-VISIBILITY-001** (P2) — Decide and enforce verification_status filter on public shelter profile route.
+3. **WORKER-DISPATCH-MODULAR-001** (P2/P3) — Modularize Worker dispatcher and `@pic4paws/client` before next large feature wave.
 
 ## Branching Convention
 

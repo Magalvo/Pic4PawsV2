@@ -24,7 +24,7 @@ describe('createSupabaseShelterDeletionRepositories', () => {
       const client = makeClient({ data: { id: 'shelter-a' }, error: null });
       const { shelterDeletionRepository } = createSupabaseShelterDeletionRepositories({ client });
 
-      const result = await shelterDeletionRepository.deleteShelter('shelter-a', 'user-1');
+      const result = await shelterDeletionRepository.deleteShelter('shelter-a');
 
       expect(result).toEqual({ shelterId: 'shelter-a' });
       expect(client.from).toHaveBeenCalledWith('shelters');
@@ -34,7 +34,7 @@ describe('createSupabaseShelterDeletionRepositories', () => {
       const client = makeClient({ data: { id: 'shelter-a' }, error: null });
       const { shelterDeletionRepository } = createSupabaseShelterDeletionRepositories({ client });
 
-      await shelterDeletionRepository.deleteShelter('shelter-a', 'user-1');
+      await shelterDeletionRepository.deleteShelter('shelter-a');
 
       const updateArg = (client._chain.update as ReturnType<typeof vi.fn>).mock.calls[0][0] as Record<string, unknown>;
       expect(typeof updateArg.deleted_at).toBe('string');
@@ -45,7 +45,7 @@ describe('createSupabaseShelterDeletionRepositories', () => {
       const client = makeClient({ data: { id: 'shelter-a' }, error: null });
       const { shelterDeletionRepository } = createSupabaseShelterDeletionRepositories({ client });
 
-      await shelterDeletionRepository.deleteShelter('shelter-a', 'user-1');
+      await shelterDeletionRepository.deleteShelter('shelter-a');
 
       expect(client._chain.eq).toHaveBeenCalledWith('id', 'shelter-a');
       expect(client._chain.is).toHaveBeenCalledWith('deleted_at', null);
@@ -55,7 +55,7 @@ describe('createSupabaseShelterDeletionRepositories', () => {
       const client = makeClient({ data: null, error: null });
       const { shelterDeletionRepository } = createSupabaseShelterDeletionRepositories({ client });
 
-      const result = await shelterDeletionRepository.deleteShelter('missing', 'user-1');
+      const result = await shelterDeletionRepository.deleteShelter('missing');
 
       expect(result).toBeNull();
     });
@@ -65,7 +65,7 @@ describe('createSupabaseShelterDeletionRepositories', () => {
       const { shelterDeletionRepository } = createSupabaseShelterDeletionRepositories({ client });
 
       await expect(
-        shelterDeletionRepository.deleteShelter('shelter-a', 'user-1'),
+        shelterDeletionRepository.deleteShelter('shelter-a'),
       ).rejects.toBeInstanceOf(SupabaseShelterDeletionRepositoryError);
     });
   });
