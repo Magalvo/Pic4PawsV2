@@ -59,19 +59,19 @@ Do not batch items that can be reviewed or merged independently.
 - `npm run test`
 - `npm run build`
 
-## 4. Current State As Of 2026-06-12
+## 4. Current State As Of 2026-06-13
 
-**Repository status**: 1391 tests passing (157 test files), full foundation complete through shelter-pets, pet-draft-load, and pet-feed location filter.
+**Repository status**: 1505 tests passing (167 test files), full foundation complete through shelter registration, shelter update, and atomic shelter registration via RPC.
 
-**Main branch HEAD**: PR #130 (audit fix — bearer pattern assertions + work item status fields)
+**Main branch HEAD**: PR #136 (SHELTER-REGISTER-ATOMIC-001 — atomic shelter registration via Supabase RPC)
 - `npm run typecheck` ✅
 - `npm run lint` ✅
 - `npm run test` ✅
 - `npm run build` ✅
 
-**Latest checkpoint**: [2026-06-12-shelter-registration-ready.md](docs/checkpoints/2026-06-12-shelter-registration-ready.md)
+**Latest checkpoint**: [2026-06-13-shelter-update-atomic-complete.md](docs/checkpoints/2026-06-13-shelter-update-atomic-complete.md)
 
-### Merged Work Items (up to 2026-06-09)
+### Merged Work Items (up to 2026-06-13)
 
 **All of these are merged to `main` and passing validation**:
 
@@ -202,8 +202,14 @@ Do not batch items that can be reviewed or merged independently.
 - `WEB-PET-DRAFT-LOAD-001` — `loadDraft` method added to `WebPetDraftUi`; 4 states: loaded/not_found/forbidden/failed; PT-PT copy
 - `MOBILE-PET-DRAFT-LOAD-001` — same as web boundary with `Mobile` prefix
 - `PET-FEED-FILTERS-001` — `location` query param added to `GET /pets`; `parseLocation` trims whitespace, treats blank as null; eq filter applied to both count and data Supabase queries; `PetFeedClientQuery.location` added to `@pic4paws/client`
+- `SHELTER-REGISTER-WORKER-001` — `POST /shelters`; authenticated; validates name/kind/city; creates `shelters` row (`verification_status: draft`, `country_code: PT`) + `shelter_memberships` row (`role: shelter_owner`); returns `201 { status: 'created', shelterId }`. Auth ladder: 405→401→501→401→400→501→201.
+- `SHELTER-REGISTER-CLIENT-001` — `createShelterRegistrationClient` in `@pic4paws/client`; POST to `{workerBaseUrl}{shelterPath}`; maps `201 created` → `{ ok: true, status: 'registered', shelterId }`; `sanitizeReasons` on all failures.
+- `WEB-SHELTER-REGISTER-001` — `createWebShelterRegistrationUi`; PT-PT, product-flow-ready; 4 states: idle/submitting/registered/failed; distinct copy for `unauthenticated` and `invalid_payload`; `unsafeReasonMarkers` + `sanitizeReasons` on generic failures.
+- `MOBILE-SHELTER-REGISTER-001` — same as Web boundary with `Mobile` prefix.
+- `SHELTER-UPDATE-001` — `PATCH /shelters/:shelterId`; all fields optional; `validateShelterUpdatePayload` rejects empty object with `no_fields_provided`; `canManageShelter` authorization; `.maybeSingle()` for not-found detection; auth ladder: 405→401→501→401→403→400→501→404→200. Client: `createShelterUpdateClient`. Web+Mobile: 4 states (idle/submitting/updated/failed) with distinct copy for `forbidden`, `shelter_not_found`, `invalid_payload`, `unauthenticated`.
+- `SHELTER-REGISTER-ATOMIC-001` — replaces two-step `shelters` + `shelter_memberships` INSERTs with a single `client.rpc('register_shelter', {...})` call; eliminates orphan-shelter risk. `SupabaseClientLike` extended with `rpc(fn, args)`; `packages/database/src/rpc-functions.ts` exports `registerShelterRpcSql` Postgres function (`security definer`).
 
-The Worker now has (as of 2026-06-12, PR #130):
+The Worker now has (as of 2026-06-13, PR #136):
 
 - server-side Supabase SDK dependency composition
 - server-side R2/S3-compatible upload signer factory
@@ -259,6 +265,8 @@ The Worker now has (as of 2026-06-12, PR #130):
   donor-only access (`actor.id !== record.donorUserId → 403`), `donorUserId` omitted from 200
   response, `matchWorkerDonationStatusId` path matcher
 - `SupabaseTableQueryLike` supports `.is()`, `.order()`, `.range()`
+- `POST /shelters` shelter registration (auth) — `canManageShelter` check, slug derived from name, atomic via `register_shelter` Supabase RPC
+- `PATCH /shelters/:shelterId` shelter profile update (auth, `canManageShelter`) — partial update, `toColumnMap`, not-found via `.maybeSingle()`
 - `WORKER_SHELTER_PATH` config (default `/shelters`)
 - `WORKER_ADOPTIONS_PATH` config (default `/adoptions`)
 - `WORKER_DONATIONS_PATH` config (default `/donations`)
@@ -304,6 +312,8 @@ The Worker now has (as of 2026-06-12, PR #130):
 - `ShelterPetListClient` (authenticated read — `loadShelterPets(shelterId, query?)` with pagination)
 - `PetDraftClient.loadPetDraft(petId)` (authenticated read — pre-fill load for edit form)
 - `PetFeedClient.loadFeed` updated — `location` filter added to `PetFeedClientQuery`
+- `ShelterRegistrationClient` (authenticated write — `registerShelter(input)`)
+- `ShelterUpdateClient` (authenticated write — `updateShelter(shelterId, input)`)
 
 Web/Mobile now have tested product boundaries for: media upload, pet media upload+attach,
 pet publish, pet draft, pet draft save flow, pet feed, pet profile, shelter profile,
@@ -324,7 +334,9 @@ notification preferences (3 states: idle/loaded/failed, optimistic updatePrefere
 financials dashboard (shelter-side, 5 states: idle/loading/loaded/forbidden/failed),
 pet status history (shelter-side audit log, 5 states: idle/loading/loaded/forbidden/failed),
 shelter-side pet list (all statuses, 6 states: idle/loading/loaded/empty/forbidden/failed),
-pet draft pre-fill load (edit form, 4 states: loaded/not_found/forbidden/failed).
+pet draft pre-fill load (edit form, 4 states: loaded/not_found/forbidden/failed),
+shelter registration (4 states: idle/submitting/registered/failed),
+shelter profile update (4 states: idle/submitting/updated/failed, with forbidden/not_found/invalid_payload variants).
 
 The adopter end-to-end flow is fully wired at the boundary layer:
 **feed → pet profile → shelter profile → submit adoption application → view adoption status**.
@@ -359,8 +371,8 @@ per deployment.
 
 ## 5. Recommended Next Work Item
 
-The foundation now covers (as of PR #130):
-- All write paths (pet drafts, media, adoption, donation, sponsorship, sponsorship manage, adoption status management, pet archive + republish)
+The foundation now covers (as of PR #136):
+- All write paths (pet drafts, media, adoption, donation, sponsorship, sponsorship manage, adoption status management, pet archive + republish, shelter registration, shelter update)
 - All read paths (pet feed + location filter, pet profile, shelter profile + search, adoption view, adoption list, donation list/status, sponsorship list/donor-list, notifications, financials, shelter-side pet list, pet draft pre-fill load — all 4 layers each)
 - Shelter-side list views (adoption list, donation list, sponsorship list, financial summary, pet list)
 - Full payment confirmation pipeline (webhook → donor status polling)
@@ -368,19 +380,18 @@ The foundation now covers (as of PR #130):
 - Notification dispatch gated by per-user preferences
 - Public shelter search with filters
 - Worker error boundary (structured 500 on uncaught throws)
+- Shelter registration (atomic via `register_shelter` Supabase RPC)
+- Shelter profile update (partial, `canManageShelter`, not-found via `maybeSingle`)
 
-**Suggested next** (in priority order, updated 2026-06-12):
-1. **SHELTER-REGISTER-WORKER-001** — `POST /shelters`; authenticated; creates shelter row + first `shelter_memberships` row (role: `shelter_owner`); returns `shelterId`; no duplicate name check needed at MVP
-2. **SHELTER-REGISTER-CLIENT-001** — `registerShelter(input)` added to a new `ShelterRegistrationClient` in `@pic4paws/client`
-3. **WEB-SHELTER-REGISTER-001** — Web shelter registration boundary (4 states: idle/submitting/registered/failed)
-4. **MOBILE-SHELTER-REGISTER-001** — Mobile shelter registration boundary with PT-PT states
+**Suggested next** (in priority order, updated 2026-06-13):
+1. **SHELTER-DELETE-001** — `DELETE /shelters/:shelterId`; authenticated shelter owner only; soft-delete (`deleted_at` timestamp); cascades visibility (pets hidden from public feed); 4-layer slice (Worker route → `@pic4paws/client` → Web + Mobile boundaries)
 
 ## 6. Handoff Prompt For New Agent Session
 
 Use this prompt in a new AI agent session (Claude Web UI):
 
 ```text
-Read AGENTS.md, docs/agent-resume.md, docs/canonical/architecture-proposal.md, docs/canonical/sdd.md, and the latest checkpoint at docs/checkpoints/2026-06-12-shelter-registration-ready.md.
+Read AGENTS.md, docs/agent-resume.md, docs/canonical/architecture-proposal.md, docs/canonical/sdd.md, and the latest checkpoint at docs/checkpoints/2026-06-13-shelter-update-atomic-complete.md.
 
 Continue Pic4Paws V2 development from main using strict SDD/TDD:
 - 1 branch per work item: agent/<WORK-ITEM-ID>
