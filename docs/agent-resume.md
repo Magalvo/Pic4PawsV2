@@ -61,9 +61,9 @@ Do not batch items that can be reviewed or merged independently.
 
 ## 4. Current State As Of 2026-06-13
 
-**Repository status**: 1541 tests passing (172 test files), full foundation complete through shelter deletion, audit remediation, and RPC security hardening.
+**Repository status**: 1542 tests passing (172 test files), full foundation complete through shelter deletion, audit remediation, RPC security hardening, and public shelter profile visibility gate.
 
-**Main branch HEAD**: PR #141 (SHELTER-RPC-HARDEN-FOLLOWUP-001 — p_kind enum type + drop old 14-arg overload)
+**Main branch HEAD**: PR #143 (SHELTER-PROFILE-VISIBILITY-001 — verification_status = verified filter on public shelter profile)
 - `npm run typecheck` ✅
 - `npm run lint` ✅
 - `npm run test` ✅
@@ -210,6 +210,7 @@ Do not batch items that can be reviewed or merged independently.
 - `SHELTER-REGISTER-ATOMIC-001` — replaces two-step `shelters` + `shelter_memberships` INSERTs with a single `client.rpc('register_shelter', {...})` call; eliminates orphan-shelter risk. `SupabaseClientLike` extended with `rpc(fn, args)`; `packages/database/src/rpc-functions.ts` exports `registerShelterRpcSql` Postgres function (`security definer`).
 - `SHELTER-DELETE-001` — `DELETE /shelters/:shelterId`; shelter owner / admin only (`canDeleteShelter`); soft-delete via `deleted_at`; pets cascade off public feed via join-filter without pet row changes. Client: `createShelterDeletionClient`. Web+Mobile: 4 states (idle/submitting/deleted/failed).
 - `SHELTER-REGISTER-RPC-HARDEN-001` — `register_shelter` RPC hardened: `set search_path = public`, schema-qualified table names, `p_verification_status`/`p_role` removed from signature (hardcoded to `draft`/`shelter_owner`), `REVOKE EXECUTE` from public/anon/authenticated, `GRANT EXECUTE` to service_role; `p_kind` typed as `public.shelter_kind`; old 14-arg unsafe overload dropped; RPC added to `migrationArtifacts` as `0003_register_shelter_rpc`.
+- `SHELTER-PROFILE-VISIBILITY-001` — public `GET /shelters/:shelterId` now filters `verification_status = 'verified'`; draft and rejected shelters return 404. Decision: Option A (public-only). No authenticated preview route added.
 
 The Worker now has (as of 2026-06-13, PR #136):
 
@@ -386,8 +387,7 @@ The foundation now covers (as of PR #136):
 - Shelter profile update (partial, `canManageShelter`, not-found via `maybeSingle`)
 
 **Suggested next** (in priority order, updated 2026-06-13):
-1. **SHELTER-PROFILE-VISIBILITY-001** (P2) — Decide and enforce `verification_status = 'verified'` filter on public `GET /shelters/:shelterId` (draft shelters currently visible).
-2. **WORKER-DISPATCH-MODULAR-001** (P2/P3) — Modularize Worker dispatcher and `@pic4paws/client` into per-domain modules before the next large feature wave.
+1. **WORKER-DISPATCH-MODULAR-001** (P2/P3) — Modularize Worker dispatcher and `@pic4paws/client` into per-domain modules before the next large feature wave.
 
 ## 6. Handoff Prompt For New Agent Session
 

@@ -181,10 +181,24 @@ describe('Supabase shelter repository adapters', () => {
         filters: [
           { kind: 'eq', column: 'id', value: 'shelter-a' },
           { kind: 'is', column: 'deleted_at', value: null },
+          { kind: 'eq', column: 'verification_status', value: 'verified' },
         ],
         result: 'maybeSingle',
       },
     ]);
+  });
+
+  it('applies verification_status = verified filter (draft and rejected shelters are hidden)', async () => {
+    const { client, operations } = createFakeSupabaseClient({
+      'shelters:maybeSingle': { data: null, error: null },
+    });
+    const { shelterProfileRepository } = createSupabaseShelterRepositories({ client });
+
+    await shelterProfileRepository.loadShelterProfile({ shelterId: 'shelter-a' });
+
+    const [op] = operations;
+    expect(op.filters).toContainEqual({ kind: 'eq', column: 'verification_status', value: 'verified' });
+    expect(op.filters).toContainEqual({ kind: 'is', column: 'deleted_at', value: null });
   });
 
   it('returns null when shelter row is absent', async () => {
