@@ -81,6 +81,7 @@ export const createSupabaseShelterRepositories = ({
         .select(shelterProfileColumns)
         .eq('id', shelterId)
         .is('deleted_at', null)
+        .eq('verification_status', 'verified')
         .maybeSingle();
       const row = assertShelterResult<ShelterProfileRow | null>(
         result,

@@ -1,6 +1,7 @@
 # SHELTER-PROFILE-VISIBILITY-001 — Public Shelter Profile Verification Gate
 
-**status**: open
+**status**: done
+**decision**: Option A — public route filters by `verification_status = 'verified'`; draft/rejected shelters return 404
 **created**: 2026-06-13
 **priority**: P2
 
