@@ -56,6 +56,7 @@ Do not use a batch branch simply because items are thematically related. Web and
 - Branch before experiments or architectural spikes. Risky approaches must happen on an isolated branch and be merged only after review and validation pass.
 - Treat AI-generated changes like a human pull request: review the diff, not only the running result, before merge.
 - When multiple agents or parallel work streams are active, use isolated worktrees or separate working directories so agents cannot overwrite each other.
+- When merging a PR, update every work item covered by that PR to `status: done`.
 
 ## Legacy App Rule
 
