@@ -1,6 +1,6 @@
 ---
 description: Periodic independent SDD audit — audits main vs specs since the last audit, saves a dated report in docs/audits/, opens a docs-only PR. Never remediates.
-model: claude-fable-5
+model: claude-sonnet-4.6
 ---
 
 # Independent SDD Audit (Pic4Paws V2)
