@@ -47,25 +47,25 @@ describe('createSupabaseShelterRegistrationRepositories', () => {
       expect(args.p_slug).toBe('canil-de-sao-joao');
     });
 
-    it('passes verification_status draft and country_code PT as rpc args', async () => {
+    it('passes p_country_code PT and does NOT pass p_verification_status or p_role (function hardcodes these)', async () => {
       const client = makeClient({ data: 'some-uuid', error: null });
       const { shelterRegistrationRepository } = createSupabaseShelterRegistrationRepositories({ client });
 
       await shelterRegistrationRepository.registerShelter(validInput, 'user-1');
 
       const args = (client.rpc as ReturnType<typeof vi.fn>).mock.calls[0][1] as Record<string, unknown>;
-      expect(args.p_verification_status).toBe('draft');
       expect(args.p_country_code).toBe('PT');
+      expect(args).not.toHaveProperty('p_verification_status');
+      expect(args).not.toHaveProperty('p_role');
     });
 
-    it('passes shelter_owner role and actorUserId as rpc args', async () => {
+    it('passes actorUserId as p_user_id', async () => {
       const client = makeClient({ data: 'some-uuid', error: null });
       const { shelterRegistrationRepository } = createSupabaseShelterRegistrationRepositories({ client });
 
       await shelterRegistrationRepository.registerShelter(validInput, 'user-owner');
 
       const args = (client.rpc as ReturnType<typeof vi.fn>).mock.calls[0][1] as Record<string, unknown>;
-      expect(args.p_role).toBe('shelter_owner');
       expect(args.p_user_id).toBe('user-owner');
     });
 

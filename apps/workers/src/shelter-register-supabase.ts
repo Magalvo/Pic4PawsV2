@@ -40,7 +40,6 @@ export const createSupabaseShelterRegistrationRepositories = ({
         p_name: input.name,
         p_slug: slug,
         p_kind: input.kind,
-        p_verification_status: 'draft',
         p_city: input.city,
         p_district: input.district ?? null,
         p_country_code: 'PT',
@@ -49,7 +48,6 @@ export const createSupabaseShelterRegistrationRepositories = ({
         p_description: input.description ?? null,
         p_membership_id: crypto.randomUUID(),
         p_user_id: actorUserId,
-        p_role: 'shelter_owner',
       });
 
       if (result.error) {
