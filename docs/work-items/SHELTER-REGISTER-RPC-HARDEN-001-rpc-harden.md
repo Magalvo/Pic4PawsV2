@@ -1,6 +1,6 @@
 # SHELTER-REGISTER-RPC-HARDEN-001 — Harden `register_shelter` RPC
 
-**status**: open
+**status**: done
 **created**: 2026-06-13
 **priority**: P0/P1
 
