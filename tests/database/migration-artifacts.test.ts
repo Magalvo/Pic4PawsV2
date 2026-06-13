@@ -36,6 +36,10 @@ describe('database migration artifacts', () => {
     expect(sql).toContain('to service_role');
     expect(sql).not.toContain('p_verification_status');
     expect(sql).not.toContain('p_role');
+    // p_kind must use the enum type, not text, so Postgres enforces valid values at call time
+    expect(sql).toMatch(/p_kind\s+public\.shelter_kind/);
+    // old 14-arg unsafe overload must be dropped in case it was ever manually deployed
+    expect(sql).toContain('drop function if exists');
   });
 
   it('renders approved enum types and core tables', () => {

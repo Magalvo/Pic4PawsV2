@@ -61,15 +61,13 @@ Do not batch items that can be reviewed or merged independently.
 
 ## 4. Current State As Of 2026-06-13
 
-**Repository status**: 1539 tests passing (172 test files), full foundation complete through shelter deletion, audit remediation (D3/D4/D6 fixes), and three new work items for open audit findings.
+**Repository status**: 1541 tests passing (172 test files), full foundation complete through shelter deletion, audit remediation, and RPC security hardening.
 
-**Main branch HEAD**: PR #138 (SHELTER-DELETE-001 — shelter soft-delete, pet visibility cascade via join-filter)
+**Main branch HEAD**: PR #140 (SHELTER-REGISTER-RPC-HARDEN-001 — harden register_shelter RPC)
 - `npm run typecheck` ✅
 - `npm run lint` ✅
 - `npm run test` ✅
 - `npm run build` ✅
-
-**In-progress**: branch `agent/audit-remediation-2026-06-13` — D3/D4 pet visibility fixes, D6 repository contract fix, D1+D2/D5/D7 work items, D8 docs update.
 
 **Latest checkpoint**: [2026-06-13-shelter-update-atomic-complete.md](docs/checkpoints/2026-06-13-shelter-update-atomic-complete.md)
 
@@ -211,6 +209,7 @@ Do not batch items that can be reviewed or merged independently.
 - `SHELTER-UPDATE-001` — `PATCH /shelters/:shelterId`; all fields optional; `validateShelterUpdatePayload` rejects empty object with `no_fields_provided`; `canManageShelter` authorization; `.maybeSingle()` for not-found detection; auth ladder: 405→401→501→401→403→400→501→404→200. Client: `createShelterUpdateClient`. Web+Mobile: 4 states (idle/submitting/updated/failed) with distinct copy for `forbidden`, `shelter_not_found`, `invalid_payload`, `unauthenticated`.
 - `SHELTER-REGISTER-ATOMIC-001` — replaces two-step `shelters` + `shelter_memberships` INSERTs with a single `client.rpc('register_shelter', {...})` call; eliminates orphan-shelter risk. `SupabaseClientLike` extended with `rpc(fn, args)`; `packages/database/src/rpc-functions.ts` exports `registerShelterRpcSql` Postgres function (`security definer`).
 - `SHELTER-DELETE-001` — `DELETE /shelters/:shelterId`; shelter owner / admin only (`canDeleteShelter`); soft-delete via `deleted_at`; pets cascade off public feed via join-filter without pet row changes. Client: `createShelterDeletionClient`. Web+Mobile: 4 states (idle/submitting/deleted/failed).
+- `SHELTER-REGISTER-RPC-HARDEN-001` — `register_shelter` RPC hardened: `set search_path = public`, schema-qualified table names, `p_verification_status`/`p_role` removed from signature (hardcoded to `draft`/`shelter_owner`), `REVOKE EXECUTE` from public/anon/authenticated, `GRANT EXECUTE` to service_role; `p_kind` typed as `public.shelter_kind`; old 14-arg unsafe overload dropped; RPC added to `migrationArtifacts` as `0003_register_shelter_rpc`.
 
 The Worker now has (as of 2026-06-13, PR #136):
 
@@ -387,9 +386,8 @@ The foundation now covers (as of PR #136):
 - Shelter profile update (partial, `canManageShelter`, not-found via `maybeSingle`)
 
 **Suggested next** (in priority order, updated 2026-06-13):
-1. **SHELTER-REGISTER-RPC-HARDEN-001** (P0/P1) — Harden `register_shelter` Supabase RPC: add `SET search_path`, REVOKE/GRANT execute, hardcode `verification_status='draft'` and `role='shelter_owner'` inside the function; add RPC to migration artifacts pipeline.
-2. **SHELTER-PROFILE-VISIBILITY-001** (P2) — Decide and enforce `verification_status = 'verified'` filter on public `GET /shelters/:shelterId` (draft shelters currently visible).
-3. **WORKER-DISPATCH-MODULAR-001** (P2/P3) — Modularize Worker dispatcher and `@pic4paws/client` into per-domain modules before the next large feature wave.
+1. **SHELTER-PROFILE-VISIBILITY-001** (P2) — Decide and enforce `verification_status = 'verified'` filter on public `GET /shelters/:shelterId` (draft shelters currently visible).
+2. **WORKER-DISPATCH-MODULAR-001** (P2/P3) — Modularize Worker dispatcher and `@pic4paws/client` into per-domain modules before the next large feature wave.
 
 ## 6. Handoff Prompt For New Agent Session
 
