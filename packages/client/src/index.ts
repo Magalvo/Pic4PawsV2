@@ -5375,3 +5375,119 @@ export const createShelterRegistrationClient = ({
     return success;
   },
 });
+
+// ─── Shelter Update ───────────────────────────────────────────────────────────
+
+export type ShelterUpdateClientInput = {
+  name?: string;
+  kind?: string;
+  city?: string;
+  district?: string | null;
+  publicEmail?: string | null;
+  publicPhone?: string | null;
+  description?: string | null;
+};
+
+export type UpdateShelterClientSuccess = {
+  ok: true;
+  status: 'updated';
+  shelterId: string;
+};
+
+export type UpdateShelterClientFailureStatus =
+  | 'unauthenticated'
+  | 'forbidden'
+  | 'invalid_payload'
+  | 'shelter_not_found'
+  | 'auth_adapter_not_configured'
+  | 'shelter_update_repository_not_configured'
+  | 'worker_request_failed';
+
+export type UpdateShelterClientFailure = {
+  ok: false;
+  status: UpdateShelterClientFailureStatus;
+  reasons: string[];
+};
+
+export type UpdateShelterClientResult = UpdateShelterClientSuccess | UpdateShelterClientFailure;
+
+export type CreateShelterUpdateClientInput = {
+  workerBaseUrl: string;
+  shelterPath: `/${string}`;
+  getAccessToken: () => Promise<string | null>;
+  fetch: typeof globalThis.fetch;
+};
+
+export type ShelterUpdateClient = {
+  updateShelter: (
+    shelterId: string,
+    input: ShelterUpdateClientInput,
+  ) => Promise<UpdateShelterClientResult>;
+};
+
+const parseUpdateShelterFailureStatus = (
+  body: Record<string, unknown> | null,
+): UpdateShelterClientFailureStatus => {
+  const status = body?.status;
+  if (status === 'unauthenticated') return 'unauthenticated';
+  if (status === 'forbidden') return 'forbidden';
+  if (status === 'invalid_payload') return 'invalid_payload';
+  if (status === 'shelter_not_found') return 'shelter_not_found';
+  if (status === 'auth_adapter_not_configured') return 'auth_adapter_not_configured';
+  if (status === 'shelter_update_repository_not_configured')
+    return 'shelter_update_repository_not_configured';
+  return 'worker_request_failed';
+};
+
+const parseUpdateShelterSuccess = (
+  body: Record<string, unknown> | null,
+): UpdateShelterClientSuccess | null => {
+  if (!body || body.status !== 'updated' || typeof body.shelterId !== 'string') return null;
+  return { ok: true, status: 'updated', shelterId: body.shelterId };
+};
+
+export const createShelterUpdateClient = ({
+  workerBaseUrl,
+  shelterPath,
+  getAccessToken,
+  fetch,
+}: CreateShelterUpdateClientInput): ShelterUpdateClient => ({
+  updateShelter: async (shelterId: string, input: ShelterUpdateClientInput) => {
+    const accessToken = await getAccessToken();
+
+    if (!accessToken?.trim()) {
+      return { ok: false, status: 'unauthenticated', reasons: ['missing_access_token'] };
+    }
+
+    let response: Response;
+
+    try {
+      response = await fetch(`${createWorkerUrl(workerBaseUrl, shelterPath)}/${shelterId}`, {
+        method: 'PATCH',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(input),
+      });
+    } catch {
+      return { ok: false, status: 'worker_request_failed', reasons: ['network_error'] };
+    }
+
+    const body = await parseJsonResponse(response);
+
+    if (!response.ok) {
+      const status = parseUpdateShelterFailureStatus(body);
+      const reasons = Array.isArray(body?.reasons) ? parseReasons(body) : [status];
+      return { ok: false, status, reasons: sanitizeReasons(reasons, status) };
+    }
+
+    const success = parseUpdateShelterSuccess(body);
+
+    if (!success) {
+      return { ok: false, status: 'worker_request_failed', reasons: ['invalid_worker_response'] };
+    }
+
+    return success;
+  },
+});

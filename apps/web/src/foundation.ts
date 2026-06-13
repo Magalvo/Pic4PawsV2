@@ -69,6 +69,10 @@ import {
   webShelterRegistrationUiContent,
   type WebShelterRegistrationUiContent,
 } from './shelter-register';
+import {
+  webShelterUpdateUiContent,
+  type WebShelterUpdateUiContent,
+} from './shelter-update';
 
 export type WebFoundationStatus = 'contract-ready';
 
@@ -112,6 +116,7 @@ export type WebFoundationContent = {
   petStatusHistory: Pick<WebPetStatusHistoryUiContent, 'title' | 'description' | 'status'>;
   shelterPetList: Pick<WebShelterPetListUiContent, 'title' | 'description' | 'status'>;
   shelterRegistration: Pick<WebShelterRegistrationUiContent, 'title' | 'description' | 'status'>;
+  shelterUpdate: Pick<WebShelterUpdateUiContent, 'title' | 'description' | 'status'>;
   readiness: Array<{
     id: 'database' | 'auth' | 'pets' | 'payments' | 'media' | 'workers';
     label: string;
@@ -276,6 +281,11 @@ export const webFoundationContent: WebFoundationContent = {
     title: webShelterRegistrationUiContent.title,
     description: webShelterRegistrationUiContent.description,
     status: webShelterRegistrationUiContent.status,
+  },
+  shelterUpdate: {
+    title: webShelterUpdateUiContent.title,
+    description: webShelterUpdateUiContent.description,
+    status: webShelterUpdateUiContent.status,
   },
   readiness: [
     {

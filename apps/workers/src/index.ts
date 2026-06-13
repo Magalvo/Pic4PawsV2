@@ -83,6 +83,7 @@ import {
   matchWorkerShelterPetsShelterId,
 } from './shelter-pet-list';
 import { handleWorkerShelterRegistrationRequest } from './shelter-register';
+import { handleWorkerShelterUpdateRequest } from './shelter-update';
 import { createR2UploadSignerWorkerDependencies } from './r2-signer';
 import { createSupabaseSdkWorkerDependencies } from './supabase-sdk';
 export {
@@ -409,6 +410,23 @@ export type {
   CreateSupabaseShelterRegistrationRepositoriesInput,
   CreateSupabaseShelterRegistrationRepositoriesResult,
 } from './shelter-register-supabase';
+export {
+  handleWorkerShelterUpdateRequest,
+  validateShelterUpdatePayload,
+} from './shelter-update';
+export type {
+  ShelterUpdateInput,
+  ShelterUpdateRepository,
+  HandleWorkerShelterUpdateRequestInput,
+} from './shelter-update';
+export {
+  createSupabaseShelterUpdateRepositories,
+  SupabaseShelterUpdateRepositoryError,
+} from './shelter-update-supabase';
+export type {
+  CreateSupabaseShelterUpdateRepositoriesInput,
+  CreateSupabaseShelterUpdateRepositoriesResult,
+} from './shelter-update-supabase';
 export {
   createR2UploadSigner,
   createR2UploadSignerWorkerDependencies,
@@ -946,6 +964,16 @@ const _dispatchWorkerRequest = async (
   );
 
   if (shelterProfileId !== null) {
+    if (request.method === 'PATCH') {
+      const payload = await request.json().catch(() => null);
+      return handleWorkerShelterUpdateRequest({
+        request,
+        shelterId: shelterProfileId,
+        payload,
+        shelterUpdateRepository: dependencies.shelterUpdateRepository,
+        authenticator: dependencies.petDraftAuthenticator,
+      });
+    }
     return handleWorkerShelterProfileRequest({
       request,
       shelterId: shelterProfileId,
