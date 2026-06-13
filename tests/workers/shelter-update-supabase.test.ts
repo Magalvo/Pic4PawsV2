@@ -15,6 +15,7 @@ const makeClient = (result: unknown) => {
   chain['maybeSingle'] = vi.fn().mockResolvedValue(result);
   return {
     from: vi.fn().mockReturnValue(chain),
+    rpc: vi.fn(),
     _chain: chain,
   };
 };

@@ -1,6 +1,6 @@
 # Work-Item: SHELTER-REGISTER-ATOMIC-001 — Atomic Shelter Registration
 
-status: draft
+status: done
 
 ## 1. Context & Problem
 

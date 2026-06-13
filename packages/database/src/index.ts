@@ -11,3 +11,4 @@ export * from './migration-artifacts';
 export * from './supabase-local';
 export * from './media-assets';
 export * from './pet-drafts';
+export * from './rpc-functions';

@@ -203,6 +203,7 @@ const createFakeSupabaseClient = (
       },
     },
     from: (table) => new FakeSupabaseQuery(table, operations, responses),
+    rpc: async () => ({ data: null, error: null }),
   };
 
   return { client, operations, requestedTokens };

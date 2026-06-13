@@ -15,6 +15,7 @@ const makeQueryChain = (result: unknown) => {
 
 const makeClient = (chain: ReturnType<typeof makeQueryChain>) => ({
   from: vi.fn().mockReturnValue(chain),
+  rpc: vi.fn(),
 });
 
 describe('createSupabaseAdoptionRepositories', () => {
