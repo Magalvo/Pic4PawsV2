@@ -4,6 +4,7 @@ import {
   initialDatabaseMigration,
   migrationArtifacts,
   notificationsMigration,
+  registerShelterMigration,
   renderMigrationArtifact,
 } from '../../packages/database/src/index';
 
@@ -12,7 +13,29 @@ describe('database migration artifacts', () => {
     expect(initialDatabaseMigration.id).toBe('0001_initial_core_schema_and_rls');
     expect(initialDatabaseMigration.filename).toBe('0001_initial_core_schema_and_rls.sql');
     expect(initialDatabaseMigration.destructive).toBe(false);
-    expect(migrationArtifacts).toEqual([initialDatabaseMigration, notificationsMigration]);
+    expect(migrationArtifacts).toEqual([
+      initialDatabaseMigration,
+      notificationsMigration,
+      registerShelterMigration,
+    ]);
+  });
+
+  it('includes the register_shelter RPC as migration 0003', () => {
+    expect(registerShelterMigration.id).toBe('0003_register_shelter_rpc');
+    expect(registerShelterMigration.filename).toBe('0003_register_shelter_rpc.sql');
+    expect(registerShelterMigration.destructive).toBe(false);
+  });
+
+  it('register_shelter RPC SQL is hardened: search_path, schema-qualified tables, REVOKE/GRANT, no unsafe params', () => {
+    const sql = renderMigrationArtifact(registerShelterMigration);
+    expect(sql).toContain('set search_path = public');
+    expect(sql).toContain('public.shelters');
+    expect(sql).toContain('public.shelter_memberships');
+    expect(sql).toContain('revoke execute');
+    expect(sql).toContain('grant execute');
+    expect(sql).toContain('to service_role');
+    expect(sql).not.toContain('p_verification_status');
+    expect(sql).not.toContain('p_role');
   });
 
   it('renders approved enum types and core tables', () => {

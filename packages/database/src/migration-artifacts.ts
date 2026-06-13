@@ -1,5 +1,6 @@
 import { rlsPolicies } from './rls-policies';
 import { renderRlsMigrationSql } from './rls-sql';
+import { registerShelterRpcSql } from './rpc-functions';
 
 export type MigrationArtifact = {
   id: string;
@@ -286,7 +287,20 @@ export const notificationsMigration: MigrationArtifact = {
   sql: notificationsSchemaSql,
 };
 
-export const migrationArtifacts = [initialDatabaseMigration, notificationsMigration] as const;
+export const registerShelterMigration: MigrationArtifact = {
+  id: '0003_register_shelter_rpc',
+  filename: '0003_register_shelter_rpc.sql',
+  description:
+    'Adds hardened register_shelter RPC: security definer with set search_path, schema-qualified tables, hardcoded safe defaults for verification_status and role, REVOKE/GRANT execute.',
+  destructive: false,
+  sql: registerShelterRpcSql.trim(),
+};
+
+export const migrationArtifacts = [
+  initialDatabaseMigration,
+  notificationsMigration,
+  registerShelterMigration,
+] as const;
 
 export const assertNonDestructiveMigration = (artifact: MigrationArtifact): void => {
   if (artifact.destructive || destructiveSqlPattern.test(artifact.sql)) {
