@@ -14,6 +14,7 @@ const fakeClient = {
   from: () => {
     throw new Error('not used by sdk factory tests');
   },
+  rpc: async () => ({ data: null, error: null }),
 } as WorkerSupabaseClientLike;
 
 describe('Supabase SDK Worker client factory', () => {

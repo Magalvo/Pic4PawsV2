@@ -49,6 +49,7 @@ export type SupabaseTableQueryLike = PromiseLike<SupabaseQueryResult<unknown>> &
 
 export type SupabaseClientLike = {
   from: (table: string) => SupabaseTableQueryLike;
+  rpc: (fn: string, args: Record<string, unknown>) => Promise<SupabaseQueryResult<unknown>>;
 };
 
 export class SupabasePetRepositoryError extends Error {

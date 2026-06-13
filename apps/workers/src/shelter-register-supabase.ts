@@ -35,44 +35,26 @@ export const createSupabaseShelterRegistrationRepositories = ({
       const shelterId = crypto.randomUUID();
       const slug = toSlug(input.name);
 
-      const shelterInsert = await client
-        .from('shelters')
-        .insert({
-          id: shelterId,
-          name: input.name,
-          slug,
-          kind: input.kind,
-          verification_status: 'draft',
-          city: input.city,
-          district: input.district,
-          country_code: 'PT',
-          public_email: input.publicEmail,
-          public_phone: input.publicPhone,
-          description: input.description,
-        })
-        .select('id')
-        .single();
+      const result = await client.rpc('register_shelter', {
+        p_shelter_id: shelterId,
+        p_name: input.name,
+        p_slug: slug,
+        p_kind: input.kind,
+        p_verification_status: 'draft',
+        p_city: input.city,
+        p_district: input.district ?? null,
+        p_country_code: 'PT',
+        p_public_email: input.publicEmail ?? null,
+        p_public_phone: input.publicPhone ?? null,
+        p_description: input.description ?? null,
+        p_membership_id: crypto.randomUUID(),
+        p_user_id: actorUserId,
+        p_role: 'shelter_owner',
+      });
 
-      if (shelterInsert.error) {
+      if (result.error) {
         throw new SupabaseShelterRegistrationRepositoryError(
-          `Failed to create shelter: ${shelterInsert.error.message ?? 'unknown error'}`,
-        );
-      }
-
-      const membershipInsert = await client
-        .from('shelter_memberships')
-        .insert({
-          id: crypto.randomUUID(),
-          shelter_id: shelterId,
-          user_id: actorUserId,
-          role: 'shelter_owner',
-        })
-        .select('id')
-        .single();
-
-      if (membershipInsert.error) {
-        throw new SupabaseShelterRegistrationRepositoryError(
-          `Failed to create shelter membership: ${membershipInsert.error.message ?? 'unknown error'}`,
+          `Failed to register shelter: ${result.error.message ?? 'unknown error'}`,
         );
       }
 

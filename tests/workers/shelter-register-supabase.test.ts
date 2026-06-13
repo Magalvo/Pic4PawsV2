@@ -5,20 +5,10 @@ import {
 } from '../../apps/workers/src/shelter-register-supabase';
 import type { ShelterRegistrationInput } from '../../apps/workers/src/shelter-register';
 
-const makeClient = (shelterResult: unknown, memberResult: unknown) => {
-  let callCount = 0;
-  return {
-    from: vi.fn().mockImplementation(() => {
-      callCount += 1;
-      const chain: Record<string, unknown> = {};
-      const result = callCount === 1 ? shelterResult : memberResult;
-      chain['insert'] = vi.fn().mockReturnValue(chain);
-      chain['select'] = vi.fn().mockReturnValue(chain);
-      chain['single'] = vi.fn().mockResolvedValue(result);
-      return chain;
-    }),
-  };
-};
+const makeClient = (result: unknown) => ({
+  from: vi.fn(),
+  rpc: vi.fn().mockResolvedValue(result),
+});
 
 const validInput: ShelterRegistrationInput = {
   name: 'Canil de Lisboa',
@@ -32,26 +22,20 @@ const validInput: ShelterRegistrationInput = {
 
 describe('createSupabaseShelterRegistrationRepositories', () => {
   describe('registerShelter', () => {
-    it('inserts a shelter and membership, returns shelterId', async () => {
-      const client = makeClient(
-        { data: { id: 'shelter-uuid' }, error: null },
-        { data: { id: 'membership-uuid' }, error: null },
-      );
+    it('calls rpc register_shelter and returns shelterId', async () => {
+      const shelterId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
+      const client = makeClient({ data: shelterId, error: null });
       const { shelterRegistrationRepository } = createSupabaseShelterRegistrationRepositories({ client });
 
       const result = await shelterRegistrationRepository.registerShelter(validInput, 'user-1');
 
-      expect(typeof result.shelterId).toBe('string');
       expect(result.shelterId).toHaveLength(36);
-      expect(client.from).toHaveBeenCalledWith('shelters');
-      expect(client.from).toHaveBeenCalledWith('shelter_memberships');
+      expect(client.rpc).toHaveBeenCalledWith('register_shelter', expect.any(Object));
+      expect(client.from).not.toHaveBeenCalled();
     });
 
-    it('generates a slug from the shelter name', async () => {
-      const client = makeClient(
-        { data: { id: 'shelter-uuid' }, error: null },
-        { data: { id: 'membership-uuid' }, error: null },
-      );
+    it('passes slug generated from name as rpc arg', async () => {
+      const client = makeClient({ data: 'some-uuid', error: null });
       const { shelterRegistrationRepository } = createSupabaseShelterRegistrationRepositories({ client });
 
       await shelterRegistrationRepository.registerShelter(
@@ -59,64 +43,44 @@ describe('createSupabaseShelterRegistrationRepositories', () => {
         'user-1',
       );
 
-      const fromMock = client.from as ReturnType<typeof vi.fn>;
-      const shelterCall = fromMock.mock.results[0].value;
-      const insertMock = shelterCall.insert as ReturnType<typeof vi.fn>;
-      const insertArg = insertMock.mock.calls[0][0] as Record<string, unknown>;
-      expect(insertArg.slug).toBe('canil-de-sao-joao');
+      const args = (client.rpc as ReturnType<typeof vi.fn>).mock.calls[0][1] as Record<string, unknown>;
+      expect(args.p_slug).toBe('canil-de-sao-joao');
     });
 
-    it('sets verification_status to draft and country_code to PT', async () => {
-      const client = makeClient(
-        { data: { id: 'shelter-uuid' }, error: null },
-        { data: { id: 'membership-uuid' }, error: null },
-      );
+    it('passes verification_status draft and country_code PT as rpc args', async () => {
+      const client = makeClient({ data: 'some-uuid', error: null });
       const { shelterRegistrationRepository } = createSupabaseShelterRegistrationRepositories({ client });
 
       await shelterRegistrationRepository.registerShelter(validInput, 'user-1');
 
-      const fromMock = client.from as ReturnType<typeof vi.fn>;
-      const shelterCall = fromMock.mock.results[0].value;
-      const insertMock = shelterCall.insert as ReturnType<typeof vi.fn>;
-      const insertArg = insertMock.mock.calls[0][0] as Record<string, unknown>;
-      expect(insertArg.verification_status).toBe('draft');
-      expect(insertArg.country_code).toBe('PT');
+      const args = (client.rpc as ReturnType<typeof vi.fn>).mock.calls[0][1] as Record<string, unknown>;
+      expect(args.p_verification_status).toBe('draft');
+      expect(args.p_country_code).toBe('PT');
     });
 
-    it('assigns shelter_owner role to the first member', async () => {
-      const client = makeClient(
-        { data: { id: 'shelter-uuid' }, error: null },
-        { data: { id: 'membership-uuid' }, error: null },
-      );
+    it('passes shelter_owner role and actorUserId as rpc args', async () => {
+      const client = makeClient({ data: 'some-uuid', error: null });
       const { shelterRegistrationRepository } = createSupabaseShelterRegistrationRepositories({ client });
 
       await shelterRegistrationRepository.registerShelter(validInput, 'user-owner');
 
-      const fromMock = client.from as ReturnType<typeof vi.fn>;
-      const membershipCall = fromMock.mock.results[1].value;
-      const insertMock = membershipCall.insert as ReturnType<typeof vi.fn>;
-      const insertArg = insertMock.mock.calls[0][0] as Record<string, unknown>;
-      expect(insertArg.role).toBe('shelter_owner');
-      expect(insertArg.user_id).toBe('user-owner');
+      const args = (client.rpc as ReturnType<typeof vi.fn>).mock.calls[0][1] as Record<string, unknown>;
+      expect(args.p_role).toBe('shelter_owner');
+      expect(args.p_user_id).toBe('user-owner');
     });
 
-    it('throws SupabaseShelterRegistrationRepositoryError when shelter insert fails', async () => {
-      const client = makeClient(
-        { data: null, error: { message: 'unique violation' } },
-        { data: { id: 'membership-uuid' }, error: null },
-      );
+    it('returns the shelterId that was passed as p_shelter_id', async () => {
+      const client = makeClient({ data: null, error: null });
       const { shelterRegistrationRepository } = createSupabaseShelterRegistrationRepositories({ client });
 
-      await expect(
-        shelterRegistrationRepository.registerShelter(validInput, 'user-1'),
-      ).rejects.toBeInstanceOf(SupabaseShelterRegistrationRepositoryError);
+      const result = await shelterRegistrationRepository.registerShelter(validInput, 'user-1');
+
+      const args = (client.rpc as ReturnType<typeof vi.fn>).mock.calls[0][1] as Record<string, unknown>;
+      expect(result.shelterId).toBe(args.p_shelter_id);
     });
 
-    it('throws SupabaseShelterRegistrationRepositoryError when membership insert fails', async () => {
-      const client = makeClient(
-        { data: { id: 'shelter-uuid' }, error: null },
-        { data: null, error: { message: 'fk violation' } },
-      );
+    it('throws SupabaseShelterRegistrationRepositoryError on rpc error', async () => {
+      const client = makeClient({ data: null, error: { message: 'unique violation' } });
       const { shelterRegistrationRepository } = createSupabaseShelterRegistrationRepositories({ client });
 
       await expect(

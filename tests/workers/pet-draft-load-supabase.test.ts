@@ -88,6 +88,7 @@ const createFakeSupabaseClient = (responses: FakeResponseMap = {}) => {
   const operations: Operation[] = [];
   const client: SupabaseClientLike = {
     from: (table) => new FakeSupabaseQuery(table, operations, responses),
+    rpc: async () => ({ data: null, error: null }),
   };
   return { client, operations };
 };
