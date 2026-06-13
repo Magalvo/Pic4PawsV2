@@ -84,6 +84,7 @@ import {
 } from './shelter-pet-list';
 import { handleWorkerShelterRegistrationRequest } from './shelter-register';
 import { handleWorkerShelterUpdateRequest } from './shelter-update';
+import { handleWorkerShelterDeleteRequest } from './shelter-delete';
 import { createR2UploadSignerWorkerDependencies } from './r2-signer';
 import { createSupabaseSdkWorkerDependencies } from './supabase-sdk';
 export {
@@ -427,6 +428,19 @@ export type {
   CreateSupabaseShelterUpdateRepositoriesInput,
   CreateSupabaseShelterUpdateRepositoriesResult,
 } from './shelter-update-supabase';
+export { handleWorkerShelterDeleteRequest } from './shelter-delete';
+export type {
+  ShelterDeletionRepository,
+  HandleWorkerShelterDeleteRequestInput,
+} from './shelter-delete';
+export {
+  createSupabaseShelterDeletionRepositories,
+  SupabaseShelterDeletionRepositoryError,
+} from './shelter-delete-supabase';
+export type {
+  CreateSupabaseShelterDeletionRepositoriesInput,
+  CreateSupabaseShelterDeletionRepositoriesResult,
+} from './shelter-delete-supabase';
 export {
   createR2UploadSigner,
   createR2UploadSignerWorkerDependencies,
@@ -964,6 +978,14 @@ const _dispatchWorkerRequest = async (
   );
 
   if (shelterProfileId !== null) {
+    if (request.method === 'DELETE') {
+      return handleWorkerShelterDeleteRequest({
+        request,
+        shelterId: shelterProfileId,
+        shelterDeletionRepository: dependencies.shelterDeletionRepository,
+        authenticator: dependencies.petDraftAuthenticator,
+      });
+    }
     if (request.method === 'PATCH') {
       const payload = await request.json().catch(() => null);
       return handleWorkerShelterUpdateRequest({
