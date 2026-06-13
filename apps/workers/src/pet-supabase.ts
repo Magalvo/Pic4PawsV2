@@ -408,7 +408,7 @@ export const createSupabasePetRepositories = ({
   };
 
   const feedColumns =
-    'id,shelter_id,name,species,location_label,short_description,hero_media_id,media_ids,published_at';
+    'id,shelter_id,name,species,location_label,short_description,hero_media_id,media_ids,published_at,shelters!inner(deleted_at)';
 
   type FeedRow = {
     id: string;
@@ -438,9 +438,10 @@ export const createSupabasePetRepositories = ({
     loadPublishedPets: async (query) => {
       let countQuery = client
         .from('pets')
-        .select('id', { count: 'exact' })
+        .select('id,shelters!inner(deleted_at)', { count: 'exact' })
         .eq('status', 'published')
-        .is('deleted_at', null);
+        .is('deleted_at', null)
+        .is('shelters.deleted_at', null);
 
       if (query.species) {
         countQuery = countQuery.eq('species', query.species);
@@ -458,7 +459,8 @@ export const createSupabasePetRepositories = ({
         .from('pets')
         .select(feedColumns)
         .eq('status', 'published')
-        .is('deleted_at', null);
+        .is('deleted_at', null)
+        .is('shelters.deleted_at', null);
 
       if (query.species) {
         dataQuery = dataQuery.eq('species', query.species);

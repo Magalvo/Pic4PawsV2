@@ -104,6 +104,17 @@ export const canReadDonationTransaction = (
   donation: ShelterScopedAccessRecord,
 ): boolean => canManageShelter(actor, donation.shelterId);
 
+export const canDeleteShelter = (
+  actor: AuthenticatedActor | null,
+  shelterId: string,
+): boolean => {
+  if (!actor) return false;
+  if (actor.role === 'admin') return true;
+  return actor.memberships.some(
+    (m) => m.shelterId === shelterId && m.role === 'shelter_owner' && !m.deletedAt,
+  );
+};
+
 export const canPublishPet = (
   actor: AuthenticatedActor | null,
   pet: PetPublishAccessRecord,

@@ -5491,3 +5491,102 @@ export const createShelterUpdateClient = ({
     return success;
   },
 });
+
+// ─── Shelter Deletion Client ──────────────────────────────────────────────────
+
+export type DeleteShelterClientSuccess = {
+  ok: true;
+  status: 'deleted';
+  shelterId: string;
+};
+
+export type DeleteShelterClientFailureStatus =
+  | 'unauthenticated'
+  | 'forbidden'
+  | 'shelter_not_found'
+  | 'auth_adapter_not_configured'
+  | 'shelter_deletion_repository_not_configured'
+  | 'worker_request_failed';
+
+export type DeleteShelterClientFailure = {
+  ok: false;
+  status: DeleteShelterClientFailureStatus;
+  reasons: string[];
+};
+
+export type DeleteShelterClientResult = DeleteShelterClientSuccess | DeleteShelterClientFailure;
+
+export type CreateShelterDeletionClientInput = {
+  workerBaseUrl: string;
+  shelterPath: `/${string}`;
+  getAccessToken: () => Promise<string | null>;
+  fetch: typeof globalThis.fetch;
+};
+
+export type ShelterDeletionClient = {
+  deleteShelter: (shelterId: string) => Promise<DeleteShelterClientResult>;
+};
+
+const parseDeleteShelterFailureStatus = (
+  body: Record<string, unknown> | null,
+): DeleteShelterClientFailureStatus => {
+  const status = body?.status;
+  if (status === 'unauthenticated') return 'unauthenticated';
+  if (status === 'forbidden') return 'forbidden';
+  if (status === 'shelter_not_found') return 'shelter_not_found';
+  if (status === 'auth_adapter_not_configured') return 'auth_adapter_not_configured';
+  if (status === 'shelter_deletion_repository_not_configured')
+    return 'shelter_deletion_repository_not_configured';
+  return 'worker_request_failed';
+};
+
+const parseDeleteShelterSuccess = (
+  body: Record<string, unknown> | null,
+): DeleteShelterClientSuccess | null => {
+  if (!body || body.status !== 'deleted' || typeof body.shelterId !== 'string') return null;
+  return { ok: true, status: 'deleted', shelterId: body.shelterId };
+};
+
+export const createShelterDeletionClient = ({
+  workerBaseUrl,
+  shelterPath,
+  getAccessToken,
+  fetch,
+}: CreateShelterDeletionClientInput): ShelterDeletionClient => ({
+  deleteShelter: async (shelterId: string) => {
+    const accessToken = await getAccessToken();
+
+    if (!accessToken?.trim()) {
+      return { ok: false, status: 'unauthenticated', reasons: ['missing_access_token'] };
+    }
+
+    let response: Response;
+
+    try {
+      response = await fetch(`${createWorkerUrl(workerBaseUrl, shelterPath)}/${shelterId}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+    } catch {
+      return { ok: false, status: 'worker_request_failed', reasons: ['network_error'] };
+    }
+
+    const body = await parseJsonResponse(response);
+
+    if (!response.ok) {
+      const status = parseDeleteShelterFailureStatus(body);
+      const reasons = Array.isArray(body?.reasons) ? parseReasons(body) : [status];
+      return { ok: false, status, reasons: sanitizeReasons(reasons, status) };
+    }
+
+    const success = parseDeleteShelterSuccess(body);
+
+    if (!success) {
+      return { ok: false, status: 'worker_request_failed', reasons: ['invalid_worker_response'] };
+    }
+
+    return success;
+  },
+});
