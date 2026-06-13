@@ -63,7 +63,7 @@ Do not batch items that can be reviewed or merged independently.
 
 **Repository status**: 1541 tests passing (172 test files), full foundation complete through shelter deletion, audit remediation, and RPC security hardening.
 
-**Main branch HEAD**: PR #140 (SHELTER-REGISTER-RPC-HARDEN-001 — harden register_shelter RPC)
+**Main branch HEAD**: PR #141 (SHELTER-RPC-HARDEN-FOLLOWUP-001 — p_kind enum type + drop old 14-arg overload)
 - `npm run typecheck` ✅
 - `npm run lint` ✅
 - `npm run test` ✅

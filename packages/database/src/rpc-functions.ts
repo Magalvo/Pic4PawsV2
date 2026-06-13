@@ -4,7 +4,7 @@
 export const registerShelterRpcSql = `
 drop function if exists public.register_shelter(uuid, text, text, text, text, text, text, text, text, text, text, uuid, uuid, text);
 
-create or replace function register_shelter(
+create or replace function public.register_shelter(
   p_shelter_id          uuid,
   p_name                text,
   p_slug                text,
@@ -40,6 +40,6 @@ begin
 end;
 $$;
 
-revoke execute on function register_shelter(uuid, text, text, public.shelter_kind, text, text, text, text, text, text, uuid, uuid) from public, anon, authenticated;
-grant execute on function register_shelter(uuid, text, text, public.shelter_kind, text, text, text, text, text, text, uuid, uuid) to service_role;
+revoke execute on function public.register_shelter(uuid, text, text, public.shelter_kind, text, text, text, text, text, text, uuid, uuid) from public, anon, authenticated;
+grant execute on function public.register_shelter(uuid, text, text, public.shelter_kind, text, text, text, text, text, text, uuid, uuid) to service_role;
 `;

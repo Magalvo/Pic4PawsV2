@@ -40,6 +40,10 @@ describe('database migration artifacts', () => {
     expect(sql).toMatch(/p_kind\s+public\.shelter_kind/);
     // old 14-arg unsafe overload must be dropped in case it was ever manually deployed
     expect(sql).toContain('drop function if exists');
+    // function name must be schema-qualified everywhere for explicit hardening
+    expect(sql).toContain('create or replace function public.register_shelter(');
+    expect(sql).toContain('revoke execute on function public.register_shelter(');
+    expect(sql).toContain('grant execute on function public.register_shelter(');
   });
 
   it('renders approved enum types and core tables', () => {
