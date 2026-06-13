@@ -227,6 +227,6 @@ describe('Supabase shelter repository adapters', () => {
 
     await expect(
       shelterProfileRepository.loadShelterProfile({ shelterId: 'shelter-a' }),
-    ).rejects.not.toThrow(/service-role-secret|r2-secret-key|test-token/);
+    ).rejects.not.toThrow(/service-role-secret|r2-secret-key|test-token|bearer/i);
   });
 });

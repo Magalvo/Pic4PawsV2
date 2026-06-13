@@ -32,9 +32,7 @@ export const createSupabaseShelterDeletionRepositories = ({
         .maybeSingle();
 
       if (result.error) {
-        throw new SupabaseShelterDeletionRepositoryError(
-          `Failed to delete shelter: ${result.error.message ?? 'unknown error'}`,
-        );
+        throw new SupabaseShelterDeletionRepositoryError('Failed to delete shelter');
       }
 
       if (!result.data) return null;
