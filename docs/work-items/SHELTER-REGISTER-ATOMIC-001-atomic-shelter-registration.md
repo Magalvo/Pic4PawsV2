@@ -67,12 +67,12 @@ $$;
 
 ### Worker — `shelter-register-supabase.ts`
 - [ ] Replace the two sequential `.from().insert()` calls with a single `client.rpc('register_shelter', { ... })` call
-- [ ] `toSlug` and `crypto.randomUUID()` logic remain in the TypeScript caller (pass generated IDs as RPC args)
-- [ ] On `result.error`, throw `SupabaseShelterRegistrationRepositoryError`
-- [ ] On success, return `{ shelterId }` from the RPC's returned UUID
+- [x] `toSlug` and `crypto.randomUUID()` logic remain in the TypeScript caller (pass generated IDs as RPC args)
+- [x] On `result.error`, throw `SupabaseShelterRegistrationRepositoryError`
+- [x] On success, return `{ shelterId }` from the RPC's returned UUID
 
 ### Tests
-- [ ] `tests/workers/shelter-register-supabase.test.ts` — replace the two-call mock chain with a single `rpc` mock:
+- [x] `tests/workers/shelter-register-supabase.test.ts` — replace the two-call mock chain with a single `rpc` mock:
   ```typescript
   const makeClient = (result: unknown) => ({
     from: vi.fn(),
@@ -81,7 +81,7 @@ $$;
   ```
   - Success: `rpc` resolves `{ data: 'shelter-uuid', error: null }` → returns `{ shelterId: 'shelter-uuid' }`
   - Error: `rpc` resolves `{ data: null, error: { message: 'fk violation' } }` → throws `SupabaseShelterRegistrationRepositoryError`
-  - Verify `rpc` was called with `'register_shelter'` and that args include `slug`, `verification_status` default, `role: 'shelter_owner'`
+  - Verify `rpc` was called with `'register_shelter'` and that args do NOT include `p_verification_status` or `p_role` (removed in SHELTER-REGISTER-RPC-HARDEN-001; both are now hardcoded inside the function body)
 
 ## 5. Affected Files
 

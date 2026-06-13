@@ -612,7 +612,7 @@ describe('Supabase pet repository adapters', () => {
       new SupabasePetRepositoryError('Failed to create pet draft'),
     );
     await expect(petDraftRepository.createDraft(insertContract, actor)).rejects.not.toThrow(
-      /service-role-secret|r2-secret-key|test-token/,
+      /service-role-secret|r2-secret-key|test-token|bearer/i,
     );
   });
 });

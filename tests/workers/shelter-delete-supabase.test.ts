@@ -68,5 +68,20 @@ describe('createSupabaseShelterDeletionRepositories', () => {
         shelterDeletionRepository.deleteShelter('shelter-a'),
       ).rejects.toBeInstanceOf(SupabaseShelterDeletionRepositoryError);
     });
+
+    it('throws sanitized error without leaking secrets on Supabase errors', async () => {
+      const client = makeClient({
+        data: null,
+        error: { message: 'service-role key: abc bearer xyz' },
+      });
+      const { shelterDeletionRepository } = createSupabaseShelterDeletionRepositories({ client });
+
+      await expect(
+        shelterDeletionRepository.deleteShelter('shelter-a'),
+      ).rejects.toBeInstanceOf(SupabaseShelterDeletionRepositoryError);
+      await expect(
+        shelterDeletionRepository.deleteShelter('shelter-a'),
+      ).rejects.not.toThrow(/service-role|bearer/i);
+    });
   });
 });

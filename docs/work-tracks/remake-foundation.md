@@ -100,12 +100,14 @@ Audit remediation (audit-remediation-2026-06-13 branch):
 ## Current Focus
 
 All major domain slices are fully wired end-to-end at the boundary layer.
-Main branch HEAD: PR #138 (SHELTER-DELETE-001).
+Main branch HEAD: PR #143 (SHELTER-PROFILE-VISIBILITY-001).
 
 Open priority work items:
-1. **SHELTER-REGISTER-RPC-HARDEN-001** (P0/P1) — Harden `register_shelter` RPC: `set search_path`, REVOKE/GRANT, hardcode safe params, add to migration artifacts.
-2. **SHELTER-PROFILE-VISIBILITY-001** (P2) — Decide and enforce verification_status filter on public shelter profile route.
-3. **WORKER-DISPATCH-MODULAR-001** (P2/P3) — Modularize Worker dispatcher and `@pic4paws/client` before next large feature wave.
+1. **WORKER-DISPATCH-MODULAR-001** (P2/P3) — Modularize Worker dispatcher and `@pic4paws/client` before next large feature wave.
+
+Completed (closed in PRs #140–#143):
+- **SHELTER-REGISTER-RPC-HARDEN-001** — RPC hardened: `set search_path`, schema-qualified names, REVOKE/GRANT, `p_kind` typed as `public.shelter_kind`, old 14-arg overload dropped, added to migration artifacts.
+- **SHELTER-PROFILE-VISIBILITY-001** — `verification_status = 'verified'` filter added to public shelter profile route (Option A).
 
 ## Branching Convention
 
