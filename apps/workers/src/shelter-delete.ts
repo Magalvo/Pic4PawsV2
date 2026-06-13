@@ -1,8 +1,9 @@
 import { canDeleteShelter } from '@pic4paws/domain';
 import type { WorkerPetDraftAuthenticator } from './pet-drafts';
 
+// Authorization is enforced by canDeleteShelter before this repository is invoked.
 export type ShelterDeletionRepository = {
-  deleteShelter: (shelterId: string, actorUserId: string) => Promise<{ shelterId: string } | null>;
+  deleteShelter: (shelterId: string) => Promise<{ shelterId: string } | null>;
 };
 
 const jsonResponse = (body: unknown, init?: ResponseInit): Response =>
@@ -58,7 +59,7 @@ export const handleWorkerShelterDeleteRequest = async ({
     return jsonResponse({ status: 'shelter_deletion_repository_not_configured' }, { status: 501 });
   }
 
-  const result = await shelterDeletionRepository.deleteShelter(shelterId, actor.id);
+  const result = await shelterDeletionRepository.deleteShelter(shelterId);
 
   if (!result) {
     return jsonResponse({ status: 'shelter_not_found' }, { status: 404 });
