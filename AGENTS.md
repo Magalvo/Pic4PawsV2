@@ -76,6 +76,7 @@ The legacy app under `reference/` is strictly functional reference. Use it to un
 - `npm run lint`
 - `npm run test`
 - `npm run build`
+- After any code change: `graphify update .` (AST-only, no API cost, keeps the knowledge graph current)
 
 ## Periodic Audits
 
