@@ -15,9 +15,7 @@ export default function EntrarPage() {
     e.preventDefault();
     setSubmitting(true);
     setResult(null);
-    const authClient = createClient(supabaseUrl(), supabaseAnonKey(), {
-      auth: { persistSession: false },
-    });
+    const authClient = createClient(supabaseUrl(), supabaseAnonKey());
     const ui = createWebAuthUi({ authClient });
     const next = await ui.signIn(email, password);
     setResult(next);
