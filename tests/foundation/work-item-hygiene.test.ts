@@ -65,9 +65,9 @@ Ship a boundary.
     );
 
     expect(checkWorkItemFiles({ repoRoot })).toEqual([
-      { file: 'docs\\work-items\\INVALID-001.md', message: 'Missing required section: States' },
+      { file: 'docs/work-items/INVALID-001.md', message: 'Missing required section: States' },
       {
-        file: 'docs\\work-items\\INVALID-001.md',
+        file: 'docs/work-items/INVALID-001.md',
         message: 'Missing required section: Affected files',
       },
     ]);
@@ -102,7 +102,7 @@ Ship a boundary.
 
     expect(checkWorkItemFiles({ repoRoot })).toEqual([
       {
-        file: 'docs\\work-items\\PENDING-001.md',
+        file: 'docs/work-items/PENDING-001.md',
         message: 'Completion Notes section is empty or still pending',
       },
     ]);

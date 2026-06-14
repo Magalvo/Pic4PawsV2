@@ -59,7 +59,7 @@ export const checkWorkItemFiles = ({ repoRoot = process.cwd() } = {}) => {
     for (const section of REQUIRED_SECTIONS) {
       if (!sectionPattern(section.aliases).test(content)) {
         issues.push({
-          file: relative(repoRoot, file),
+          file: relative(repoRoot, file).replace(/\\/g, '/'),
           message: `Missing required section: ${section.label}`,
         });
       }
@@ -67,7 +67,7 @@ export const checkWorkItemFiles = ({ repoRoot = process.cwd() } = {}) => {
 
     if (isEmptyCompletionNotes(getCompletionNotesBody(content))) {
       issues.push({
-        file: relative(repoRoot, file),
+        file: relative(repoRoot, file).replace(/\\/g, '/'),
         message: 'Completion Notes section is empty or still pending',
       });
     }
