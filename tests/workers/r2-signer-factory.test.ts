@@ -37,6 +37,7 @@ const validConfig: EnvironmentConfig = {
   },
   payments: {
     primaryProvider: 'stripe',
+    webhooksEnabled: false,
     eupagoApiKey: null,
     eupagoWebhookSecret: null,
     ifthenpayApiKey: null,

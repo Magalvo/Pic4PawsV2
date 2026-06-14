@@ -61,7 +61,7 @@ describe('worker payment webhook boundary', () => {
   it('uses the validated environment webhook path and rejects non-POST requests', async () => {
     const response = await handleWorkerRequest(
       new Request('https://worker.test/webhooks/payments'),
-      validEnv,
+      { ...validEnv, PAYMENT_WEBHOOKS_ENABLED: 'true' },
     );
 
     expect(response.status).toBe(405);
@@ -79,17 +79,17 @@ describe('worker payment webhook boundary', () => {
         method: 'POST',
         body: '{not-json',
       }),
-      validEnv,
+      { ...validEnv, PAYMENT_WEBHOOKS_ENABLED: 'true' },
     );
 
     expect(response.status).toBe(501);
     await expect(json(response)).resolves.toEqual({
-      status: 'provider_adapter_not_configured',
+      status: 'payment_webhook_verifier_not_configured',
       provider: 'eupago',
     });
   });
 
-  it('does not process payment state before provider adapter verification exists', async () => {
+  it('blocks payment webhooks by default until provider verification is operationally enabled', async () => {
     const response = await handleWorkerRequest(
       new Request('https://worker.test/webhooks/payments', {
         method: 'POST',
@@ -98,9 +98,25 @@ describe('worker payment webhook boundary', () => {
       validEnv,
     );
 
+    expect(response.status).toBe(503);
+    await expect(json(response)).resolves.toEqual({
+      status: 'payment_webhooks_disabled',
+      provider: 'eupago',
+    });
+  });
+
+  it('does not silently fall back to provider_adapter_not_configured when enabled without verifier', async () => {
+    const response = await handleWorkerRequest(
+      new Request('https://worker.test/webhooks/payments', {
+        method: 'POST',
+        body: JSON.stringify({ providerEventId: 'evt-1', status: 'paid' }),
+      }),
+      { ...validEnv, PAYMENT_WEBHOOKS_ENABLED: 'true' },
+    );
+
     expect(response.status).toBe(501);
     await expect(json(response)).resolves.toEqual({
-      status: 'provider_adapter_not_configured',
+      status: 'payment_webhook_verifier_not_configured',
       provider: 'eupago',
     });
   });

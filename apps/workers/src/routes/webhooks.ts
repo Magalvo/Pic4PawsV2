@@ -20,6 +20,10 @@ export const handle = async (
 
   const rawBody = await request.text();
   const provider = config.payments.primaryProvider;
+  if (!config.payments.webhooksEnabled) {
+    return jsonResponse({ status: 'payment_webhooks_disabled', provider }, { status: 503 });
+  }
+
   const webhookSecretMap: Record<string, string | null> = {
     eupago: config.payments.eupagoWebhookSecret,
     ifthenpay: config.payments.ifthenpayWebhookSecret,

@@ -52,6 +52,7 @@ describe('parseEnvironmentConfig', () => {
         },
         payments: {
           primaryProvider: 'eupago',
+          webhooksEnabled: false,
           eupagoApiKey: 'eupago-api-key',
           eupagoWebhookSecret: 'eupago-webhook-secret',
           ifthenpayApiKey: null,
@@ -97,6 +98,18 @@ describe('parseEnvironmentConfig', () => {
       ],
     });
   });
+
+  it('parses the payment webhook processing feature flag explicitly', () => {
+    expect(parseEnvironmentConfig({ ...validEnv, PAYMENT_WEBHOOKS_ENABLED: 'true' })).toMatchObject({
+      ok: true,
+      config: {
+        payments: {
+          primaryProvider: 'eupago',
+          webhooksEnabled: true,
+        },
+      },
+    });
+  });
 });
 
 describe('redactEnvironmentConfig', () => {
@@ -125,6 +138,7 @@ describe('redactEnvironmentConfig', () => {
       workers: parsed.config.workers,
       payments: {
         primaryProvider: 'eupago',
+        webhooksEnabled: false,
         eupagoApiKey: '[redacted]',
         eupagoWebhookSecret: '[redacted]',
         ifthenpayApiKey: null,
