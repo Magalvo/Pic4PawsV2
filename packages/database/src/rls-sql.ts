@@ -58,17 +58,33 @@ export const renderCreatePolicySql = (policy: RlsPolicyDefinition): string => {
 
   const name = renderPolicyName(policy);
   const tableName = renderTableName(policy.tableName);
-  const usingSql = policy.usingSql.trim();
-  const checkSql = policy.checkSql?.trim();
+  if (policy.command !== 'insert' && !policy.usingSql?.trim()) {
+    throw new Error('RLS policy must declare usingSql unless it is an insert policy');
+  }
 
-  return [
+  if (policy.command === 'insert' && !policy.checkSql?.trim()) {
+    throw new Error('RLS insert policy must declare checkSql');
+  }
+
+  const usingSql = policy.usingSql?.trim();
+  const checkSql = policy.checkSql?.trim();
+  const clauses = [
     `drop policy if exists ${name} on ${tableName};`,
     `create policy ${name}`,
     `on ${tableName}`,
     `for ${policy.command}`,
     `to ${renderRoles(policy.roles)}`,
-    `using (${usingSql})${checkSql ? `\nwith check (${checkSql})` : ''};`,
-  ].join('\n');
+  ];
+
+  if (usingSql) {
+    clauses.push(`using (${usingSql})`);
+  }
+
+  if (checkSql) {
+    clauses.push(`with check (${checkSql})`);
+  }
+
+  return `${clauses.join('\n')};`;
 };
 
 export const renderRlsMigrationSql = (policies: RlsPolicyDefinition[]): string => {

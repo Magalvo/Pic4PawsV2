@@ -4,6 +4,7 @@ import {
   renderCreatePolicySql,
   renderEnableRowLevelSecuritySql,
   renderRlsMigrationSql,
+  rlsPolicyMatrix,
   rlsPolicies,
 } from '../../packages/database/src/index';
 
@@ -73,5 +74,41 @@ describe('RLS SQL rendering', () => {
     expect(migrationSql).toContain(
       'donation_transactions_shelter_members_can_read_for_shelter',
     );
+  });
+
+  it('declares the complete core RLS policy matrix by table and operation', () => {
+    expect(rlsPolicyMatrix).toEqual({
+      users: ['select', 'update', 'all'],
+      shelters: ['select', 'update', 'all'],
+      shelter_memberships: ['select', 'insert', 'update', 'delete', 'all'],
+      pets: ['select', 'insert', 'update', 'delete', 'all'],
+      media_assets: ['select', 'insert', 'update', 'delete', 'all'],
+      adoption_applications: ['select', 'insert', 'update', 'all'],
+      donation_transactions: ['select', 'all'],
+    });
+  });
+
+  it('renders insert policies with with-check clauses and without invalid using clauses', () => {
+    const petInsertPolicy = rlsPolicies.find(
+      (policy) => policy.name === 'pets_shelter_members_can_insert_for_shelter',
+    );
+
+    expect(petInsertPolicy).toBeDefined();
+    const sql = renderCreatePolicySql(petInsertPolicy!);
+
+    expect(sql).toContain('for insert');
+    expect(sql).toContain('with check (exists (');
+    expect(sql).not.toContain('using (');
+  });
+
+  it('keeps private records behind actor-owned or shelter-member RLS policies', () => {
+    const migrationSql = renderRlsMigrationSql(rlsPolicies);
+
+    expect(migrationSql).toContain('users_can_read_own_profile');
+    expect(migrationSql).toContain('media_assets_owner_can_read_own');
+    expect(migrationSql).toContain('media_assets_shelter_members_can_read_for_shelter');
+    expect(migrationSql).toContain('donation_transactions_donor_can_read_own');
+    expect(migrationSql).toContain('adoption_applications_applicant_can_insert_own');
+    expect(migrationSql).not.toContain('donation_transactions_authenticated_can_insert');
   });
 });
