@@ -59,11 +59,11 @@ Do not batch items that can be reviewed or merged independently.
 - `npm run test`
 - `npm run build`
 
-## 4. Current State As Of 2026-06-13
+## 4. Current State As Of 2026-06-14
 
-**Repository status**: 1542 tests passing (172 test files), full foundation complete through shelter deletion, audit remediation, RPC security hardening, and public shelter profile visibility gate.
+**Repository status**: 1556 tests passing (173 test files), full foundation complete — all domain slices wired, dispatcher and client modularized per domain.
 
-**Main branch HEAD**: PR #143 (SHELTER-PROFILE-VISIBILITY-001 — verification_status = verified filter on public shelter profile)
+**Main branch HEAD**: PR #147 (WORKER-DISPATCH-MODULAR-001 — per-domain route and client modules)
 - `npm run typecheck` ✅
 - `npm run lint` ✅
 - `npm run test` ✅
@@ -211,6 +211,7 @@ Do not batch items that can be reviewed or merged independently.
 - `SHELTER-DELETE-001` — `DELETE /shelters/:shelterId`; shelter owner / admin only (`canDeleteShelter`); soft-delete via `deleted_at`; pets cascade off public feed via join-filter without pet row changes. Client: `createShelterDeletionClient`. Web+Mobile: 4 states (idle/submitting/deleted/failed).
 - `SHELTER-REGISTER-RPC-HARDEN-001` — `register_shelter` RPC hardened: `set search_path = public`, schema-qualified table names, `p_verification_status`/`p_role` removed from signature (hardcoded to `draft`/`shelter_owner`), `REVOKE EXECUTE` from public/anon/authenticated, `GRANT EXECUTE` to service_role; `p_kind` typed as `public.shelter_kind`; old 14-arg unsafe overload dropped; RPC added to `migrationArtifacts` as `0003_register_shelter_rpc`.
 - `SHELTER-PROFILE-VISIBILITY-001` — public `GET /shelters/:shelterId` now filters `verification_status = 'verified'`; draft and rejected shelters return 404. Decision: Option A (public-only). No authenticated preview route added.
+- `WORKER-DISPATCH-MODULAR-001` — Worker dispatcher split into 8 per-domain route modules under `apps/workers/src/routes/` (pets, shelters, adoptions, donations, sponsorships, notifications, media, webhooks); `@pic4paws/client` split into per-domain modules with `index.ts` re-exporting everything. Route ordering enforced by `tests/workers/route-table.test.ts`.
 
 The Worker now has (as of 2026-06-13, PR #136):
 
@@ -386,8 +387,9 @@ The foundation now covers (as of PR #136):
 - Shelter registration (atomic via `register_shelter` Supabase RPC)
 - Shelter profile update (partial, `canManageShelter`, not-found via `maybeSingle`)
 
-**Suggested next** (in priority order, updated 2026-06-13):
-1. **WORKER-DISPATCH-MODULAR-001** (P2/P3) — Modularize Worker dispatcher and `@pic4paws/client` into per-domain modules before the next large feature wave.
+**Suggested next** (updated 2026-06-14):
+
+The remake-foundation work track is **complete**. All domain slices are wired end-to-end at all 4 layers and the dispatcher/client are modularized. The next step is to agree on the next feature track by reviewing `docs/canonical/architecture-proposal.md` and opening a new work track document.
 
 ## 6. Handoff Prompt For New Agent Session
 
@@ -401,5 +403,7 @@ Continue Pic4Paws V2 development from main using strict SDD/TDD:
 - Failing test first, then implementation
 - Validate: npm run typecheck, lint, test, build
 
-The audit remediation PR (D3/D4/D6 fixes + work items for D1+D2, D5, D7) may still be pending merge — check PR list and pick up or start the next recommended item.
+The remake-foundation work track is complete as of PR #147. Review
+docs/canonical/architecture-proposal.md to decide the next feature track,
+then open a new work track document and enriched work items before implementing.
 ```

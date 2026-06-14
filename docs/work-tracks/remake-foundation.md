@@ -97,17 +97,24 @@ Audit remediation (audit-remediation-2026-06-13 branch):
 - D6 fix: `actorUserId` removed from `ShelterDeletionRepository` contract.
 - Work items created: `SHELTER-REGISTER-RPC-HARDEN-001`, `SHELTER-PROFILE-VISIBILITY-001`, `WORKER-DISPATCH-MODULAR-001`.
 
+Security hardening + visibility gate (PRs #139–#143, #146):
+`SHELTER-REGISTER-RPC-HARDEN-001`, `SHELTER-PROFILE-VISIBILITY-001`.
+Audit remediation E1-E4: shelter-delete error sanitization, test bearer pattern, docs drift.
+
+Dispatcher + client modularization (PR #147):
+`WORKER-DISPATCH-MODULAR-001` — 8 per-domain route modules under `apps/workers/src/routes/`;
+8 per-domain client modules under `packages/client/src/`; route-table test enforces ordering.
+
 ## Current Focus
 
-All major domain slices are fully wired end-to-end at the boundary layer.
-Main branch HEAD: PR #143 (SHELTER-PROFILE-VISIBILITY-001).
+**This work track is complete as of PR #147.**
 
-Open priority work items:
-1. **WORKER-DISPATCH-MODULAR-001** (P2/P3) — Modularize Worker dispatcher and `@pic4paws/client` before next large feature wave.
+Main branch HEAD: PR #147 (WORKER-DISPATCH-MODULAR-001).
+Tests: 1556 / 173 files. All validation gates pass.
 
-Completed (closed in PRs #140–#143):
-- **SHELTER-REGISTER-RPC-HARDEN-001** — RPC hardened: `set search_path`, schema-qualified names, REVOKE/GRANT, `p_kind` typed as `public.shelter_kind`, old 14-arg overload dropped, added to migration artifacts.
-- **SHELTER-PROFILE-VISIBILITY-001** — `verification_status = 'verified'` filter added to public shelter profile route (Option A).
+There are no remaining open work items in this track. The next step is to agree on
+the next feature track by reviewing `docs/canonical/architecture-proposal.md` and
+opening a new work track document with enriched work items.
 
 ## Branching Convention
 
