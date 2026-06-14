@@ -1,37 +1,59 @@
 import { describe, expect, it } from 'vitest';
-import { sponsorshipProgress, validatePetPublishDraft } from '@pic4paws/domain';
+import { calculateSponsorshipProgress, validatePetDraftForPublishing } from '@pic4paws/domain';
 
-describe('sponsorshipProgress', () => {
+describe('calculateSponsorshipProgress', () => {
   it('calculates rounded sponsorship progress', () => {
-    expect(sponsorshipProgress({ currentAmount: 210, targetAmount: 300, label: 'Care' })).toBe(70);
+    expect(
+      calculateSponsorshipProgress({
+        currentMonthCoveredCents: 21_000,
+        monthlyGoalCents: 30_000,
+      }),
+    ).toBe(70);
   });
 
   it('clamps invalid and overfunded sponsorship progress', () => {
-    expect(sponsorshipProgress({ currentAmount: 500, targetAmount: 300, label: 'Care' })).toBe(100);
-    expect(sponsorshipProgress({ currentAmount: 20, targetAmount: 0, label: 'Care' })).toBe(0);
+    expect(
+      calculateSponsorshipProgress({
+        currentMonthCoveredCents: 50_000,
+        monthlyGoalCents: 30_000,
+      }),
+    ).toBe(100);
+    expect(
+      calculateSponsorshipProgress({
+        currentMonthCoveredCents: 2_000,
+        monthlyGoalCents: 0,
+      }),
+    ).toBe(0);
   });
 });
 
-describe('validatePetPublishDraft', () => {
+describe('validatePetDraftForPublishing', () => {
   it('rejects a pet draft missing required publishing fields', () => {
-    const result = validatePetPublishDraft({
+    const result = validatePetDraftForPublishing({
+      id: 'pet-1',
+      shelterId: 'shelter-1',
+      status: 'draft',
       name: 'Buddy',
       species: 'dog',
-      tags: ['GoodWithCats'],
+      mediaIds: [],
+      medical: {},
     });
 
     expect(result.valid).toBe(false);
-    expect(result.missingFields).toEqual(['age', 'breed', 'description', 'imageUrl']);
+    expect(result.missingFields).toEqual(['locationLabel', 'shortDescription', 'mediaIds']);
   });
 
   it('accepts a complete pet draft', () => {
-    const result = validatePetPublishDraft({
+    const result = validatePetDraftForPublishing({
+      id: 'pet-1',
+      shelterId: 'shelter-1',
+      status: 'draft',
       name: 'Buddy',
       species: 'dog',
-      age: '2 years old',
-      breed: 'Golden Retriever',
-      description: 'Friendly and energetic.',
-      imageUrl: '/images/buddy.jpeg',
+      locationLabel: 'Lisboa',
+      shortDescription: 'Friendly and energetic.',
+      mediaIds: ['media-1'],
+      medical: {},
     });
 
     expect(result.valid).toBe(true);
