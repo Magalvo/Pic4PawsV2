@@ -1,3 +1,9 @@
+---
+id: PAY-001
+title: Donation Transaction and Webhook Idempotency
+status: done
+---
+
 # Work-Item: PAY-001-Donation Transaction and Webhook Idempotency
 
 ## 1. Context & Problem
@@ -5,6 +11,21 @@
 The approved architecture requires payment state to be driven by verified server-side PSP webhook or API confirmation, never by client claims. `DB-001` defined donation transaction and webhook event storage, but the payments package still lacks shared contracts for donation intents, transaction transitions and webhook idempotency.
 
 This task establishes persistence-free payment rules that can later be wired into Cloudflare Workers and Supabase writes.
+
+## Goal
+
+Define payment-domain contracts for donation intent creation, verified webhook transitions and provider event idempotency without trusting client payment claims.
+
+## States
+
+- `created`: a server-side donation transaction was created but has no PSP confirmation.
+- `pending_payment`: the PSP is waiting for donor action or settlement.
+- `paid`: a verified PSP event confirmed payment.
+- `failed`: a verified PSP event confirmed payment failure.
+- `cancelled`: a verified PSP event cancelled the payment.
+- `refunded`: a verified PSP event confirmed a full refund.
+- `partially_refunded`: a verified PSP event confirmed a partial refund.
+- `duplicate_event`: the provider event id was already applied and must not transition again.
 
 ## 2. Acceptance Criteria
 
@@ -23,6 +44,14 @@ This task establishes persistence-free payment rules that can later be wired int
 - Do not implement webhook signature verification algorithms.
 - Do not persist transactions or webhook events.
 - Do not implement checkout UI or API routes.
+
+## Affected files
+
+- `packages/payments/src/donations.ts`
+- `packages/payments/src/webhooks.ts`
+- `packages/payments/src/index.ts`
+- `tests/payments/donations.test.ts`
+- `tests/payments/webhooks.test.ts`
 
 ## 4. Completion Notes
 

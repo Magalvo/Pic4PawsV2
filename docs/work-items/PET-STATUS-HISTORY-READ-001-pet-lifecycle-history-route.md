@@ -11,6 +11,14 @@ Expose `GET /pets/:petId/status-history` so shelter staff can read the full audi
 trail of lifecycle transitions for a pet. Auth-gated to shelter members of the
 pet's shelter.
 
+## States
+
+- `unauthenticated`: no valid Bearer actor is available.
+- `forbidden`: the actor is not a member of the pet's shelter.
+- `pet_not_found`: the pet or its shelter context cannot be loaded.
+- `repository_not_configured`: lifecycle history persistence is not wired.
+- `ok`: ordered lifecycle events are returned.
+
 ## Contract
 
 ```typescript
