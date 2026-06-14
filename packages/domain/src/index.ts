@@ -1,249 +1,303 @@
+import type {
+  PetLifecycleSpecies,
+  PetLifecycleStatus,
+  PublicPetMedicalStatus,
+} from './pet-lifecycle';
+
 export type UUID = string;
 export type ISODateTime = string;
 export type Locale = 'pt-PT' | 'en';
 export type CurrencyCode = 'EUR';
+
+export type AuditMetadata = {
+  createdAt: ISODateTime;
+  updatedAt: ISODateTime;
+  deletedAt?: ISODateTime | null;
+};
 
 export * from './auth';
 export * from './media-policy';
 export * from './pet-lifecycle';
 
 export type PaymentProvider = 'eupago' | 'ifthenpay' | 'stripe';
+export type PaymentMethod = 'mb_way' | 'multibanco' | 'card' | 'bank_transfer' | 'unknown';
+export type DonationKind = 'one_time_donation' | 'monthly_sponsorship';
+export type DonationStatus =
+  | 'created'
+  | 'pending_payment'
+  | 'paid'
+  | 'failed'
+  | 'cancelled'
+  | 'refunded'
+  | 'partially_refunded';
 
 export const productName = 'Pic4Paws';
-export const primaryCtaLabel = 'Comecar fundacao aprovada';
+export const SUPPORTED_LOCALES = ['pt-PT', 'en'] as const satisfies readonly Locale[];
+export const DEFAULT_LOCALE = 'pt-PT' satisfies Locale;
+export const PAYMENT_PROVIDERS = ['eupago', 'ifthenpay', 'stripe'] as const satisfies readonly PaymentProvider[];
+export const PAYMENT_METHODS = [
+  'mb_way',
+  'multibanco',
+  'card',
+  'bank_transfer',
+  'unknown',
+] as const satisfies readonly PaymentMethod[];
+export const DONATION_KINDS = [
+  'one_time_donation',
+  'monthly_sponsorship',
+] as const satisfies readonly DonationKind[];
+export const DONATION_STATUSES = [
+  'created',
+  'pending_payment',
+  'paid',
+  'failed',
+  'cancelled',
+  'refunded',
+  'partially_refunded',
+] as const satisfies readonly DonationStatus[];
 
-export type AdoptionStatus = 'available' | 'pending' | 'adopted';
-export type PetSpecies = 'dog' | 'cat' | 'rabbit' | 'other';
+export type UserRole = 'admin' | 'shelter_owner' | 'shelter_member' | 'adopter';
+export type UserStatus = 'active' | 'pending_verification' | 'suspended' | 'deleted';
 
-export type Shelter = {
-  id: string;
+export type User = AuditMetadata & {
+  id: UUID;
+  authUserId: UUID;
+  role: UserRole;
+  status: UserStatus;
+  email: string;
+  displayName: string;
+  phoneNumber?: string | null;
+  locale: Locale;
+  avatarMediaId?: UUID | null;
+  gdprConsentVersion: string;
+  gdprConsentAcceptedAt: ISODateTime;
+};
+
+export type ShelterKind = 'shelter' | 'sanctuary' | 'association' | 'foster_network';
+export type ShelterVerificationStatus =
+  | 'draft'
+  | 'pending_review'
+  | 'verified'
+  | 'rejected'
+  | 'suspended';
+export type ShelterPaymentAccountStatus = 'not_configured' | 'pending' | 'active' | 'disabled';
+
+export const SHELTER_KINDS = [
+  'shelter',
+  'sanctuary',
+  'association',
+  'foster_network',
+] as const satisfies readonly ShelterKind[];
+export const SHELTER_VERIFICATION_STATUSES = [
+  'draft',
+  'pending_review',
+  'verified',
+  'rejected',
+  'suspended',
+] as const satisfies readonly ShelterVerificationStatus[];
+export const SHELTER_PAYMENT_ACCOUNT_STATUSES = [
+  'not_configured',
+  'pending',
+  'active',
+  'disabled',
+] as const satisfies readonly ShelterPaymentAccountStatus[];
+
+export type Shelter = AuditMetadata & {
+  id: UUID;
   name: string;
-  partnerLevel: 'shelter-partner' | 'verified-rescue';
+  slug: string;
+  kind: ShelterKind;
+  verificationStatus: ShelterVerificationStatus;
+  taxId?: string | null;
+  registrationNumber?: string | null;
+  publicEmail?: string | null;
+  publicPhone?: string | null;
+  addressLine1?: string | null;
+  addressLine2?: string | null;
   city: string;
-  state: string;
-  monthlyDonations: number;
-  activeSponsors: number;
+  district?: string | null;
+  postalCode?: string | null;
+  countryCode: 'PT';
+  latitude?: number | null;
+  longitude?: number | null;
+  description?: string | null;
+  logoMediaId?: UUID | null;
+  coverMediaId?: UUID | null;
+  paymentAccountStatus: ShelterPaymentAccountStatus;
 };
 
-export type MedicalStatus = {
-  vaccinated: boolean;
-  sterilized: boolean;
-  energyLevel: 'low' | 'medium' | 'high';
+export type PetSpecies = PetLifecycleSpecies;
+export type PetStatus = PetLifecycleStatus;
+export type PetSex = 'female' | 'male' | 'unknown';
+export type PetSize = 'small' | 'medium' | 'large' | 'giant' | 'unknown';
+export type PetMedicalStatus = PublicPetMedicalStatus;
+
+export const PET_SPECIES = [
+  'dog',
+  'cat',
+  'horse',
+  'donkey',
+  'guinea_pig',
+  'rabbit',
+  'bird',
+  'other',
+] as const satisfies readonly PetSpecies[];
+export const PET_STATUSES = [
+  'draft',
+  'published',
+  'adoption_pending',
+  'adopted',
+  'not_available',
+  'archived',
+] as const satisfies readonly PetStatus[];
+export const PET_SEXES = ['female', 'male', 'unknown'] as const satisfies readonly PetSex[];
+export const PET_SIZES = [
+  'small',
+  'medium',
+  'large',
+  'giant',
+  'unknown',
+] as const satisfies readonly PetSize[];
+
+export type PetSponsorshipSettings = {
+  enabled: boolean;
+  monthlyGoalCents?: number | null;
+  currentMonthCoveredCents?: number | null;
+  goalLabel?: string | null;
 };
 
-export type SponsorshipGoal = {
-  currentAmount: number;
-  targetAmount: number;
-  label: string;
-};
-
-export type PetProfile = {
-  id: string;
+export type Pet = AuditMetadata & {
+  id: UUID;
+  shelterId: UUID;
+  status: PetStatus;
   name: string;
   species: PetSpecies;
-  breed: string;
-  age: string;
-  gender: 'female' | 'male' | 'unknown';
-  location: string;
-  shelterId: string;
-  status: AdoptionStatus;
-  imageUrl: string;
-  description: string;
-  tags: string[];
-  likes: number;
-  comments: number;
-  sponsorship: SponsorshipGoal;
-  medical: MedicalStatus;
+  customSpeciesLabel?: string | null;
+  breedPrimary?: string | null;
+  breedSecondary?: string | null;
+  sex: PetSex;
+  size: PetSize;
+  birthDate?: string | null;
+  estimatedAgeLabel?: string | null;
+  locationLabel: string;
+  shortDescription: string;
+  story?: string | null;
+  traits: string[];
+  adoptionFeeCents?: number | null;
+  mediaIds: UUID[];
+  heroMediaId?: UUID | null;
+  medical: PetMedicalStatus;
+  sponsorship: PetSponsorshipSettings;
+  publishedAt?: ISODateTime | null;
 };
 
-export type FeedPost = {
-  id: string;
-  petId: string;
-  shelterId: string;
-  caption: string;
-  distanceMiles: number;
-  createdAt: string;
+export type AdoptionApplicationStatus =
+  | 'draft'
+  | 'submitted'
+  | 'under_review'
+  | 'more_info_requested'
+  | 'approved'
+  | 'rejected'
+  | 'withdrawn'
+  | 'expired';
+export type HousingType = 'apartment' | 'house' | 'farm' | 'other';
+
+export const ADOPTION_APPLICATION_STATUSES = [
+  'draft',
+  'submitted',
+  'under_review',
+  'more_info_requested',
+  'approved',
+  'rejected',
+  'withdrawn',
+  'expired',
+] as const satisfies readonly AdoptionApplicationStatus[];
+export const HOUSING_TYPES = [
+  'apartment',
+  'house',
+  'farm',
+  'other',
+] as const satisfies readonly HousingType[];
+
+export type AdoptionForm = AuditMetadata & {
+  id: UUID;
+  petId: UUID;
+  shelterId: UUID;
+  applicantUserId: UUID;
+  status: AdoptionApplicationStatus;
+  submittedAt?: ISODateTime | null;
+  reviewedAt?: ISODateTime | null;
+  reviewedByUserId?: UUID | null;
+  applicant: {
+    fullName: string;
+    email: string;
+    phoneNumber: string;
+    city: string;
+    district?: string | null;
+    postalCode?: string | null;
+  };
+  household: {
+    housingType: HousingType;
+    hasOutdoorSpace: boolean;
+    hasChildren: boolean;
+    hasOtherAnimals: boolean;
+    otherAnimalsDescription?: string | null;
+  };
+  experience: {
+    previousPetExperience: string;
+    dailyRoutine: string;
+    adoptionMotivation: string;
+    veterinarianContact?: string | null;
+  };
+  consent: {
+    dataProcessingAccepted: boolean;
+    shelterContactAccepted: boolean;
+    consentVersion: string;
+    acceptedAt: ISODateTime;
+  };
+  internalNotes?: string | null;
+  rejectionReason?: string | null;
 };
 
-export type NewPetDraft = {
-  name?: string;
-  species?: PetSpecies;
-  age?: string;
-  breed?: string;
-  description?: string;
-  tags?: string[];
-  imageUrl?: string;
+export type DonationTransaction = AuditMetadata & {
+  id: UUID;
+  kind: DonationKind;
+  status: DonationStatus;
+  provider: PaymentProvider;
+  providerPaymentId: string;
+  providerCustomerId?: string | null;
+  providerSubscriptionId?: string | null;
+  idempotencyKey: string;
+  shelterId: UUID;
+  petId?: UUID | null;
+  donorUserId?: UUID | null;
+  donorDisplayName?: string | null;
+  donorEmail?: string | null;
+  amountCents: number;
+  feeCents?: number | null;
+  netAmountCents?: number | null;
+  currency: CurrencyCode;
+  paymentMethod: PaymentMethod;
+  paidAt?: ISODateTime | null;
+  refundedAt?: ISODateTime | null;
+  rawProviderEventIds: string[];
+  publicMessage?: string | null;
+  anonymous: boolean;
 };
 
-export type PetPublishValidation = {
-  valid: boolean;
-  missingFields: Array<keyof NewPetDraft>;
+export type SponsorshipProgressInput = {
+  currentMonthCoveredCents: number;
+  monthlyGoalCents: number;
 };
 
-const requiredPetDraftFields = ['name', 'species', 'age', 'breed', 'description', 'imageUrl'] as const;
-
-export const sponsorshipProgress = ({ currentAmount, targetAmount }: SponsorshipGoal): number => {
-  if (targetAmount <= 0) {
+export const calculateSponsorshipProgress = ({
+  currentMonthCoveredCents,
+  monthlyGoalCents,
+}: SponsorshipProgressInput): number => {
+  if (monthlyGoalCents <= 0) {
     return 0;
   }
 
-  const progress = (currentAmount / targetAmount) * 100;
+  const progress = (currentMonthCoveredCents / monthlyGoalCents) * 100;
   return Math.min(100, Math.max(0, Math.round(progress)));
 };
-
-export const validatePetPublishDraft = (draft: NewPetDraft): PetPublishValidation => {
-  const missingFields = requiredPetDraftFields.filter((field) => {
-    const value = draft[field];
-    return value === undefined || value === '';
-  });
-
-  return {
-    valid: missingFields.length === 0,
-    missingFields,
-  };
-};
-
-export const shelters: Shelter[] = [
-  {
-    id: 'happy-tails',
-    name: 'Happy Tails Sanctuary',
-    partnerLevel: 'shelter-partner',
-    city: 'Austin',
-    state: 'TX',
-    monthlyDonations: 4250,
-    activeSponsors: 128,
-  },
-  {
-    id: 'paws-claws',
-    name: 'Paws & Claws Rescue',
-    partnerLevel: 'verified-rescue',
-    city: 'Seattle',
-    state: 'WA',
-    monthlyDonations: 2910,
-    activeSponsors: 84,
-  },
-];
-
-export const pets: PetProfile[] = [
-  {
-    id: 'buddy',
-    name: 'Buddy',
-    species: 'dog',
-    breed: 'Golden Retriever',
-    age: '2 years old',
-    gender: 'male',
-    location: 'Austin, TX',
-    shelterId: 'happy-tails',
-    status: 'available',
-    imageUrl: '/images/buddy.jpeg',
-    description:
-      'Buddy has the biggest heart. He loves tennis balls, long walks and greeting every volunteer like an old friend.',
-    tags: ['GoodWithCats', 'HighEnergy', 'HouseTrained'],
-    likes: 1248,
-    comments: 42,
-    sponsorship: {
-      currentAmount: 210,
-      targetAmount: 300,
-      label: 'Monthly medical & nutrition fund',
-    },
-    medical: {
-      vaccinated: true,
-      sterilized: true,
-      energyLevel: 'high',
-    },
-  },
-  {
-    id: 'luna',
-    name: 'Luna',
-    species: 'cat',
-    breed: 'Domestic Shorthair',
-    age: '1 year old',
-    gender: 'female',
-    location: 'Round Rock, TX',
-    shelterId: 'paws-claws',
-    status: 'available',
-    imageUrl: '/images/luna.jpeg',
-    description:
-      'Luna is quiet, curious and happiest when she can watch the world from a sunny window.',
-    tags: ['Quiet', 'IndoorOnly'],
-    likes: 856,
-    comments: 18,
-    sponsorship: {
-      currentAmount: 75,
-      targetAmount: 250,
-      label: 'Calm-room enrichment fund',
-    },
-    medical: {
-      vaccinated: true,
-      sterilized: false,
-      energyLevel: 'medium',
-    },
-  },
-  {
-    id: 'max',
-    name: 'Max',
-    species: 'dog',
-    breed: 'Beagle Mix',
-    age: '6 years old',
-    gender: 'male',
-    location: 'Austin, TX',
-    shelterId: 'happy-tails',
-    status: 'available',
-    imageUrl: '/images/max.jpeg',
-    description: 'Max is a gentle senior who likes slow walks, soft beds and patient people.',
-    tags: ['SeniorDog', 'LovesKids'],
-    likes: 391,
-    comments: 9,
-    sponsorship: {
-      currentAmount: 180,
-      targetAmount: 180,
-      label: 'Senior wellness fund',
-    },
-    medical: {
-      vaccinated: true,
-      sterilized: true,
-      energyLevel: 'low',
-    },
-  },
-  {
-    id: 'snowball',
-    name: 'Snowball',
-    species: 'rabbit',
-    breed: 'New Zealand Rabbit',
-    age: '8 months old',
-    gender: 'unknown',
-    location: 'Seattle, WA',
-    shelterId: 'paws-claws',
-    status: 'pending',
-    imageUrl: '/images/snowball.jpeg',
-    description: 'Snowball needs a quiet home and a family ready to keep a careful feeding routine.',
-    tags: ['SmallPet', 'Vegetarian'],
-    likes: 214,
-    comments: 5,
-    sponsorship: {
-      currentAmount: 40,
-      targetAmount: 150,
-      label: 'Special diet support',
-    },
-    medical: {
-      vaccinated: false,
-      sterilized: false,
-      energyLevel: 'medium',
-    },
-  },
-];
-
-export const feedPosts: FeedPost[] = pets.slice(0, 2).map((pet, index) => ({
-  id: `${pet.id}-feed`,
-  petId: pet.id,
-  shelterId: pet.shelterId,
-  caption: `Meet ${pet.name}! ${pet.description}`,
-  distanceMiles: index === 0 ? 2 : 5,
-  createdAt: new Date(Date.UTC(2026, 5, 1 - index)).toISOString(),
-}));
-
-export const findPetById = (petId: string): PetProfile | undefined =>
-  pets.find((pet) => pet.id === petId);
-
-export const findShelterById = (shelterId: string): Shelter | undefined =>
-  shelters.find((shelter) => shelter.id === shelterId);
