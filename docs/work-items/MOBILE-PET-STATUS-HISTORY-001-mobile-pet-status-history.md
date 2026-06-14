@@ -10,6 +10,14 @@ pr: 121
 Add `createMobilePetStatusHistoryUi` to `apps/mobile/src/pet-status-history.ts` wrapping
 `PetStatusHistoryClient.loadStatusHistory` with a full product-boundary state machine.
 
+## States
+
+- `idle`: the screen has not requested history.
+- `loading`: status history is being loaded.
+- `loaded`: events are available for display.
+- `forbidden`: the actor cannot view this pet's lifecycle audit trail.
+- `failed`: the client request failed with sanitized reasons.
+
 ## Contract
 
 ```typescript

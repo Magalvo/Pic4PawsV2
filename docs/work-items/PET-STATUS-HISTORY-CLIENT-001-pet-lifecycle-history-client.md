@@ -10,6 +10,14 @@ pr: 119
 Add `createPetStatusHistoryClient` to `@pic4paws/client` wrapping the authenticated
 `GET /pets/:petId/status-history` route added in `PET-STATUS-HISTORY-READ-001`.
 
+## States
+
+- `idle`: no request has started.
+- `loading`: the status history route is being requested.
+- `loaded`: lifecycle events were returned and validated.
+- `forbidden`: the actor cannot view this pet's history.
+- `failed`: the Worker request or response validation failed.
+
 ## Contract
 
 ```typescript

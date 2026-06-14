@@ -11,6 +11,14 @@ Add `createNotificationPreferencesClient` to `@pic4paws/client` wrapping the
 authenticated `GET /notifications/preferences` and `PATCH /notifications/preferences`
 routes added in `NOTIF-PREFS-WORKER-001`.
 
+## States
+
+- `idle`: no preferences request has started.
+- `loading`: current preferences are being loaded.
+- `saving`: updated preferences are being sent.
+- `loaded`: preferences are available locally.
+- `failed`: load or update failed with sanitized reasons.
+
 ## Contract
 
 ```typescript

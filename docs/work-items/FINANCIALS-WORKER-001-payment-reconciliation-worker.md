@@ -11,14 +11,23 @@ Expose `GET /shelters/:shelterId/financials` for shelter staff to retrieve an ag
 financial summary: donation totals by status, and active/paused/cancelled sponsorship counts
 with total committed amount.
 
-## Route
+## States
+
+- `unauthenticated`: no valid Bearer actor is available.
+- `forbidden`: the actor cannot manage the requested shelter.
+- `repository_not_configured`: financials persistence is not wired.
+- `ok`: the summary is loaded and returned.
+
+## Contract
+
+### Route
 
 `GET /shelters/:shelterId/financials`
 - Authenticated (Bearer token)
 - Shelter membership required (`canManageShelter`)
 - No pagination — returns a single summary object
 
-## Response
+### Response
 
 ```json
 {
@@ -42,7 +51,7 @@ with total committed amount.
 }
 ```
 
-## Design
+### Design
 
 - `FinancialsRepository.getFinancials(shelterId)` — single method interface
 - Supabase impl fetches `donation_transactions` (status, amount_cents, currency) and

@@ -23,7 +23,8 @@
     "dev": "turbo run dev --parallel",
     "build": "turbo run build",
     "typecheck": "turbo run typecheck && npx tsc --noEmit -p tests/tsconfig.json",
-    "lint": "turbo run lint && eslint .",
+    "check:sdd-work-items": "node scripts/check-work-items.mjs",
+    "lint": "turbo run lint && eslint . && npm run check:sdd-work-items",
     "test": "turbo run test && vitest run",
     "format": "prettier --write ."
   },

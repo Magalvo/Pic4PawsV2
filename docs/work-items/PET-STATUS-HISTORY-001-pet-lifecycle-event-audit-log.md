@@ -12,6 +12,13 @@ via the archive/republish route (`PATCH /pets/:petId/status`). Provides a full
 status history (who changed it, from which status, to which status, and when)
 without mutating any existing table.
 
+## States
+
+- `not_applicable`: no lifecycle transition was applied.
+- `recording`: a successful transition is being appended to the audit log.
+- `recorded`: the immutable lifecycle event was persisted.
+- `failed`: recording failed and the route must surface a safe server error.
+
 ## Contract
 
 ```typescript

@@ -10,6 +10,13 @@ pr: 111
 Add `createFinancialsClient` to `@pic4paws/client` wrapping the authenticated
 `GET /shelters/:shelterId/financials` route added in `FINANCIALS-WORKER-001`.
 
+## States
+
+- `idle`: no request has started.
+- `loading`: the client is requesting the Worker route.
+- `loaded`: the Worker returned a valid financial summary.
+- `failed`: authentication, authorization, repository or response validation failed.
+
 ## Contract
 
 ```typescript

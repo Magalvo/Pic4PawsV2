@@ -10,6 +10,13 @@ pr: 102
 Add `createShelterSearchClient` to `@pic4paws/client` wrapping the public
 `GET /shelters` paginated list route added in `SHELTER-SEARCH-WORKER-001`.
 
+## States
+
+- `idle`: no search has been submitted.
+- `loading`: the public shelter list route is being requested.
+- `loaded`: shelter summaries and total count were returned.
+- `failed`: request or response validation failed with sanitized reasons.
+
 ## Contract
 
 ```typescript

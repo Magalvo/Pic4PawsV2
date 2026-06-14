@@ -1,11 +1,25 @@
 # Work-Item: PAYMENT-WEBHOOK-WORKER-001 — Payment Webhook Handler
 
+status: done
+
 ## 1. Context & Problem
 
 `DONATION-WORKER-001` creates donation intents with `status: 'created'`. Payment state must
 be driven by verified server-side webhook confirmation, never client claims. The Worker index
 already routes `POST /webhooks/payments` to a stub that returns `501 provider_adapter_not_configured`.
 This item replaces that stub with a real, testable handler.
+
+## Goal
+
+Add a Worker payment webhook boundary that reads raw provider events, delegates signature verification to an injected provider verifier and records idempotent server-side financial state changes.
+
+## States
+
+- `provider_adapter_not_configured`: no verifier was wired for the provider.
+- `webhook_signature_invalid`: the verifier rejected the raw body/signature.
+- `payment_webhook_repository_not_configured`: persistence is not wired.
+- `webhook_already_processed`: the provider event id was already recorded.
+- `webhook_accepted`: the verified event was recorded and applied or safely marked donation-not-found.
 
 ## 2. Acceptance Criteria
 
@@ -49,6 +63,16 @@ This item replaces that stub with a real, testable handler.
 - [ ] Tests: `tests/workers/payment-webhook.test.ts` (≥ 10 tests).
 - [ ] Tests: `tests/workers/payment-webhook-supabase-repository.test.ts` (≥ 3 tests).
 - [ ] Final validation: `npm run typecheck`, `npm run lint`, `npm run test`, `npm run build`.
+
+## Affected files
+
+- `apps/workers/src/payment-webhook.ts`
+- `apps/workers/src/payment-webhook-supabase.ts`
+- `apps/workers/src/dependencies.ts`
+- `apps/workers/src/index.ts`
+- `tests/workers/payment-webhook.test.ts`
+- `tests/workers/payment-webhook-supabase-repository.test.ts`
+- `tests/workers/worker-boundary.test.ts`
 
 ## 3. Non-Goals
 

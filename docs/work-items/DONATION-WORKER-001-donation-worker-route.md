@@ -1,5 +1,7 @@
 # Work-Item: DONATION-WORKER-001 — Donation Worker Route
 
+status: done
+
 ## 1. Context & Problem
 
 The `donationTransactions` table is defined in `packages/database/src/schema.ts`.
@@ -8,6 +10,17 @@ No Worker route exists to accept donation intent requests.
 Donors must be able to initiate a donation to a shelter (optionally linked to a pet).
 Payment state is always driven by server-side webhook confirmation — the client only
 initiates the intent.
+
+## Goal
+
+Expose an authenticated donation-intent Worker route that creates server-owned donation transactions while keeping paid, failed and refunded state exclusively under verified webhook/API control.
+
+## States
+
+- `unauthenticated`: no valid Bearer actor is available.
+- `invalid_donation`: request payload validation failed.
+- `repository_not_configured`: donation persistence is not wired.
+- `donation_created`: a server-side donation transaction was inserted with non-final payment state.
 
 ## 2. Acceptance Criteria
 
@@ -47,6 +60,19 @@ initiates the intent.
 - Do not integrate a real payment provider (EuPago, Stripe, etc.).
 - Do not implement `DONATION-CLIENT-001` (client package) or Web/Mobile boundaries.
 
+## Affected files
+
+- `packages/config/src/env.ts`
+- `apps/workers/src/donation.ts`
+- `apps/workers/src/donation-supabase.ts`
+- `apps/workers/src/dependencies.ts`
+- `apps/workers/src/index.ts`
+- `tests/workers/donation.test.ts`
+- `tests/workers/donation-supabase-repository.test.ts`
+
 ## 5. Completion Notes
 
-_To be filled in after implementation._
+- Added typed donation payload validation and authenticated Worker handling.
+- Added Supabase donation repository wiring for server-side transaction creation.
+- Ensured `donorUserId` is derived from the authenticated actor.
+- Kept final payment state outside the client-created donation intent route.

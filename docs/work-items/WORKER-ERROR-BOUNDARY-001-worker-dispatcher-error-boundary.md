@@ -11,6 +11,13 @@ Wrap the entire body of `handleWorkerRequest` in a top-level try/catch so that
 uncaught throws from any route handler return a structured JSON 500 response
 rather than an opaque Cloudflare runtime error.
 
+## States
+
+- `dispatching`: the Worker is parsing config and routing the request.
+- `handled`: a route returns its own response.
+- `not_found`: no route matches the request.
+- `internal_server_error`: an unexpected throw is caught and converted to safe JSON.
+
 ## Contract
 
 Any unhandled throw inside `handleWorkerRequest` returns:
