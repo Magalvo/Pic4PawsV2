@@ -20,6 +20,11 @@ const validEnv: EnvironmentRecord = {
   EUPAGO_WEBHOOK_SECRET: 'eupago-webhook-secret',
 };
 
+const developmentEnv: EnvironmentRecord = {
+  ...validEnv,
+  APP_ENV: 'development',
+};
+
 const validUploadPayload = {
   mediaId: 'media-1',
   purpose: 'pet_public_image',
@@ -35,7 +40,7 @@ const json = async (response: Response) => response.json() as Promise<Record<str
 
 describe('worker media upload request contract', () => {
   it('parses the configured media upload path', () => {
-    const parsed = parseEnvironmentConfig(validEnv);
+    const parsed = parseEnvironmentConfig(developmentEnv);
 
     expect(parsed.ok).toBe(true);
     if (!parsed.ok) {
@@ -46,7 +51,7 @@ describe('worker media upload request contract', () => {
   });
 
   it('creates dry-run upload intent metadata without real signed URLs', async () => {
-    const parsed = parseEnvironmentConfig(validEnv);
+    const parsed = parseEnvironmentConfig(developmentEnv);
 
     expect(parsed.ok).toBe(true);
     if (!parsed.ok) {
@@ -138,7 +143,7 @@ describe('worker media upload request contract', () => {
         method: 'POST',
         body: JSON.stringify(validUploadPayload),
       }),
-      validEnv,
+      developmentEnv,
     );
 
     expect(response.status).toBe(501);
@@ -158,5 +163,21 @@ describe('worker media upload request contract', () => {
     expect(typeof body.createdAt).toBe('string');
     expect(JSON.stringify(body)).not.toContain('r2-secret-key');
     expect(JSON.stringify(body)).not.toContain('service-role-secret');
+  });
+
+  it('rejects production dry-runs when no upload signer is configured', async () => {
+    const response = await handleWorkerRequest(
+      new Request('https://worker.test/uploads/media', {
+        method: 'POST',
+        body: JSON.stringify(validUploadPayload),
+      }),
+      validEnv,
+    );
+
+    expect(response.status).toBe(501);
+    await expect(json(response)).resolves.toEqual({
+      status: 'upload_signer_not_configured',
+      reasons: ['signed_upload_requires_configured_signer'],
+    });
   });
 });

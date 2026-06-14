@@ -25,6 +25,11 @@ const validEnv: EnvironmentRecord = {
   EUPAGO_WEBHOOK_SECRET: 'eupago-webhook-secret',
 };
 
+const developmentEnv: EnvironmentRecord = {
+  ...validEnv,
+  APP_ENV: 'development',
+};
+
 const validUploadPayload = {
   mediaId: 'media-1',
   purpose: 'pet_public_image',
@@ -36,8 +41,8 @@ const validUploadPayload = {
   originalFilename: 'becas.jpg',
 };
 
-const getConfig = () => {
-  const parsed = parseEnvironmentConfig(validEnv);
+const getConfig = (env: EnvironmentRecord = validEnv) => {
+  const parsed = parseEnvironmentConfig(env);
 
   expect(parsed.ok).toBe(true);
   if (!parsed.ok) {
@@ -103,7 +108,7 @@ describe('injectable media upload signer', () => {
   it('keeps the no-signer fallback explicit', async () => {
     const result = await createWorkerMediaUploadIntent({
       payload: validUploadPayload,
-      config: getConfig(),
+      config: getConfig(developmentEnv),
       now: '2026-06-04T12:30:00.000Z',
     });
 
@@ -132,11 +137,15 @@ describe('injectable media upload signer', () => {
     expect(JSON.stringify(result)).not.toContain('r2-secret-key');
   });
 
-  it('uses injected signer dependencies at the Worker route boundary', async () => {
-    const signer: MediaUploadSigner = async () => ({
-      signedUrl: 'https://uploads.test/signed/media-1',
-      expiresAt: '2026-06-04T12:45:00.000Z',
-    });
+  it('requires authentication before returning upload_ready from the Worker route boundary', async () => {
+    const signerCalls: string[] = [];
+    const signer: MediaUploadSigner = async () => {
+      signerCalls.push('called');
+      return {
+        signedUrl: 'https://uploads.test/signed/media-1',
+        expiresAt: '2026-06-04T12:45:00.000Z',
+      };
+    };
 
     const response = await handleWorkerRequest(
       new Request('https://worker.test/uploads/media', {
@@ -146,6 +155,39 @@ describe('injectable media upload signer', () => {
       validEnv,
       {
         mediaUploadSigner: signer,
+        now: () => '2026-06-04T12:30:00.000Z',
+      },
+    );
+
+    expect(response.status).toBe(401);
+    await expect(json(response)).resolves.toEqual({ status: 'unauthenticated' });
+    expect(signerCalls).toEqual([]);
+  });
+
+  it('uses injected signer dependencies after Worker route authentication succeeds', async () => {
+    const signer: MediaUploadSigner = async () => ({
+      signedUrl: 'https://uploads.test/signed/media-1',
+      expiresAt: '2026-06-04T12:45:00.000Z',
+    });
+
+    const response = await handleWorkerRequest(
+      new Request('https://worker.test/uploads/media', {
+        method: 'POST',
+        headers: {
+          Authorization: 'Bearer test-token',
+        },
+        body: JSON.stringify(validUploadPayload),
+      }),
+      validEnv,
+      {
+        mediaUploadSigner: signer,
+        petDraftAuthenticator: async () => ({
+          id: 'user-a',
+          authUserId: 'auth-user-a',
+          role: 'adopter',
+          status: 'active',
+          memberships: [],
+        }),
         now: () => '2026-06-04T12:30:00.000Z',
       },
     );
