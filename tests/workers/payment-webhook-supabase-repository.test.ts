@@ -35,75 +35,110 @@ const makeClient = (queryChain: SupabaseTableQueryLike) => ({
 });
 
 describe('createSupabasePaymentWebhookRepositories', () => {
-  it('isEventAlreadyProcessed returns false when no event found', async () => {
-    const chain = makeQueryChain({
-      maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
-    });
-    const { paymentWebhookRepository } = createSupabasePaymentWebhookRepositories({
-      client: makeClient(chain) as never,
-    });
-
-    const result = await paymentWebhookRepository.isEventAlreadyProcessed('evt_001', 'stripe');
-
-    expect(result).toBe(false);
-  });
-
-  it('isEventAlreadyProcessed returns true when event exists', async () => {
-    const chain = makeQueryChain({
-      maybeSingle: vi.fn().mockResolvedValue({ data: { id: 'existing-row-id' }, error: null }),
-    });
-    const { paymentWebhookRepository } = createSupabasePaymentWebhookRepositories({
-      client: makeClient(chain) as never,
-    });
-
-    const result = await paymentWebhookRepository.isEventAlreadyProcessed('evt_001', 'stripe');
-
-    expect(result).toBe(true);
-  });
-
-  it('recordWebhookEvent inserts into payment_webhook_events table', async () => {
-    const chain = makeQueryChain({
-      single: vi.fn().mockResolvedValue({ data: { id: 'new-row-id' }, error: null }),
-    });
-    const client = makeClient(chain);
+  it('processVerifiedWebhookEvent calls the atomic payment webhook RPC', async () => {
+    const chain = makeQueryChain();
+    const client = {
+      ...makeClient(chain),
+      rpc: vi.fn().mockResolvedValue({
+        data: {
+          already_processed: false,
+          donation_found: true,
+          previous_status: 'pending_payment',
+          new_status: 'paid',
+          processed_at: '2026-06-08T12:00:00.000Z',
+          financial_timestamp: '2026-06-08T12:00:00.000Z',
+          raw_provider_event_ids: ['evt_001'],
+        },
+        error: null,
+      }),
+    };
     const { paymentWebhookRepository } = createSupabasePaymentWebhookRepositories({
       client: client as never,
     });
 
-    await paymentWebhookRepository.recordWebhookEvent({
-      providerEventId: 'evt_001',
-      provider: 'stripe',
-      payload: { type: 'payment.completed' },
-      receivedAt: '2026-06-08T12:00:00.000Z',
-    });
-
-    expect(client.from).toHaveBeenCalledWith('payment_webhook_events');
-    expect(chain.insert).toHaveBeenCalled();
-  });
-
-  it('updateDonationStatus updates donation_transactions and returns found: true', async () => {
-    const chain = makeQueryChain({
-      then: (
-        onfulfilled?: ((value: SupabaseQueryResult<unknown>) => unknown) | null,
-      ) =>
-        (Promise.resolve({ data: [{ id: 'row' }], error: null, count: 1 }) as Promise<SupabaseQueryResult<unknown>>).then(
-          onfulfilled as never,
-        ) as never,
-    });
-    const client = makeClient(chain);
-    const { paymentWebhookRepository } = createSupabasePaymentWebhookRepositories({
-      client: client as never,
-    });
-
-    const result = await paymentWebhookRepository.updateDonationStatus({
+    const result = await paymentWebhookRepository.processVerifiedWebhookEvent({
       providerPaymentId: 'pay_001',
       provider: 'stripe',
       newStatus: 'paid',
       providerEventId: 'evt_001',
+      payload: { type: 'payment.completed' },
+      receivedAt: '2026-06-08T12:00:00.000Z',
     });
 
-    expect(client.from).toHaveBeenCalledWith('donation_transactions');
-    expect(chain.update).toHaveBeenCalled();
-    expect(result).toEqual({ found: true });
+    expect(client.rpc).toHaveBeenCalledWith('process_payment_webhook_event', {
+      p_provider_event_id: 'evt_001',
+      p_provider: 'stripe',
+      p_provider_payment_id: 'pay_001',
+      p_new_status: 'paid',
+      p_payload: { type: 'payment.completed' },
+      p_received_at: '2026-06-08T12:00:00.000Z',
+    });
+    expect(client.from).not.toHaveBeenCalledWith('donation_transactions');
+    expect(chain.update).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      alreadyProcessed: false,
+      donationFound: true,
+      previousStatus: 'pending_payment',
+      newStatus: 'paid',
+      processedAt: '2026-06-08T12:00:00.000Z',
+      financialTimestamp: '2026-06-08T12:00:00.000Z',
+      rawProviderEventIds: ['evt_001'],
+    });
+  });
+
+  it('returns alreadyProcessed true from the RPC without requiring a donation transition', async () => {
+    const client = {
+      ...makeClient(makeQueryChain()),
+      rpc: vi.fn().mockResolvedValue({
+        data: {
+          already_processed: true,
+          donation_found: false,
+          previous_status: null,
+          new_status: 'paid',
+          processed_at: '2026-06-08T12:00:00.000Z',
+          financial_timestamp: null,
+          raw_provider_event_ids: [],
+        },
+        error: null,
+      }),
+    };
+    const { paymentWebhookRepository } = createSupabasePaymentWebhookRepositories({
+      client: client as never,
+    });
+
+    await expect(
+      paymentWebhookRepository.processVerifiedWebhookEvent({
+        providerPaymentId: 'pay_001',
+        provider: 'stripe',
+        newStatus: 'paid',
+        providerEventId: 'evt_001',
+        payload: {},
+        receivedAt: '2026-06-08T12:00:00.000Z',
+      }),
+    ).resolves.toMatchObject({ alreadyProcessed: true, donationFound: false });
+  });
+
+  it('throws a sanitized repository error when the RPC fails', async () => {
+    const client = {
+      ...makeClient(makeQueryChain()),
+      rpc: vi.fn().mockResolvedValue({
+        data: null,
+        error: { message: 'database exploded with service-role-secret' },
+      }),
+    };
+    const { paymentWebhookRepository } = createSupabasePaymentWebhookRepositories({
+      client: client as never,
+    });
+
+    await expect(
+      paymentWebhookRepository.processVerifiedWebhookEvent({
+        providerPaymentId: 'pay_001',
+        provider: 'stripe',
+        newStatus: 'paid',
+        providerEventId: 'evt_001',
+        payload: {},
+        receivedAt: '2026-06-08T12:00:00.000Z',
+      }),
+    ).rejects.toThrow('Failed to process payment webhook event');
   });
 });

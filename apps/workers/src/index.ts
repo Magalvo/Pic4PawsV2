@@ -418,6 +418,8 @@ export type {
   ParsedWebhookEvent,
   PaymentWebhookRepository,
   PaymentWebhookVerifier,
+  PaymentWebhookProcessingResult,
+  ProcessVerifiedWebhookEventInput,
   RecordWebhookEventInput,
   UpdateDonationStatusInput,
 } from './payment-webhook';
