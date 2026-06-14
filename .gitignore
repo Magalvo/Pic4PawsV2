@@ -17,6 +17,4 @@ notification-payload.zip
 notification-payload/
 .claude/settings.local.json
 
-# Ignore all graphify output except the committed report
-graphify-out/*
-!graphify-out/GRAPH_REPORT.md
+graphify-out/
