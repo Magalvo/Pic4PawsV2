@@ -61,13 +61,15 @@ Do not batch items that can be reviewed or merged independently.
 
 ## 4. Current State As Of 2026-06-14
 
-**Repository status**: 1556 tests passing (173 test files), full foundation complete — all domain slices wired, dispatcher and client modularized per domain.
+**Repository status**: 1580 tests passing (176 test files), full foundation complete — all domain slices wired, dispatcher and client modularized per domain, security hardening and audit remediation applied.
 
-**Main branch HEAD**: PR #147 (WORKER-DISPATCH-MODULAR-001 — per-domain route and client modules)
+**Main branch HEAD**: PR #156 (PAYMENT-WEBHOOK-VERIFIER-001 — webhook endpoint feature flag gate)
 - `npm run typecheck` ✅
 - `npm run lint` ✅
 - `npm run test` ✅
 - `npm run build` ✅
+
+> **Note**: `packages/config/dist/` is gitignored. After pulling or switching branches, run `npm run build --workspace=packages/config` if typecheck fails on `EnvironmentConfig`.
 
 **Latest checkpoint**: [2026-06-13-shelter-update-atomic-complete.md](docs/checkpoints/2026-06-13-shelter-update-atomic-complete.md)
 
@@ -212,6 +214,16 @@ Do not batch items that can be reviewed or merged independently.
 - `SHELTER-REGISTER-RPC-HARDEN-001` — `register_shelter` RPC hardened: `set search_path = public`, schema-qualified table names, `p_verification_status`/`p_role` removed from signature (hardcoded to `draft`/`shelter_owner`), `REVOKE EXECUTE` from public/anon/authenticated, `GRANT EXECUTE` to service_role; `p_kind` typed as `public.shelter_kind`; old 14-arg unsafe overload dropped; RPC added to `migrationArtifacts` as `0003_register_shelter_rpc`.
 - `SHELTER-PROFILE-VISIBILITY-001` — public `GET /shelters/:shelterId` now filters `verification_status = 'verified'`; draft and rejected shelters return 404. Decision: Option A (public-only). No authenticated preview route added.
 - `WORKER-DISPATCH-MODULAR-001` — Worker dispatcher split into 8 per-domain route modules under `apps/workers/src/routes/` (pets, shelters, adoptions, donations, sponsorships, notifications, media, webhooks); `@pic4paws/client` split into per-domain modules with `index.ts` re-exporting everything. Route ordering enforced by `tests/workers/route-table.test.ts`.
+
+Security hardening + audit remediation (PRs #149–#156):
+- `DB-SHELTER-GEO-001` — canonical geographic coordinate contract: `decimal`/`numeric` in Postgres, `number | null` at TS boundaries, validation before persistence.
+- `SDD-WORKITEM-HYGIENE-001` — CI script (`scripts/check-work-items.mjs`) enforces work item envelope (Goal/States/Contract/Files sections); path separators normalized for cross-platform.
+- `DOMAIN-CANON-001` — `@pic4paws/domain` public API pruned to canonical Portugal-first contracts; prototype feed fixtures and US demo data removed from package exports.
+- `RLS-002` — complete core RLS policy matrix: explicit `SELECT`/`INSERT`/`UPDATE`/`DELETE` policies on all tenant-owned and personal-data tables; RLS now independently enforces the same access boundaries as Workers.
+- `MEDIA-UPLOAD-AUTH-001` — signed media upload URLs require authenticated requests; dry-run metadata without signed URL allowed only in non-production environments.
+- `DONATION-ELIGIBILITY-001` — server-side eligibility gate before creating donation intents: verifies shelter, pet, payment account, and provider/method; client claims cannot decide payment state.
+- `PAYMENT-WEBHOOK-002` — payment webhook processing uses a single auditable server-side transition; idempotency preserved, PSP event IDs attached to donation, no client-claim state mutation, timestamp columns protected.
+- `PAYMENT-WEBHOOK-VERIFIER-001` — `PAYMENT_WEBHOOKS_ENABLED` feature flag gates the webhook endpoint; without an injected provider verifier the endpoint returns 503; prevents silent unverified payment state mutation in production.
 
 The Worker now has (as of 2026-06-13, PR #136):
 
@@ -389,21 +401,28 @@ The foundation now covers (as of PR #136):
 
 **Suggested next** (updated 2026-06-14):
 
-The remake-foundation work track is **complete**. All domain slices are wired end-to-end at all 4 layers and the dispatcher/client are modularized. The next step is to agree on the next feature track by reviewing `docs/canonical/architecture-proposal.md` and opening a new work track document.
+The remake-foundation work track and all security hardening PRs are **complete** (through PR #156). The agreed next tracks are:
+
+- **Track A** (first): Real UI — migrate `apps/web` from React/Vite to Next.js App Router; wire existing Web boundary components into real Next.js pages; set up Expo Router in `apps/mobile` with real screens using existing Mobile boundary components.
+- **Track B** (after A): Supabase local dev tooling + PSP adapter (implement `PaymentWebhookVerifier` for Eupago or Stripe; lift the `PAYMENT_WEBHOOKS_ENABLED` gate).
+
+Open `docs/work-tracks/track-a-real-ui.md` before implementing any Track A items.
 
 ## 6. Handoff Prompt For New Agent Session
 
 Use this prompt in a new AI agent session (Claude Web UI):
 
 ```text
-Read AGENTS.md, docs/agent-resume.md, docs/canonical/architecture-proposal.md, docs/canonical/sdd.md, and the latest checkpoint at docs/checkpoints/2026-06-13-shelter-update-atomic-complete.md.
+Read AGENTS.md, docs/agent-resume.md, docs/canonical/architecture-proposal.md, docs/canonical/sdd.md, and docs/work-tracks/track-a-real-ui.md (if it exists).
 
 Continue Pic4Paws V2 development from main using strict SDD/TDD:
 - 1 branch per work item: agent/<WORK-ITEM-ID>
 - Failing test first, then implementation
 - Validate: npm run typecheck, lint, test, build
+- After any env.ts change: npm run build --workspace=packages/config
 
-The remake-foundation work track is complete as of PR #147. Review
-docs/canonical/architecture-proposal.md to decide the next feature track,
-then open a new work track document and enriched work items before implementing.
+The remake-foundation work track and all security hardening PRs are complete (through
+PR #156). The current focus is Track A: migrate apps/web from React/Vite to Next.js
+App Router, then set up Expo Router screens in apps/mobile. Read the work track doc
+before implementing any item.
 ```

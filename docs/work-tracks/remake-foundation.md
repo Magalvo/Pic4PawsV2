@@ -101,16 +101,20 @@ Security hardening + visibility gate (PRs #139–#143, #146):
 `SHELTER-REGISTER-RPC-HARDEN-001`, `SHELTER-PROFILE-VISIBILITY-001`.
 Audit remediation E1-E4: shelter-delete error sanitization, test bearer pattern, docs drift.
 
+Post-audit security hardening (PRs #149–#156):
+`DB-SHELTER-GEO-001`, `SDD-WORKITEM-HYGIENE-001`, `DOMAIN-CANON-001`, `RLS-002`,
+`MEDIA-UPLOAD-AUTH-001`, `DONATION-ELIGIBILITY-001`, `PAYMENT-WEBHOOK-002`, `PAYMENT-WEBHOOK-VERIFIER-001`.
+
 Dispatcher + client modularization (PR #147):
 `WORKER-DISPATCH-MODULAR-001` — 8 per-domain route modules under `apps/workers/src/routes/`;
 8 per-domain client modules under `packages/client/src/`; route-table test enforces ordering.
 
 ## Current Focus
 
-**This work track is complete as of PR #147.**
+**This work track is complete as of PR #156.**
 
-Main branch HEAD: PR #147 (WORKER-DISPATCH-MODULAR-001).
-Tests: 1556 / 173 files. All validation gates pass.
+Main branch HEAD: PR #156 (PAYMENT-WEBHOOK-VERIFIER-001).
+Tests: 1580 / 176 files. All validation gates pass.
 
 There are no remaining open work items in this track. The next step is to agree on
 the next feature track by reviewing `docs/canonical/architecture-proposal.md` and
