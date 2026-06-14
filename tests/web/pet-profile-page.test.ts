@@ -21,7 +21,7 @@ const petStub = {
   mediaIds: [],
   publishedAt: '2026-01-01T00:00:00Z',
   medical: { sterilized: null, vaccinated: null, microchipped: null },
-} as const;
+};
 
 describe('pet profile page — boundary contract', () => {
   it('produces not_found state for pet_not_found client response', async () => {
