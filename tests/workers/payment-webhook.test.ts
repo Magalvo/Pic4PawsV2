@@ -31,7 +31,7 @@ const makeRepository = (overrides: Partial<PaymentWebhookRepository> = {}): Paym
 });
 
 describe('handleWorkerPaymentWebhookRequest', () => {
-  it('returns 501 provider_adapter_not_configured when no verifier provided', async () => {
+  it('returns 501 payment_webhook_verifier_not_configured when no verifier provided', async () => {
     const response = await handleWorkerPaymentWebhookRequest({
       request: makeRequest(),
       rawBody: '{}',
@@ -42,7 +42,7 @@ describe('handleWorkerPaymentWebhookRequest', () => {
 
     expect(response.status).toBe(501);
     const body = await response.json() as { status: string };
-    expect(body.status).toBe('provider_adapter_not_configured');
+    expect(body.status).toBe('payment_webhook_verifier_not_configured');
   });
 
   it('returns 401 webhook_signature_invalid when verifier returns null', async () => {

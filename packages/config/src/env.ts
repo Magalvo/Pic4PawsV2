@@ -7,6 +7,7 @@ const optionalSecret = z
   .transform((value) => (value.length > 0 ? value : null))
   .optional()
   .default('');
+const booleanFlag = z.enum(['true', 'false']).optional().default('false').transform((value) => value === 'true');
 
 const environmentSchema = z
   .object({
@@ -30,6 +31,7 @@ const environmentSchema = z
     WORKER_SPONSORSHIPS_PATH: z.string().startsWith('/').default('/sponsorships'),
     WORKER_NOTIFICATIONS_PATH: z.string().startsWith('/').default('/notifications'),
     PAYMENT_PRIMARY_PROVIDER: z.enum(['eupago', 'ifthenpay', 'stripe']),
+    PAYMENT_WEBHOOKS_ENABLED: booleanFlag,
     EUPAGO_API_KEY: optionalSecret,
     EUPAGO_WEBHOOK_SECRET: optionalSecret,
     IFTHENPAY_API_KEY: optionalSecret,
@@ -88,6 +90,7 @@ export type EnvironmentConfig = {
   };
   payments: {
     primaryProvider: PrimaryPaymentProvider;
+    webhooksEnabled: boolean;
     eupagoApiKey: string | null;
     eupagoWebhookSecret: string | null;
     ifthenpayApiKey: string | null;
@@ -161,6 +164,7 @@ export const parseEnvironmentConfig = (
       },
       payments: {
         primaryProvider: env.PAYMENT_PRIMARY_PROVIDER,
+        webhooksEnabled: env.PAYMENT_WEBHOOKS_ENABLED,
         eupagoApiKey: optionalSecretToNullable(env.EUPAGO_API_KEY),
         eupagoWebhookSecret: optionalSecretToNullable(env.EUPAGO_WEBHOOK_SECRET),
         ifthenpayApiKey: optionalSecretToNullable(env.IFTHENPAY_API_KEY),
@@ -191,6 +195,7 @@ export const redactEnvironmentConfig = (config: EnvironmentConfig): EnvironmentC
   workers: config.workers,
   payments: {
     primaryProvider: config.payments.primaryProvider,
+    webhooksEnabled: config.payments.webhooksEnabled,
     eupagoApiKey: redactSecret(config.payments.eupagoApiKey),
     eupagoWebhookSecret: redactSecret(config.payments.eupagoWebhookSecret),
     ifthenpayApiKey: redactSecret(config.payments.ifthenpayApiKey),

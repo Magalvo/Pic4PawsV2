@@ -244,6 +244,7 @@ describe('Worker Supabase dependency wiring', () => {
         },
         payments: {
           primaryProvider: 'eupago',
+          webhooksEnabled: false,
           eupagoApiKey: 'eupago-api-key',
           eupagoWebhookSecret: 'eupago-webhook-secret',
           ifthenpayApiKey: null,
@@ -383,6 +384,7 @@ describe('Worker Supabase dependency wiring', () => {
           },
           payments: {
             primaryProvider: 'eupago',
+            webhooksEnabled: false,
             eupagoApiKey: 'eupago-api-key',
             eupagoWebhookSecret: 'eupago-webhook-secret',
             ifthenpayApiKey: null,

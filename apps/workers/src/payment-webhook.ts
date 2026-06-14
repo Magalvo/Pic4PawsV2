@@ -77,7 +77,10 @@ export const handleWorkerPaymentWebhookRequest = async ({
 }: HandleWorkerPaymentWebhookRequestInput): Promise<Response> => {
   // 1. Verifier configured
   if (!paymentWebhookVerifier) {
-    return jsonResponse({ status: 'provider_adapter_not_configured', provider }, { status: 501 });
+    return jsonResponse(
+      { status: 'payment_webhook_verifier_not_configured', provider },
+      { status: 501 },
+    );
   }
 
   // 2. Verify and parse event
