@@ -19,6 +19,8 @@ export type ShelterUpdateInput = {
   publicEmail?: string | null;
   publicPhone?: string | null;
   description?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
 };
 
 export type ShelterUpdateRepository = {
@@ -37,6 +39,25 @@ type ValidateShelterUpdateResult =
 
 const isNonEmptyString = (v: unknown): v is string =>
   typeof v === 'string' && v.trim().length > 0;
+
+const parseCoordinate = (
+  value: unknown,
+  min: number,
+  max: number,
+): { valid: true; value: number | null } | { valid: false } => {
+  if (value === null) return { valid: true, value: null };
+  if (typeof value === 'string' && value.trim().length === 0) {
+    return { valid: true, value: null };
+  }
+
+  const parsed = typeof value === 'number' ? value : typeof value === 'string' ? Number(value.trim()) : NaN;
+
+  if (!Number.isFinite(parsed) || parsed < min || parsed > max) {
+    return { valid: false };
+  }
+
+  return { valid: true, value: parsed };
+};
 
 export const validateShelterUpdatePayload = (body: unknown): ValidateShelterUpdateResult => {
   if (typeof body !== 'object' || body === null) {
@@ -85,6 +106,24 @@ export const validateShelterUpdatePayload = (body: unknown): ValidateShelterUpda
 
   if ('description' in b) {
     input.description = isNonEmptyString(b.description) ? (b.description as string).trim() : null;
+  }
+
+  if ('latitude' in b) {
+    const latitude = parseCoordinate(b.latitude, -90, 90);
+    if (!latitude.valid) {
+      reasons.push('latitude_invalid');
+    } else {
+      input.latitude = latitude.value;
+    }
+  }
+
+  if ('longitude' in b) {
+    const longitude = parseCoordinate(b.longitude, -180, 180);
+    if (!longitude.valid) {
+      reasons.push('longitude_invalid');
+    } else {
+      input.longitude = longitude.value;
+    }
   }
 
   if (reasons.length > 0) return { valid: false, reasons };

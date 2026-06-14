@@ -1,4 +1,5 @@
 import { describe, expect, it } from 'vitest';
+import { getTableColumns } from 'drizzle-orm';
 import {
   adoptionApplications,
   auditEvents,
@@ -61,6 +62,15 @@ describe('core database schema', () => {
     expect(getSchemaColumnNames(paymentWebhookEvents)).toEqual(
       expect.arrayContaining(['provider', 'providerEventId', 'processedAt', 'payload']),
     );
+  });
+
+  it('uses numeric number-mode coordinates for shelter latitude and longitude', () => {
+    const columns = getTableColumns(shelters);
+
+    expect(columns.latitude.getSQLType()).toBe('numeric(9, 6)');
+    expect(columns.longitude.getSQLType()).toBe('numeric(9, 6)');
+    expect(columns.latitude.mapFromDriverValue('38.722300')).toBe(38.7223);
+    expect(columns.longitude.mapFromDriverValue('-9.139300')).toBe(-9.1393);
   });
 });
 

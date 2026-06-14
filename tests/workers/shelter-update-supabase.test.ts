@@ -52,6 +52,8 @@ describe('createSupabaseShelterUpdateRepositories', () => {
         publicEmail: 'x@x.pt',
         publicPhone: '+351',
         description: 'Desc',
+        latitude: 38.7223,
+        longitude: -9.1393,
       };
       await shelterUpdateRepository.updateShelter('shelter-a', input, 'user-1');
 
@@ -60,6 +62,8 @@ describe('createSupabaseShelterUpdateRepositories', () => {
       expect(updateArg.public_email).toBe('x@x.pt');
       expect(updateArg.public_phone).toBe('+351');
       expect(updateArg.description).toBe('Desc');
+      expect(updateArg.latitude).toBe(38.7223);
+      expect(updateArg.longitude).toBe(-9.1393);
       expect('publicEmail' in updateArg).toBe(false);
     });
 
