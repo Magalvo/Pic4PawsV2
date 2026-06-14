@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createSupabaseDonationRepositories } from '../../apps/workers/src/donation-supabase';
 import type { CreateDonationInput } from '../../apps/workers/src/donation';
+import type { SupabaseClientLike } from '../../apps/workers/src/pet-supabase';
 
 const makeQueryChain = (result: unknown) => {
   const chain: Record<string, unknown> = {};
@@ -9,6 +10,7 @@ const makeQueryChain = (result: unknown) => {
     chain[method] = vi.fn().mockReturnValue(chain);
   }
   chain['single'] = vi.fn().mockResolvedValue(result);
+  chain['maybeSingle'] = vi.fn().mockResolvedValue(result);
   return chain;
 };
 
@@ -16,6 +18,11 @@ const makeClient = (chain: ReturnType<typeof makeQueryChain>) => ({
   from: vi.fn().mockReturnValue(chain),
   rpc: vi.fn(),
 });
+
+const makeClientByTable = (chains: Record<string, ReturnType<typeof makeQueryChain>>) => ({
+  from: vi.fn((table: string) => chains[table]),
+  rpc: vi.fn(),
+}) as unknown as SupabaseClientLike;
 
 const sampleInput: CreateDonationInput = {
   donorUserId: 'user-donor-1',
@@ -33,6 +40,47 @@ const sampleInput: CreateDonationInput = {
 };
 
 describe('createSupabaseDonationRepositories', () => {
+  describe('getDonationEligibilityContext', () => {
+    it('loads shelter payment eligibility and optional pet shelter scope before insert', async () => {
+      const shelterChain = makeQueryChain({
+        data: {
+          id: 'shelter-a',
+          verification_status: 'verified',
+          payment_account_status: 'active',
+        },
+        error: null,
+      });
+      const petChain = makeQueryChain({
+        data: { id: 'pet-1', shelter_id: 'shelter-a' },
+        error: null,
+      });
+      const client = makeClientByTable({ shelters: shelterChain, pets: petChain });
+      const { donationRepository } = createSupabaseDonationRepositories({ client });
+
+      await expect(
+        donationRepository.getDonationEligibilityContext({
+          shelterId: 'shelter-a',
+          petId: 'pet-1',
+        }),
+      ).resolves.toEqual({
+        shelter: {
+          id: 'shelter-a',
+          verificationStatus: 'verified',
+          paymentAccountStatus: 'active',
+        },
+        pet: { id: 'pet-1', shelterId: 'shelter-a' },
+      });
+      expect(client.from).toHaveBeenCalledWith('shelters');
+      expect(shelterChain.select).toHaveBeenCalledWith(
+        'id,verification_status,payment_account_status',
+      );
+      expect(shelterChain.eq).toHaveBeenCalledWith('id', 'shelter-a');
+      expect(client.from).toHaveBeenCalledWith('pets');
+      expect(petChain.select).toHaveBeenCalledWith('id,shelter_id');
+      expect(petChain.eq).toHaveBeenCalledWith('id', 'pet-1');
+    });
+  });
+
   describe('createDonation', () => {
     it('inserts a row and returns donationId and createdAt', async () => {
       const chain = makeQueryChain({

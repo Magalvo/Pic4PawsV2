@@ -55,6 +55,14 @@ const validPayload = {
 const makeDonationRepo = (
   result: CreateDonationResult = donationResult,
 ): DonationRepository => ({
+  getDonationEligibilityContext: vi.fn().mockResolvedValue({
+    shelter: {
+      id: 'shelter-a',
+      verificationStatus: 'verified',
+      paymentAccountStatus: 'active',
+    },
+    pet: null,
+  }),
   createDonation: vi.fn().mockResolvedValue(result),
 });
 
@@ -198,6 +206,97 @@ describe('POST /donations — donation initiation', () => {
 
     expect(response.status).toBe(501);
     expect(body.status).toBe('donation_repository_not_configured');
+  });
+
+  it('rejects donation intents for shelters that are not verified before insert', async () => {
+    const donationRepository: DonationRepository = {
+      getDonationEligibilityContext: vi.fn().mockResolvedValue({
+        shelter: {
+          id: 'shelter-a',
+          verificationStatus: 'pending_review',
+          paymentAccountStatus: 'active',
+        },
+        pet: null,
+      }),
+      createDonation: vi.fn(),
+    };
+
+    const response = await handleWorkerRequest(makeDonationRequest(), validEnv, {
+      petDraftAuthenticator: fakeAuth,
+      donationRepository,
+    });
+    const body = (await response.json()) as { status: string; reasons: string[] };
+
+    expect(response.status).toBe(409);
+    expect(body).toEqual({
+      status: 'donation_not_eligible',
+      reasons: ['shelter_not_verified'],
+    });
+    expect(donationRepository.createDonation).not.toHaveBeenCalled();
+  });
+
+  it('rejects donation intents when the selected pet does not belong to the shelter', async () => {
+    const donationRepository: DonationRepository = {
+      getDonationEligibilityContext: vi.fn().mockResolvedValue({
+        shelter: {
+          id: 'shelter-a',
+          verificationStatus: 'verified',
+          paymentAccountStatus: 'active',
+        },
+        pet: { id: 'pet-1', shelterId: 'shelter-b' },
+      }),
+      createDonation: vi.fn(),
+    };
+
+    const response = await handleWorkerRequest(
+      makeDonationRequest({ ...validPayload, petId: 'pet-1' }),
+      validEnv,
+      {
+        petDraftAuthenticator: fakeAuth,
+        donationRepository,
+      },
+    );
+    const body = (await response.json()) as { status: string; reasons: string[] };
+
+    expect(response.status).toBe(409);
+    expect(body.reasons).toContain('pet_not_in_shelter');
+    expect(donationRepository.createDonation).not.toHaveBeenCalled();
+  });
+
+  it('rejects payment methods unsupported by the configured provider', async () => {
+    const donationRepository = makeDonationRepo();
+
+    const response = await handleWorkerRequest(
+      makeDonationRequest({ ...validPayload, paymentMethod: 'bank_transfer' }),
+      validEnv,
+      {
+        petDraftAuthenticator: fakeAuth,
+        donationRepository,
+      },
+    );
+    const body = (await response.json()) as { status: string; reasons: string[] };
+
+    expect(response.status).toBe(409);
+    expect(body.reasons).toContain('payment_method_not_supported');
+    expect(donationRepository.createDonation).not.toHaveBeenCalled();
+  });
+
+  it('derives donorUserId from the authenticated actor instead of the payload', async () => {
+    const donationRepository = makeDonationRepo();
+
+    await handleWorkerRequest(
+      makeDonationRequest({ ...validPayload, donorUserId: 'attacker-user-id' }),
+      validEnv,
+      {
+        petDraftAuthenticator: fakeAuth,
+        donationRepository,
+        now: () => '2026-06-08T10:00:00.000Z',
+      },
+    );
+
+    expect(donationRepository.createDonation).toHaveBeenCalledWith(
+      expect.objectContaining({ donorUserId: 'user-donor-1' }),
+    );
   });
 
   it('returns 405 for GET /donations', async () => {

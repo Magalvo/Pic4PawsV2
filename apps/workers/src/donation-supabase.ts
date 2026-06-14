@@ -26,11 +26,68 @@ type CreatedDonationRow = {
   created_at: string;
 };
 
+type DonationEligibilityShelterRow = {
+  id: string;
+  verification_status: 'draft' | 'pending_review' | 'verified' | 'rejected' | 'suspended';
+  payment_account_status: 'not_configured' | 'pending' | 'active' | 'disabled';
+};
+
+type DonationEligibilityPetRow = {
+  id: string;
+  shelter_id: string;
+};
+
+const assertSupabaseResult = <TData>(
+  result: SupabaseQueryResult<unknown>,
+  failureMessage: string,
+): TData => {
+  if (result.error) {
+    throw new SupabaseDonationRepositoryError(failureMessage);
+  }
+
+  return result.data as TData;
+};
+
 export const createSupabaseDonationRepositories = ({
   client,
   generateId = () => crypto.randomUUID(),
 }: CreateSupabaseDonationRepositoriesInput): CreateSupabaseDonationRepositoriesResult => {
   const donationRepository: DonationRepository = {
+    getDonationEligibilityContext: async ({ shelterId, petId }) => {
+      const shelterResult = await client
+        .from('shelters')
+        .select('id,verification_status,payment_account_status')
+        .eq('id', shelterId)
+        .maybeSingle();
+      const shelterRow = assertSupabaseResult<DonationEligibilityShelterRow | null>(
+        shelterResult,
+        'Failed to load donation shelter eligibility',
+      );
+
+      let petRow: DonationEligibilityPetRow | null = null;
+      if (petId) {
+        const petResult = await client
+          .from('pets')
+          .select('id,shelter_id')
+          .eq('id', petId)
+          .maybeSingle();
+        petRow = assertSupabaseResult<DonationEligibilityPetRow | null>(
+          petResult,
+          'Failed to load donation pet eligibility',
+        );
+      }
+
+      return {
+        shelter: shelterRow
+          ? {
+              id: shelterRow.id,
+              verificationStatus: shelterRow.verification_status,
+              paymentAccountStatus: shelterRow.payment_account_status,
+            }
+          : null,
+        pet: petRow ? { id: petRow.id, shelterId: petRow.shelter_id } : null,
+      };
+    },
     createDonation: async (input: CreateDonationInput): Promise<CreateDonationResult> => {
       const row = {
         donor_user_id: input.donorUserId,
