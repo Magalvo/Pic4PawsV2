@@ -31,7 +31,35 @@ export type CreateDonationResult = {
   createdAt: string;
 };
 
+export type DonationEligibilityQuery = {
+  shelterId: string;
+  petId: string | null;
+};
+
+export type DonationEligibilityContext = {
+  shelter: {
+    id: string;
+    verificationStatus: 'draft' | 'pending_review' | 'verified' | 'rejected' | 'suspended';
+    paymentAccountStatus: 'not_configured' | 'pending' | 'active' | 'disabled';
+  } | null;
+  pet: {
+    id: string;
+    shelterId: string;
+  } | null;
+};
+
+export type DonationEligibilityRejectionReason =
+  | 'shelter_not_found'
+  | 'shelter_not_verified'
+  | 'payment_account_not_active'
+  | 'pet_not_found'
+  | 'pet_not_in_shelter'
+  | 'payment_method_not_supported';
+
 export type DonationRepository = {
+  getDonationEligibilityContext: (
+    query: DonationEligibilityQuery,
+  ) => Promise<DonationEligibilityContext>;
   createDonation: (input: CreateDonationInput) => Promise<CreateDonationResult>;
 };
 
@@ -63,6 +91,12 @@ const PAYMENT_METHODS: DonationPaymentMethod[] = [
   'bank_transfer',
   'unknown',
 ];
+
+const PAYMENT_METHODS_BY_PROVIDER: Record<DonationProvider, DonationPaymentMethod[]> = {
+  eupago: ['mb_way', 'multibanco', 'card'],
+  ifthenpay: ['mb_way', 'multibanco', 'card'],
+  stripe: ['card'],
+};
 
 const isNonEmptyString = (value: unknown): value is string =>
   typeof value === 'string' && value.trim().length > 0;
@@ -123,6 +157,40 @@ export const validateDonationPayload = (payload: unknown): ValidateDonationPaylo
       dataProcessingAccepted: true,
     },
   };
+};
+
+export const validateDonationEligibility = (
+  context: DonationEligibilityContext,
+  donation: Pick<ValidatedDonationPayload, 'shelterId' | 'petId' | 'paymentMethod'>,
+  provider: DonationProvider,
+): DonationEligibilityRejectionReason[] => {
+  const reasons: DonationEligibilityRejectionReason[] = [];
+
+  if (!context.shelter) {
+    reasons.push('shelter_not_found');
+  } else {
+    if (context.shelter.verificationStatus !== 'verified') {
+      reasons.push('shelter_not_verified');
+    }
+
+    if (context.shelter.paymentAccountStatus !== 'active') {
+      reasons.push('payment_account_not_active');
+    }
+  }
+
+  if (donation.petId) {
+    if (!context.pet) {
+      reasons.push('pet_not_found');
+    } else if (context.pet.shelterId !== donation.shelterId) {
+      reasons.push('pet_not_in_shelter');
+    }
+  }
+
+  if (!PAYMENT_METHODS_BY_PROVIDER[provider].includes(donation.paymentMethod)) {
+    reasons.push('payment_method_not_supported');
+  }
+
+  return reasons;
 };
 
 // ─── Handler ──────────────────────────────────────────────────────────────────
@@ -194,7 +262,37 @@ export const handleWorkerDonationRequest = async ({
     return jsonResponse({ status: 'donation_repository_not_configured' }, { status: 501 });
   }
 
-  // 7. Create donation
+  // 7. Server-side eligibility check
+  let eligibilityContext: DonationEligibilityContext;
+  try {
+    eligibilityContext = await donationRepository.getDonationEligibilityContext({
+      shelterId: validation.data.shelterId,
+      petId: validation.data.petId,
+    });
+  } catch {
+    return jsonResponse(
+      {
+        status: 'donation_eligibility_failed',
+        reasons: ['donation_eligibility_repository_unavailable'],
+      },
+      { status: 502 },
+    );
+  }
+
+  const eligibilityReasons = validateDonationEligibility(
+    eligibilityContext,
+    validation.data,
+    provider,
+  );
+
+  if (eligibilityReasons.length > 0) {
+    return jsonResponse(
+      { status: 'donation_not_eligible', reasons: eligibilityReasons },
+      { status: 409 },
+    );
+  }
+
+  // 8. Create donation
   const result = await donationRepository.createDonation({
     donorUserId: actor.id,
     shelterId: validation.data.shelterId,
