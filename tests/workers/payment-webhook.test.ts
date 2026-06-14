@@ -4,6 +4,7 @@ import {
   PROVIDER_SIGNATURE_HEADERS,
   type ParsedWebhookEvent,
   type PaymentWebhookRepository,
+  type PaymentWebhookProcessingResult,
   type PaymentWebhookVerifier,
 } from '../../apps/workers/src/payment-webhook';
 
@@ -23,10 +24,18 @@ const sampleParsedEvent: ParsedWebhookEvent = {
 const makeVerifier = (result: ParsedWebhookEvent | null): PaymentWebhookVerifier =>
   vi.fn().mockReturnValue(result);
 
+const sampleProcessingResult: PaymentWebhookProcessingResult = {
+  alreadyProcessed: false,
+  donationFound: true,
+  previousStatus: 'pending_payment',
+  newStatus: 'paid',
+  processedAt: '2026-06-08T12:00:00.000Z',
+  financialTimestamp: '2026-06-08T12:00:00.000Z',
+  rawProviderEventIds: ['evt_001'],
+};
+
 const makeRepository = (overrides: Partial<PaymentWebhookRepository> = {}): PaymentWebhookRepository => ({
-  isEventAlreadyProcessed: vi.fn().mockResolvedValue(false),
-  recordWebhookEvent: vi.fn().mockResolvedValue(undefined),
-  updateDonationStatus: vi.fn().mockResolvedValue({ found: true }),
+  processVerifiedWebhookEvent: vi.fn().mockResolvedValue(sampleProcessingResult),
   ...overrides,
 });
 
@@ -77,7 +86,10 @@ describe('handleWorkerPaymentWebhookRequest', () => {
 
   it('returns 200 webhook_already_processed when event already processed (idempotent)', async () => {
     const repo = makeRepository({
-      isEventAlreadyProcessed: vi.fn().mockResolvedValue(true),
+      processVerifiedWebhookEvent: vi.fn().mockResolvedValue({
+        ...sampleProcessingResult,
+        alreadyProcessed: true,
+      }),
     });
 
     const response = await handleWorkerPaymentWebhookRequest({
@@ -93,8 +105,7 @@ describe('handleWorkerPaymentWebhookRequest', () => {
     expect(response.status).toBe(200);
     const body = await response.json() as { status: string };
     expect(body.status).toBe('webhook_already_processed');
-    expect(repo.recordWebhookEvent).not.toHaveBeenCalled();
-    expect(repo.updateDonationStatus).not.toHaveBeenCalled();
+    expect(repo.processVerifiedWebhookEvent).toHaveBeenCalledTimes(1);
   });
 
   it('returns 200 webhook_accepted with donationFound true on happy path', async () => {
@@ -118,7 +129,13 @@ describe('handleWorkerPaymentWebhookRequest', () => {
 
   it('returns 200 webhook_accepted with donationFound false when donation not found', async () => {
     const repo = makeRepository({
-      updateDonationStatus: vi.fn().mockResolvedValue({ found: false }),
+      processVerifiedWebhookEvent: vi.fn().mockResolvedValue({
+        ...sampleProcessingResult,
+        donationFound: false,
+        previousStatus: null,
+        financialTimestamp: null,
+        rawProviderEventIds: [],
+      }),
     });
 
     const response = await handleWorkerPaymentWebhookRequest({
@@ -135,6 +152,29 @@ describe('handleWorkerPaymentWebhookRequest', () => {
     const body = await response.json() as { status: string; donationFound: boolean };
     expect(body.status).toBe('webhook_accepted');
     expect(body.donationFound).toBe(false);
+  });
+
+  it('returns sanitized 502 webhook_processing_failed when repository transition fails', async () => {
+    const repo = makeRepository({
+      processVerifiedWebhookEvent: vi
+        .fn()
+        .mockRejectedValue(new Error('service-role-secret r2-secret-key')),
+    });
+
+    const response = await handleWorkerPaymentWebhookRequest({
+      request: makeRequest({ 'stripe-signature': 't=123,v1=abc' }),
+      rawBody: '{"type":"payment.completed"}',
+      provider: 'stripe',
+      webhookSecret: 'whsec_test',
+      paymentWebhookVerifier: makeVerifier(sampleParsedEvent),
+      paymentWebhookRepository: repo,
+      now: '2026-06-08T12:00:00.000Z',
+    });
+
+    expect(response.status).toBe(502);
+    const body = await response.json() as { status: string };
+    expect(body).toEqual({ status: 'webhook_processing_failed' });
+    expect(JSON.stringify(body)).not.toMatch(/service-role-secret|r2-secret-key/);
   });
 
   it('passes correct rawBody, signatureHeader and secret to verifier', async () => {
@@ -178,7 +218,7 @@ describe('handleWorkerPaymentWebhookRequest', () => {
     );
   });
 
-  it('calls recordWebhookEvent and updateDonationStatus with correct params', async () => {
+  it('processes the verified webhook event through one auditable repository transition', async () => {
     const repo = makeRepository();
 
     await handleWorkerPaymentWebhookRequest({
@@ -191,18 +231,13 @@ describe('handleWorkerPaymentWebhookRequest', () => {
       now: '2026-06-08T12:00:00.000Z',
     });
 
-    expect(repo.recordWebhookEvent).toHaveBeenCalledWith({
+    expect(repo.processVerifiedWebhookEvent).toHaveBeenCalledWith({
       providerEventId: 'evt_001',
       provider: 'stripe',
+      providerPaymentId: 'pay_001',
+      newStatus: 'paid',
       payload: { type: 'payment.completed', id: 'evt_001' },
       receivedAt: '2026-06-08T12:00:00.000Z',
-    });
-
-    expect(repo.updateDonationStatus).toHaveBeenCalledWith({
-      providerPaymentId: 'pay_001',
-      provider: 'stripe',
-      newStatus: 'paid',
-      providerEventId: 'evt_001',
     });
   });
 

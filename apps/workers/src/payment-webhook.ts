@@ -34,15 +34,25 @@ export type UpdateDonationStatusInput = {
   providerEventId: string;
 };
 
+export type ProcessVerifiedWebhookEventInput = RecordWebhookEventInput & {
+  providerPaymentId: string;
+  newStatus: DonationWebhookStatus;
+};
+
+export type PaymentWebhookProcessingResult = {
+  alreadyProcessed: boolean;
+  donationFound: boolean;
+  previousStatus: DonationStatus | null;
+  newStatus: DonationWebhookStatus;
+  processedAt: string | null;
+  financialTimestamp: string | null;
+  rawProviderEventIds: string[];
+};
+
 export type PaymentWebhookRepository = {
-  isEventAlreadyProcessed: (
-    providerEventId: string,
-    provider: DonationProvider,
-  ) => Promise<boolean>;
-  recordWebhookEvent: (input: RecordWebhookEventInput) => Promise<void>;
-  updateDonationStatus: (
-    input: UpdateDonationStatusInput,
-  ) => Promise<{ found: boolean }>;
+  processVerifiedWebhookEvent: (
+    input: ProcessVerifiedWebhookEventInput,
+  ) => Promise<PaymentWebhookProcessingResult>;
 };
 
 export const PROVIDER_SIGNATURE_HEADERS: Record<DonationProvider, string> = {
@@ -96,34 +106,27 @@ export const handleWorkerPaymentWebhookRequest = async ({
     );
   }
 
-  // 4. Idempotency check
-  const alreadyProcessed = await paymentWebhookRepository.isEventAlreadyProcessed(
-    parsed.providerEventId,
-    provider,
-  );
+  let processingResult: PaymentWebhookProcessingResult;
 
-  if (alreadyProcessed) {
+  try {
+    processingResult = await paymentWebhookRepository.processVerifiedWebhookEvent({
+      providerEventId: parsed.providerEventId,
+      provider,
+      providerPaymentId: parsed.providerPaymentId,
+      newStatus: parsed.newStatus,
+      payload: parsed.payload,
+      receivedAt: now,
+    });
+  } catch {
+    return jsonResponse({ status: 'webhook_processing_failed' }, { status: 502 });
+  }
+
+  if (processingResult.alreadyProcessed) {
     return jsonResponse({ status: 'webhook_already_processed' }, { status: 200 });
   }
 
-  // 5. Record webhook event
-  await paymentWebhookRepository.recordWebhookEvent({
-    providerEventId: parsed.providerEventId,
-    provider,
-    payload: parsed.payload,
-    receivedAt: now,
-  });
-
-  // 6. Update donation status
-  const { found } = await paymentWebhookRepository.updateDonationStatus({
-    providerPaymentId: parsed.providerPaymentId,
-    provider,
-    newStatus: parsed.newStatus,
-    providerEventId: parsed.providerEventId,
-  });
-
-  // 7. Dispatch notification for paid events (fire-and-forget)
-  if (found && parsed.newStatus === 'paid' && notificationRepository) {
+  // Dispatch notification for paid events (fire-and-forget).
+  if (processingResult.donationFound && parsed.newStatus === 'paid' && notificationRepository) {
     notificationRepository
       .notifyDonationPaid({
         providerPaymentId: parsed.providerPaymentId,
@@ -132,5 +135,8 @@ export const handleWorkerPaymentWebhookRequest = async ({
       .catch(() => undefined);
   }
 
-  return jsonResponse({ status: 'webhook_accepted', donationFound: found }, { status: 200 });
+  return jsonResponse(
+    { status: 'webhook_accepted', donationFound: processingResult.donationFound },
+    { status: 200 },
+  );
 };

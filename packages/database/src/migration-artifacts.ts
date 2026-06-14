@@ -1,6 +1,6 @@
 import { rlsPolicies } from './rls-policies';
 import { renderRlsMigrationSql } from './rls-sql';
-import { registerShelterRpcSql } from './rpc-functions';
+import { processPaymentWebhookEventRpcSql, registerShelterRpcSql } from './rpc-functions';
 
 export type MigrationArtifact = {
   id: string;
@@ -296,10 +296,20 @@ export const registerShelterMigration: MigrationArtifact = {
   sql: registerShelterRpcSql.trim(),
 };
 
+export const processPaymentWebhookEventMigration: MigrationArtifact = {
+  id: '0004_process_payment_webhook_event_rpc',
+  filename: '0004_process_payment_webhook_event_rpc.sql',
+  description:
+    'Adds service-role-only process_payment_webhook_event RPC for idempotent, auditable payment webhook transitions.',
+  destructive: false,
+  sql: processPaymentWebhookEventRpcSql.trim(),
+};
+
 export const migrationArtifacts = [
   initialDatabaseMigration,
   notificationsMigration,
   registerShelterMigration,
+  processPaymentWebhookEventMigration,
 ] as const;
 
 export const assertNonDestructiveMigration = (artifact: MigrationArtifact): void => {

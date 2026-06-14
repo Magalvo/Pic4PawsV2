@@ -4,6 +4,7 @@ import {
   initialDatabaseMigration,
   migrationArtifacts,
   notificationsMigration,
+  processPaymentWebhookEventMigration,
   registerShelterMigration,
   renderMigrationArtifact,
 } from '../../packages/database/src/index';
@@ -17,6 +18,7 @@ describe('database migration artifacts', () => {
       initialDatabaseMigration,
       notificationsMigration,
       registerShelterMigration,
+      processPaymentWebhookEventMigration,
     ]);
   });
 
@@ -24,6 +26,19 @@ describe('database migration artifacts', () => {
     expect(registerShelterMigration.id).toBe('0003_register_shelter_rpc');
     expect(registerShelterMigration.filename).toBe('0003_register_shelter_rpc.sql');
     expect(registerShelterMigration.destructive).toBe(false);
+  });
+
+  it('includes the payment webhook transition RPC as migration 0004', () => {
+    expect(processPaymentWebhookEventMigration.id).toBe(
+      '0004_process_payment_webhook_event_rpc',
+    );
+    expect(processPaymentWebhookEventMigration.filename).toBe(
+      '0004_process_payment_webhook_event_rpc.sql',
+    );
+    expect(processPaymentWebhookEventMigration.destructive).toBe(false);
+    expect(renderMigrationArtifact(processPaymentWebhookEventMigration)).toContain(
+      'public.process_payment_webhook_event',
+    );
   });
 
   it('register_shelter RPC SQL is hardened: search_path, schema-qualified tables, REVOKE/GRANT, no unsafe params', () => {

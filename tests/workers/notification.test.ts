@@ -372,9 +372,15 @@ describe('dispatch side-effects', () => {
     );
     const notifRepo = makeRepo();
     const webhookRepo = {
-      isEventAlreadyProcessed: vi.fn().mockResolvedValue(false),
-      recordWebhookEvent: vi.fn().mockResolvedValue(undefined),
-      updateDonationStatus: vi.fn().mockResolvedValue({ found: true }),
+      processVerifiedWebhookEvent: vi.fn().mockResolvedValue({
+        alreadyProcessed: false,
+        donationFound: true,
+        previousStatus: 'pending_payment',
+        newStatus: 'paid',
+        processedAt: '2026-01-01T00:00:00Z',
+        financialTimestamp: '2026-01-01T00:00:00Z',
+        rawProviderEventIds: ['evt-001'],
+      }),
     };
     const verifier = vi.fn().mockReturnValue({
       providerEventId: 'evt-001',
