@@ -81,7 +81,7 @@ export type WorkerMediaUploadIntentResult =
   | { ok: true; intent: WorkerMediaUploadIntent }
   | {
       ok: false;
-      status: 'invalid_upload_request' | 'upload_signer_failed';
+      status: 'invalid_upload_request' | 'upload_signer_failed' | 'upload_signer_not_configured';
       reasons: string[];
     };
 
@@ -230,6 +230,14 @@ export const createWorkerMediaUploadIntent = async ({
     buckets: createR2BucketContract(config),
     media: mediaResult.contract,
   });
+
+  if (!signer && config.app.environment === 'production') {
+    return {
+      ok: false,
+      status: 'upload_signer_not_configured',
+      reasons: ['signed_upload_requires_configured_signer'],
+    };
+  }
 
   if (signer) {
     try {

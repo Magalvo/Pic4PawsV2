@@ -207,6 +207,7 @@ describe('authenticated media upload persistence', () => {
   it('keeps signed upload responses working when no repository is injected', async () => {
     const response = await handleWorkerRequest(uploadRequest(), validEnv, {
       mediaUploadSigner: signer,
+      petDraftAuthenticator: async () => shelterActor,
       now: () => '2026-06-05T12:30:00.000Z',
     });
 

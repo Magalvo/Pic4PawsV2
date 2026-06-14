@@ -25,7 +25,10 @@ export const handle = async (
   const payload = await parseJsonBody(request);
   if (payload === null) return jsonResponse({ status: 'invalid_json' }, { status: 400 });
 
-  const authenticated = dependencies.mediaAssetRepository
+  const requiresAuthenticatedActor = Boolean(
+    dependencies.mediaUploadSigner || dependencies.mediaAssetRepository,
+  );
+  const authenticated = requiresAuthenticatedActor
     ? await authenticateWorkerActor(request, dependencies)
     : null;
 
@@ -41,7 +44,14 @@ export const handle = async (
   if (!resolvedUploadIntent.ok) {
     return jsonResponse(
       { status: resolvedUploadIntent.status, reasons: resolvedUploadIntent.reasons },
-      { status: resolvedUploadIntent.status === 'upload_signer_failed' ? 502 : 400 },
+      {
+        status:
+          resolvedUploadIntent.status === 'upload_signer_failed'
+            ? 502
+            : resolvedUploadIntent.status === 'upload_signer_not_configured'
+              ? 501
+              : 400,
+      },
     );
   }
 
