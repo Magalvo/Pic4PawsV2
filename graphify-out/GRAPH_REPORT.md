@@ -1,16 +1,16 @@
 # Graph Report - Pic4PawsV2  (2026-06-14)
 
 ## Corpus Check
-- 803 files · ~2,814,358 words
+- 804 files · ~2,814,945 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 6174 nodes · 8358 edges · 608 communities (476 shown, 132 thin omitted)
+- 6182 nodes · 8372 edges · 617 communities (481 shown, 136 thin omitted)
 - Extraction: 99% EXTRACTED · 1% INFERRED · 0% AMBIGUOUS · INFERRED: 52 edges (avg confidence: 0.82)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `5e63411e`
+- Built from commit: `798f40f5`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
@@ -255,6 +255,8 @@
 - [[_COMMUNITY_Community 240|Community 240]]
 - [[_COMMUNITY_Community 241|Community 241]]
 - [[_COMMUNITY_Community 242|Community 242]]
+- [[_COMMUNITY_Community 243|Community 243]]
+- [[_COMMUNITY_Community 244|Community 244]]
 - [[_COMMUNITY_Community 245|Community 245]]
 - [[_COMMUNITY_Community 246|Community 246]]
 - [[_COMMUNITY_Community 247|Community 247]]
@@ -292,6 +294,7 @@
 - [[_COMMUNITY_Community 279|Community 279]]
 - [[_COMMUNITY_Community 280|Community 280]]
 - [[_COMMUNITY_Community 281|Community 281]]
+- [[_COMMUNITY_Community 282|Community 282]]
 - [[_COMMUNITY_Community 283|Community 283]]
 - [[_COMMUNITY_Community 284|Community 284]]
 - [[_COMMUNITY_Community 285|Community 285]]
@@ -318,6 +321,7 @@
 - [[_COMMUNITY_Community 306|Community 306]]
 - [[_COMMUNITY_Community 307|Community 307]]
 - [[_COMMUNITY_Community 308|Community 308]]
+- [[_COMMUNITY_Community 309|Community 309]]
 - [[_COMMUNITY_Community 310|Community 310]]
 - [[_COMMUNITY_Community 311|Community 311]]
 - [[_COMMUNITY_Community 312|Community 312]]
@@ -335,6 +339,7 @@
 - [[_COMMUNITY_Community 324|Community 324]]
 - [[_COMMUNITY_Community 325|Community 325]]
 - [[_COMMUNITY_Community 326|Community 326]]
+- [[_COMMUNITY_Community 327|Community 327]]
 - [[_COMMUNITY_Community 328|Community 328]]
 - [[_COMMUNITY_Community 329|Community 329]]
 - [[_COMMUNITY_Community 330|Community 330]]
@@ -380,8 +385,10 @@
 - [[_COMMUNITY_Community 370|Community 370]]
 - [[_COMMUNITY_Community 371|Community 371]]
 - [[_COMMUNITY_Community 372|Community 372]]
+- [[_COMMUNITY_Community 373|Community 373]]
 - [[_COMMUNITY_Community 374|Community 374]]
 - [[_COMMUNITY_Community 375|Community 375]]
+- [[_COMMUNITY_Community 376|Community 376]]
 - [[_COMMUNITY_Community 377|Community 377]]
 - [[_COMMUNITY_Community 378|Community 378]]
 - [[_COMMUNITY_Community 379|Community 379]]
@@ -432,7 +439,8 @@
 - [[_COMMUNITY_Community 424|Community 424]]
 - [[_COMMUNITY_Community 425|Community 425]]
 - [[_COMMUNITY_Community 426|Community 426]]
-- [[_COMMUNITY_Community 428|Community 428]]
+- [[_COMMUNITY_Community 427|Community 427]]
+- [[_COMMUNITY_Community 429|Community 429]]
 - [[_COMMUNITY_Community 430|Community 430]]
 - [[_COMMUNITY_Community 431|Community 431]]
 - [[_COMMUNITY_Community 432|Community 432]]
@@ -570,6 +578,7 @@
 - [[_COMMUNITY_Community 565|Community 565]]
 - [[_COMMUNITY_Community 566|Community 566]]
 - [[_COMMUNITY_Community 567|Community 567]]
+- [[_COMMUNITY_Community 568|Community 568]]
 - [[_COMMUNITY_Community 569|Community 569]]
 - [[_COMMUNITY_Community 570|Community 570]]
 - [[_COMMUNITY_Community 571|Community 571]]
@@ -591,8 +600,7 @@
 - [[_COMMUNITY_Community 588|Community 588]]
 - [[_COMMUNITY_Community 589|Community 589]]
 - [[_COMMUNITY_Community 590|Community 590]]
-- [[_COMMUNITY_Community 591|Community 591]]
-- [[_COMMUNITY_Community 592|Community 592]]
+- [[_COMMUNITY_Community 593|Community 593]]
 - [[_COMMUNITY_Community 594|Community 594]]
 - [[_COMMUNITY_Community 595|Community 595]]
 - [[_COMMUNITY_Community 596|Community 596]]
@@ -607,6 +615,7 @@
 - [[_COMMUNITY_Community 611|Community 611]]
 - [[_COMMUNITY_Community 612|Community 612]]
 - [[_COMMUNITY_Community 619|Community 619]]
+- [[_COMMUNITY_Community 620|Community 620]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `_dispatchWorkerRequest()` - 57 edges
@@ -614,13 +623,15 @@
 3. `SupabaseQueryResult` - 45 edges
 4. `WorkerPetDraftAuthenticator` - 43 edges
 5. `canManageShelter()` - 37 edges
-6. `SupabaseClientLike` - 33 edges
+6. `SupabaseClientLike` - 34 edges
 7. `MobileFoundationContent` - 32 edges
 8. `WebFoundationContent` - 32 edges
 9. `createWorkerSupabaseDependencies()` - 30 edges
 10. `AuthenticatedActor` - 28 edges
 
 ## Surprising Connections (you probably didn't know these)
+- `createWorkerMediaUploadIntent()` --calls--> `signer()`  [INFERRED]
+  apps/workers/src/media-upload.ts → tests/workers/media-upload-persistence.test.ts
 - `SHELTER-PROFILE-VISIBILITY-001 — Public Shelter Profile Verification Gate` --references--> `Shelter Supabase Repository`  [EXTRACTED]
   docs/work-items/SHELTER-PROFILE-VISIBILITY-001-shelter-profile-visibility.md → apps/workers/src/shelter-supabase.ts
 - `SHELTER-PROFILE-VISIBILITY-001 — Public Shelter Profile Verification Gate` --references--> `apps/workers/src/shelter-supabase.ts`  [EXTRACTED]
@@ -629,8 +640,6 @@
   docs/work-specs/FOUND-001-boilerplate.md → apps/web/src/foundation.ts
 - `Work-Spec: Implementation Plan for SHELTER-PROFILE-WORKER-001` --references--> `apps/web/src/foundation.ts`  [EXTRACTED]
   docs/work-specs/SHELTER-PROFILE-WORKER-001-shelter-profile-worker-route.md → apps/web/src/foundation.ts
-- `Pic4Paws Full Logo with Slogan` --conceptually_related_to--> `Pic4Paws-Server`  [INFERRED]
-  Pic4PawsV2/reference/Pic4Paws-Client/src/lotties/Canva Home.png → reference/Pic4Paws-Server/README.md
 
 ## Import Cycles
 - 1-file cycle: `apps/workers/src/index.ts -> apps/workers/src/index.ts`
@@ -638,11 +647,11 @@
 - 1-file cycle: `packages/database/src/index.ts -> packages/database/src/index.ts`
 - 1-file cycle: `packages/payments/src/index.ts -> packages/payments/src/index.ts`
 
-## Communities (608 total, 132 thin omitted)
+## Communities (617 total, 136 thin omitted)
 
 ### Community 0 - "Adoption Application Client"
-Cohesion: 0.13
-Nodes (9): styles, mojibakePatterns, FetchCall, uploadReadyBody, MobileFoundationContent, MobileFoundationStatus, MobileMediaUploadContent, MobileNotificationPreferencesUiContent (+1 more)
+Cohesion: 0.04
+Nodes (72): createSupabaseAdoptionDonorListRepositories(), createSupabaseAuthAdapter(), createWorkerSupabaseDependencies(), CreateWorkerSupabaseDependenciesInput, ResolveWorkerRequestDependenciesInput, WorkerSupabaseTableQueryLike, WorkerSupabaseWiringError, ROUTE_HANDLERS (+64 more)
 
 ### Community 1 - "Adoption Status Repositories"
 Cohesion: 0.11
@@ -697,16 +706,16 @@ Cohesion: 0.33
 Nodes (6): Adoption List Client Work Item, Shelter Adoption List Worker Route Work Item, Adoption View Client Work Item, Adoption View Worker Route Work Item, Mobile Adoption List Product Boundary Work Item, Mobile Pet Archive Product Boundary Work Item
 
 ### Community 14 - "Notification Client and UI"
-Cohesion: 0.07
-Nodes (27): unsafeReasonMarkers, unsafeReasonMarkers, sampleApplications, createMobileAdoptionListUi(), createWebAdoptionListUi(), MobileAdoptionListEmptyState, MobileAdoptionListFailedState, MobileAdoptionListForbiddenState (+19 more)
+Cohesion: 0.10
+Nodes (16): extractBearerToken(), FinancialsDonationBreakdown, FinancialsRepository, FinancialsSummary, GetFinancialsResult, handleWorkerFinancialsRequest(), HandleWorkerFinancialsRequestInput, jsonResponse() (+8 more)
 
 ### Community 15 - "React Modal Components"
 Cohesion: 0.06
 Nodes (29): unsafeReasonMarkers, unsafeReasonMarkers, makeClient(), successBody, validInput, validInput, createMobileAdoptionUi(), createWebAdoptionUi() (+21 more)
 
 ### Community 16 - "Adoption Donor List UI"
-Cohesion: 0.07
-Nodes (26): unsafeReasonMarkers, unsafeReasonMarkers, sampleDonation, createMobileDonationStatusUi(), createWebDonationStatusUi(), MobileDonationStatusFailedState, MobileDonationStatusForbiddenState, MobileDonationStatusIdleState (+18 more)
+Cohesion: 0.18
+Nodes (8): sampleDonation, createMobileDonationStatusUi(), createWebDonationStatusUi(), MobileDonationStatusUiContent, WebDonationStatusUiContent, DonationStatusClient, DonationStatusClientResult, sampleDonation
 
 ### Community 17 - "Donation UI Components"
 Cohesion: 0.08
@@ -718,11 +727,11 @@ Nodes (23): unsafeReasonMarkers, unsafeReasonMarkers, samplePet, createMobilePet
 
 ### Community 19 - "Shelter Member Management"
 Cohesion: 0.08
-Nodes (21): unsafeReasonMarkers, unsafeReasonMarkers, samplePet, createMobilePetProfileUi(), createWebPetProfileUi(), MobilePetProfileFailedState, MobilePetProfileIdleState, MobilePetProfileLoadedState (+13 more)
+Nodes (22): unsafeReasonMarkers, unsafeReasonMarkers, samplePet, createMobilePetProfileUi(), createWebPetProfileUi(), MobilePetProfileFailedState, MobilePetProfileIdleState, MobilePetProfileLoadedState (+14 more)
 
 ### Community 20 - "Notification Preferences UI"
-Cohesion: 0.05
-Nodes (37): unsafeReasonMarkers, unsafeReasonMarkers, makeClient(), shelterPath, throwingFetch, createMobileShelterMemberUi(), createWebShelterMemberUi(), MobileShelterMemberActionFailedState (+29 more)
+Cohesion: 0.06
+Nodes (31): unsafeReasonMarkers, unsafeReasonMarkers, createMobileShelterMemberUi(), createWebShelterMemberUi(), MobileShelterMemberActionFailedState, MobileShelterMemberActionResultViewModel, MobileShelterMemberAddedState, MobileShelterMemberFailedState (+23 more)
 
 ### Community 21 - "Shelter Registration UI"
 Cohesion: 0.08
@@ -733,8 +742,8 @@ Cohesion: 0.08
 Nodes (23): unsafeReasonMarkers, unsafeReasonMarkers, sampleShelter, createMobileShelterSearchUi(), createWebShelterSearchUi(), MobileShelterSearchEmptyState, MobileShelterSearchFailedState, MobileShelterSearchIdleState (+15 more)
 
 ### Community 23 - "Pet Feed UI"
-Cohesion: 0.13
-Nodes (12): unsafeReasonMarkers, sampleSponsorships, createMobileSponsorshipDonorListUi(), MobileSponsorshipDonorListEmptyState, MobileSponsorshipDonorListFailedState, MobileSponsorshipDonorListIdleState, MobileSponsorshipDonorListLoadedState, MobileSponsorshipDonorListLoadingState (+4 more)
+Cohesion: 0.14
+Nodes (12): unsafeReasonMarkers, createWebSponsorshipDonorListUi(), WebSponsorshipDonorListEmptyState, WebSponsorshipDonorListFailedState, WebSponsorshipDonorListIdleState, WebSponsorshipDonorListLoadedState, WebSponsorshipDonorListLoadingState, WebSponsorshipDonorListResultViewModel (+4 more)
 
 ### Community 24 - "Shelter Update Client"
 Cohesion: 0.13
@@ -745,8 +754,8 @@ Cohesion: 0.08
 Nodes (25): unsafeReasonMarkers, unsafeReasonMarkers, successResult, validInput, createMobileSponsorshipUi(), createWebSponsorshipUi(), MobileSponsorshipFailedState, MobileSponsorshipIdleState (+17 more)
 
 ### Community 26 - "Adoption Status UI"
-Cohesion: 0.10
-Nodes (37): addComment(), addPost(), getAll(), liking(), upload(), userPosts(), patchingFriend(), FlexBetween (+29 more)
+Cohesion: 0.11
+Nodes (33): addComment(), addPost(), getAll(), liking(), upload(), userPosts(), FlexBetween, UserImage() (+25 more)
 
 ### Community 27 - "Pet Archive Worker"
 Cohesion: 0.50
@@ -766,11 +775,11 @@ Nodes (3): Adoption Application Client Work Item, Adoption Application Worker Ro
 
 ### Community 31 - "Database Core Schema"
 Cohesion: 0.07
-Nodes (25): unsafeReasonMarkers, unsafeReasonMarkers, makeClient(), SHELTER_PATH, createMobileFinancialsDashboardUi(), createWebFinancialsDashboardUi(), MobileFinancialsDashboardFailedState, MobileFinancialsDashboardForbiddenState (+17 more)
+Nodes (24): unsafeReasonMarkers, unsafeReasonMarkers, makeClient(), SHELTER_PATH, createMobileFinancialsDashboardUi(), createWebFinancialsDashboardUi(), MobileFinancialsDashboardFailedState, MobileFinancialsDashboardForbiddenState (+16 more)
 
 ### Community 32 - "Shelter Pet List Worker"
-Cohesion: 0.07
-Nodes (24): unsafeReasonMarkers, unsafeReasonMarkers, makeClient(), PET_FEED_PATH, createMobilePetStatusHistoryUi(), createWebPetStatusHistoryUi(), MobilePetStatusHistoryFailedState, MobilePetStatusHistoryForbiddenState (+16 more)
+Cohesion: 0.14
+Nodes (11): unsafeReasonMarkers, createMobilePetStatusHistoryUi(), MobilePetStatusHistoryFailedState, MobilePetStatusHistoryForbiddenState, MobilePetStatusHistoryIdleState, MobilePetStatusHistoryLoadedState, MobilePetStatusHistoryLoadingState, MobilePetStatusHistoryState (+3 more)
 
 ### Community 33 - "Shelter Registration Worker"
 Cohesion: 0.09
@@ -778,7 +787,7 @@ Nodes (18): unsafeReasonMarkers, unsafeReasonMarkers, createMobileShelterDeletio
 
 ### Community 34 - "Financials Dashboard UI"
 Cohesion: 0.06
-Nodes (28): unsafeReasonMarkers, unsafeReasonMarkers, makeClient(), samplePet, successBody, createMobileShelterPetListUi(), createWebShelterPetListUi(), MobileShelterPetListEmptyState (+20 more)
+Nodes (27): unsafeReasonMarkers, unsafeReasonMarkers, makeClient(), samplePet, successBody, createMobileShelterPetListUi(), createWebShelterPetListUi(), MobileShelterPetListEmptyState (+19 more)
 
 ### Community 35 - "Financials Repository and Worker"
 Cohesion: 0.07
@@ -786,7 +795,7 @@ Nodes (26): unsafeReasonMarkers, unsafeReasonMarkers, makeClient(), successBody,
 
 ### Community 36 - "Donation Worker Routes"
 Cohesion: 0.07
-Nodes (26): unsafeReasonMarkers, unsafeReasonMarkers, makeClient(), successBody, validInput, validInput, createMobileShelterUpdateUi(), createWebShelterUpdateUi() (+18 more)
+Nodes (25): unsafeReasonMarkers, unsafeReasonMarkers, makeClient(), successBody, validInput, validInput, createMobileShelterUpdateUi(), createWebShelterUpdateUi() (+17 more)
 
 ### Community 37 - "Backend Server Dependencies"
 Cohesion: 0.08
@@ -801,16 +810,16 @@ Cohesion: 0.09
 Nodes (20): unsafeReasonMarkers, unsafeReasonMarkers, createMobileAdoptionStatusUi(), createWebAdoptionStatusUi(), MobileAdoptionStatusFailedState, MobileAdoptionStatusIdleState, MobileAdoptionStatusResultViewModel, MobileAdoptionStatusSubmittingState (+12 more)
 
 ### Community 40 - "Supabase Auth Adapter"
-Cohesion: 0.09
-Nodes (23): Lottie, NotFound(), Close, DarkMode, HomeNav(), LightMode, Menu, Lottie (+15 more)
+Cohesion: 0.07
+Nodes (28): Lottie, NotFound(), CatAdoptionModal(), defaultOptions, Lottie, style, CatAdoptionModal(), defaultOptions (+20 more)
 
 ### Community 41 - "Auth Guard Components"
-Cohesion: 0.08
-Nodes (24): unsafeReasonMarkers, unsafeReasonMarkers, createMobileAdoptionViewUi(), createWebAdoptionViewUi(), MobileAdoptionViewFailedState, MobileAdoptionViewForbiddenState, MobileAdoptionViewIdleState, MobileAdoptionViewLoadedState (+16 more)
+Cohesion: 0.06
+Nodes (28): unsafeReasonMarkers, unsafeReasonMarkers, adoptionsPath, makeClient(), throwingFetch, createMobileAdoptionViewUi(), createWebAdoptionViewUi(), MobileAdoptionViewFailedState (+20 more)
 
 ### Community 42 - "Database Migration Artifacts"
-Cohesion: 0.12
-Nodes (13): unsafeReasonMarkers, sampleDonation, createMobileDonationListUi(), MobileDonationListEmptyState, MobileDonationListFailedState, MobileDonationListForbiddenState, MobileDonationListIdleState, MobileDonationListLoadedState (+5 more)
+Cohesion: 0.10
+Nodes (16): AdoptionStatusRecord, AdoptionStatusRepository, extractBearerToken(), handleWorkerAdoptionStatusRequest(), HandleWorkerAdoptionStatusRequestInput, jsonResponse(), SHELTER_MANAGE_STATUSES, AdoptionStatusRow (+8 more)
 
 ### Community 43 - "Shelter Deletion UI"
 Cohesion: 0.08
@@ -829,24 +838,20 @@ Cohesion: 0.07
 Nodes (27): unsafeReasonMarkers, unsafeReasonMarkers, makeClient(), petFeedPath, throwingFetch, createMobilePetArchiveUi(), createWebPetArchiveUi(), MobilePetArchiveArchivedState (+19 more)
 
 ### Community 47 - "Firebase Auth API"
-Cohesion: 0.05
-Nodes (23): EnvironmentRecord, handleWorkerRequest(), WorkerEnv, PetFeedResult, donationResult, fakeActor, fakeAuth, validEnv (+15 more)
+Cohesion: 0.07
+Nodes (28): CreateDonationInput, CreateDonationResult, DONATION_KINDS, DonationProvider, DonationRepository, extractBearerToken(), handleWorkerDonationRequest(), HandleWorkerDonationRequestInput (+20 more)
 
 ### Community 48 - "Auth and Access Control"
 Cohesion: 0.07
 Nodes (26): author, dependencies, bcrypt, body-parser, cloudinary, cors, dotenv, express (+18 more)
-
-### Community 49 - "Pet Draft Save Flow"
-Cohesion: 0.14
-Nodes (15): DonationProvider, DonationWebhookStatus, handleWorkerPaymentWebhookRequest(), HandleWorkerPaymentWebhookRequestInput, jsonResponse(), ParsedWebhookEvent, PaymentWebhookRepository, PaymentWebhookVerifier (+7 more)
 
 ### Community 50 - "Donation Transaction Logic"
 Cohesion: 0.19
 Nodes (15): apiClient, petfinderClient, createConversation(), onlineConversations(), userConversations(), sendMessage(), userMessages(), editUser() (+7 more)
 
 ### Community 51 - "Web Pet Draft UI"
-Cohesion: 0.22
-Nodes (5): adopter, draftWithoutMedia, publicImage, shelterMember, validEnv
+Cohesion: 0.15
+Nodes (9): unsafeReasonMarkers, createWebPetStatusHistoryUi(), WebPetStatusHistoryFailedState, WebPetStatusHistoryForbiddenState, WebPetStatusHistoryIdleState, WebPetStatusHistoryLoadedState, WebPetStatusHistoryLoadingState, WebPetStatusHistoryState (+1 more)
 
 ### Community 52 - "Adoption Donor List Worker"
 Cohesion: 0.08
@@ -857,8 +862,8 @@ Cohesion: 0.14
 Nodes (13): createPet(), getPet(), removePet(), upload(), AddIcon, FormAccordion(), libraries, MapComponent() (+5 more)
 
 ### Community 54 - "Pet Management Components"
-Cohesion: 0.07
-Nodes (25): CreateNotificationClientInput, CreateNotificationPreferencesClientInput, ListNotificationsClientFailure, ListNotificationsClientFailureStatus, ListNotificationsClientQuery, ListNotificationsClientSuccess, LoadNotificationPreferencesClientFailure, LoadNotificationPreferencesClientFailureStatus (+17 more)
+Cohesion: 0.08
+Nodes (26): CreateSponsorshipInput, CreateSponsorshipResult, extractBearerToken(), handleWorkerSponsorshipRequest(), HandleWorkerSponsorshipRequestInput, isNonEmptyString(), isNullableString(), isPositiveInteger() (+18 more)
 
 ### Community 55 - "Pet Status History UI"
 Cohesion: 0.09
@@ -868,17 +873,13 @@ Nodes (22): 1. Executive Recommendation, 2. Recommended Stack, 3. Payment Gatewa
 Cohesion: 0.09
 Nodes (22): Adoption View Slice (PRs #80–#83), Checkpoint: Pet Archive + Adoption View + Shelter Member Complete — 2026-06-09, Client (`ADOPTION-VIEW-CLIENT-001`), Client (`PET-ARCHIVE-CLIENT-001`), Client (`SHELTER-MEMBER-CLIENT-001`), Foundation Status (Updated), Git Status, Mobile Boundary (`MOBILE-ADOPTION-VIEW-001`) (+14 more)
 
-### Community 57 - "Mobile Sponsorship UI"
-Cohesion: 0.14
-Nodes (12): unsafeReasonMarkers, createWebSponsorshipDonorListUi(), WebSponsorshipDonorListEmptyState, WebSponsorshipDonorListFailedState, WebSponsorshipDonorListIdleState, WebSponsorshipDonorListLoadedState, WebSponsorshipDonorListLoadingState, WebSponsorshipDonorListResultViewModel (+4 more)
-
 ### Community 58 - "Payment Webhook Handler"
-Cohesion: 0.18
-Nodes (9): unsafeReasonMarkers, WebSponsorshipListEmptyState, WebSponsorshipListFailedState, WebSponsorshipListForbiddenState, WebSponsorshipListIdleState, WebSponsorshipListLoadedState, WebSponsorshipListLoadingState, WebSponsorshipListResultViewModel (+1 more)
+Cohesion: 0.06
+Nodes (32): unsafeReasonMarkers, unsafeReasonMarkers, makeClient(), sampleApplication, successBody, sampleApplications, createMobileAdoptionListUi(), createWebAdoptionListUi() (+24 more)
 
 ### Community 59 - "Pet Draft Contracts"
-Cohesion: 0.09
-Nodes (20): unsafeReasonMarkers, unsafeReasonMarkers, createMobileSponsorshipManageUi(), createWebSponsorshipManageUi(), MobileSponsorshipManageFailedState, MobileSponsorshipManageIdleState, MobileSponsorshipManageResultViewModel, MobileSponsorshipManageSubmittingState (+12 more)
+Cohesion: 0.07
+Nodes (24): unsafeReasonMarkers, unsafeReasonMarkers, makeClient(), sponsorshipsPath, throwingFetch, createMobileSponsorshipManageUi(), createWebSponsorshipManageUi(), MobileSponsorshipManageFailedState (+16 more)
 
 ### Community 60 - "Domain Package Config"
 Cohesion: 0.09
@@ -901,8 +902,8 @@ Cohesion: 0.67
 Nodes (3): SHELTER-REGISTER-CLIENT-001 — Shelter Registration Client, SHELTER-REGISTER-WORKER-001 — Shelter Registration Worker Route, SHELTER-UPDATE-001 — Shelter Profile Update
 
 ### Community 65 - "Sponsorship Donor List UI"
-Cohesion: 0.09
-Nodes (19): FetchCall, uploadReadyBody, validRequest, createMediaUploadFlowClient(), CreateMediaUploadFlowClientInput, createMobileMediaUploadBoundary(), createWebMediaUploadBoundary(), MobileMediaUploadBoundary (+11 more)
+Cohesion: 0.05
+Nodes (28): FetchCall, validRequest, FetchCall, uploadReadyBody, validRequest, FetchCall, uploadReadyBody, createMediaUploadClient() (+20 more)
 
 ### Community 69 - "Next.js App Dependencies"
 Cohesion: 0.07
@@ -917,104 +918,100 @@ Cohesion: 0.22
 Nodes (8): SHELTER-SEARCH-CLIENT-001 — Shelter search client, Files, Goal, PublicShelterSummary, Repository interface, Response shape, Route, SHELTER-SEARCH-WORKER-001 — Shelter Search Worker Route
 
 ### Community 75 - "Pet Profile UI"
-Cohesion: 0.09
-Nodes (5): AuthenticatedActor, donorActor, fakeDonorAuth, sampleSponsorships, validEnv
+Cohesion: 0.29
+Nodes (3): NotificationPreference, allEnabledPreferences, validEnv
 
 ### Community 77 - "Web Pet Profile UI"
-Cohesion: 0.12
-Nodes (9): WebFoundationContent, WebFoundationStatus, brandTokens, WebMediaUploadContent, WebNotificationPreferencesUiContent, WebNotificationUiContent, mojibakePatterns, FetchCall (+1 more)
+Cohesion: 0.07
+Nodes (16): AdoptionApplicationClientFailure, AdoptionApplicationStatus, AdoptionDonorListClientFailure, AdoptionDonorListClientResult, AdoptionDonorListClientSuccess, AdoptionListClientFailure, AdoptionStatusClientFailure, AdoptionStatusClientSuccess (+8 more)
 
 ### Community 78 - "Web Shelter Profile UI"
 Cohesion: 0.09
-Nodes (21): allPreferences, makeClient(), allEnabled, createMobileNotificationPreferencesUi(), CreateMobileNotificationPreferencesUiInput, createWebNotificationPreferencesUi(), CreateWebNotificationPreferencesUiInput, MobileNotificationPreferencesFailedState (+13 more)
+Nodes (23): allPreferences, makeClient(), allEnabled, createMobileNotificationPreferencesUi(), CreateMobileNotificationPreferencesUiInput, createWebNotificationPreferencesUi(), CreateWebNotificationPreferencesUiInput, MobileNotificationPreferencesFailedState (+15 more)
 
 ### Community 79 - "Media Upload Intent"
-Cohesion: 0.08
-Nodes (23): makeClient(), notificationsPath, sampleNotifications, throwingFetch, createMobileNotificationUi(), CreateMobileNotificationUiInput, createWebNotificationUi(), CreateWebNotificationUiInput (+15 more)
+Cohesion: 0.07
+Nodes (24): makeClient(), notificationsPath, sampleNotifications, throwingFetch, createMobileNotificationUi(), CreateMobileNotificationUiInput, createWebNotificationUi(), CreateWebNotificationUiInput (+16 more)
 
 ### Community 80 - "Base TypeScript Config"
 Cohesion: 0.12
 Nodes (16): AdoptionDonorListRepository, AdoptionDonorListSummary, extractBearerToken(), handleWorkerAdoptionDonorListRequest(), HandleWorkerAdoptionDonorListRequestInput, jsonResponse(), ListDonorAdoptionsQuery, ListDonorAdoptionsResult (+8 more)
 
 ### Community 81 - "Turborepo Task Config"
-Cohesion: 0.07
-Nodes (27): AdoptionApplicationStatus, AdoptionListRepository, AdoptionListSummary, extractBearerToken(), handleWorkerAdoptionListRequest(), HandleWorkerAdoptionListRequestInput, jsonResponse(), ListAdoptionApplicationsQuery (+19 more)
+Cohesion: 0.08
+Nodes (21): AdoptionListRepository, AdoptionListSummary, extractBearerToken(), handleWorkerAdoptionListRequest(), HandleWorkerAdoptionListRequestInput, jsonResponse(), ListAdoptionApplicationsQuery, ListAdoptionApplicationsResult (+13 more)
 
 ### Community 82 - "Database RLS Policies"
-Cohesion: 0.11
-Nodes (28): handle(), handle(), handle(), authenticateWorkerActor(), jsonResponse(), parseAuthorizationBearer(), parseJsonBody(), WorkerParsedConfig (+20 more)
+Cohesion: 0.20
+Nodes (20): handle(), handle(), handle(), authenticateWorkerActor(), jsonResponse(), parseAuthorizationBearer(), parseJsonBody(), WorkerParsedConfig (+12 more)
 
 ### Community 83 - "Node.js Backend Config"
-Cohesion: 0.10
-Nodes (22): AdoptionApplicationPetContext, AdoptionApplicationRepository, CreateAdoptionApplicationInput, CreateAdoptionApplicationResult, extractBearerToken(), handleWorkerAdoptionRequest(), HandleWorkerAdoptionRequestInput, HOUSING_TYPES (+14 more)
+Cohesion: 0.07
+Nodes (28): AdoptionApplicationPetContext, AdoptionApplicationRepository, CreateAdoptionApplicationInput, CreateAdoptionApplicationResult, extractBearerToken(), handleWorkerAdoptionRequest(), HandleWorkerAdoptionRequestInput, HOUSING_TYPES (+20 more)
 
 ### Community 84 - "Web Media Upload UI"
-Cohesion: 0.13
-Nodes (13): unsafeReasonMarkers, createWebDonationListUi(), WebDonationListEmptyState, WebDonationListFailedState, WebDonationListForbiddenState, WebDonationListIdleState, WebDonationListLoadedState, WebDonationListLoadingState (+5 more)
+Cohesion: 0.08
+Nodes (17): CreateNotificationClientInput, CreateNotificationPreferencesClientInput, ListNotificationsClientFailure, ListNotificationsClientFailureStatus, ListNotificationsClientQuery, ListNotificationsClientSuccess, LoadNotificationPreferencesClientFailure, LoadNotificationPreferencesClientFailureStatus (+9 more)
 
 ### Community 85 - "Adoption Status Validation"
-Cohesion: 0.06
-Nodes (35): DonationKind, DonationPaymentMethod, DonationListRepository, DonationListSummary, DonationStatus, extractBearerToken(), handleWorkerDonationListRequest(), HandleWorkerDonationListRequestInput (+27 more)
+Cohesion: 0.05
+Nodes (39): DonationKind, DonationPaymentMethod, DonationListRepository, DonationListSummary, DonationStatus, extractBearerToken(), handleWorkerDonationListRequest(), HandleWorkerDonationListRequestInput (+31 more)
 
 ### Community 86 - "Media Asset Persistence"
 Cohesion: 0.09
 Nodes (21): dependencies, @aws-sdk/client-s3, @aws-sdk/s3-request-presigner, @pic4paws/config, @pic4paws/database, @pic4paws/domain, @pic4paws/payments, @supabase/supabase-js (+13 more)
 
 ### Community 87 - "Frontend TypeScript Config"
-Cohesion: 0.10
-Nodes (22): CreateDonationInput, CreateDonationResult, DONATION_KINDS, DonationRepository, extractBearerToken(), handleWorkerDonationRequest(), HandleWorkerDonationRequestInput, isBoolean() (+14 more)
+Cohesion: 0.08
+Nodes (20): createPetDraftFailure(), parsePetDraftFailureStatus(), createWorkerSubUrl(), createWorkerUrl(), parseJsonResponse(), parseReasons(), sanitizeReasons(), unsafeClientReasonMarkers (+12 more)
 
 ### Community 88 - "Media Upload Testing"
-Cohesion: 0.06
-Nodes (33): extractBearerToken(), FinancialsDonationBreakdown, FinancialsRepository, FinancialsSummary, GetFinancialsResult, handleWorkerFinancialsRequest(), HandleWorkerFinancialsRequestInput, jsonResponse() (+25 more)
+Cohesion: 0.12
+Nodes (9): createSupabasePetRepositories(), CreateSupabasePetRepositoriesInput, CreateSupabasePetRepositoriesResult, MediaAssetRow, PetRow, ShelterRow, SupabaseErrorLike, toMediaAssetRecord() (+1 more)
 
 ### Community 89 - "Mobile Draft Save Flow"
 Cohesion: 0.09
-Nodes (35): handle(), matchWorkerAdoptionListShelterId(), canDeleteShelter(), canManageShelter(), matchWorkerDonationListShelterId(), matchWorkerFinancialsShelterId(), _dispatchWorkerRequest(), extractBearerToken() (+27 more)
+Nodes (33): handle(), matchWorkerAdoptionListShelterId(), canDeleteShelter(), canManageShelter(), matchWorkerDonationListShelterId(), matchWorkerFinancialsShelterId(), _dispatchWorkerRequest(), extractBearerToken() (+25 more)
 
 ### Community 90 - "Donation List Worker"
-Cohesion: 0.15
-Nodes (16): createWorkerMediaUploadIntent(), isNullableString(), isRecord(), mediaUploadPurposes, MediaUploadSignerResult, mediaVisibilities, parseWorkerMediaUploadPayload(), PersistWorkerMediaUploadIntentInput (+8 more)
+Cohesion: 0.12
+Nodes (20): createMediaAssetInsertFromUploadIntent(), CreateMediaAssetInsertResult, hasScope(), MediaAssetInsertContract, MediaAssetInsertRejectionReason, PersistableMediaUploadIntent, MediaKind, MediaVisibility (+12 more)
 
 ### Community 91 - "Config Package TypeScript"
 Cohesion: 0.07
-Nodes (34): handle(), extractBearerToken(), handleWorkerNotificationListRequest(), HandleWorkerNotificationListRequestInput, handleWorkerNotificationReadRequest(), HandleWorkerNotificationReadRequestInput, jsonResponse(), ListNotificationsQuery (+26 more)
+Nodes (33): handle(), extractBearerToken(), handleWorkerNotificationListRequest(), HandleWorkerNotificationListRequestInput, handleWorkerNotificationReadRequest(), HandleWorkerNotificationReadRequestInput, jsonResponse(), ListNotificationsQuery (+25 more)
 
 ### Community 92 - "Supabase Query Mocking"
-Cohesion: 0.60
-Nodes (5): getAccessToken(), handler(), isAllowedPath(), jsonResponse(), fetch()
+Cohesion: 0.18
+Nodes (10): MediaUploadPurpose, PetLifecycleSpecies, PetLifecycleStatus, PublicPetMedicalStatus, jsonResponse(), PetProfileQuery, PetProfileRepository, PublishedPetProfile (+2 more)
 
 ### Community 93 - "Environment Configuration"
-Cohesion: 0.06
-Nodes (28): handle(), resolveWorkerRequestDependencies(), handleWorkerPetArchiveRequest(), HandleWorkerPetArchiveRequestInput, handleWorkerPetStatusHistoryRequest(), HandleWorkerPetStatusHistoryRequestInput, jsonResponse(), matchWorkerPetArchiveId() (+20 more)
+Cohesion: 0.07
+Nodes (22): handle(), AuthenticatedActor, resolveWorkerRequestDependencies(), handleWorkerPetArchiveRequest(), HandleWorkerPetArchiveRequestInput, handleWorkerPetStatusHistoryRequest(), HandleWorkerPetStatusHistoryRequestInput, jsonResponse() (+14 more)
 
 ### Community 94 - "R2 Storage Contract"
 Cohesion: 0.13
 Nodes (25): authenticatePetDraftActor(), handleWorkerPetDraftRequest(), HandleWorkerPetDraftRequestInput, invalidDraftResponse(), isNullableString(), isRecord(), jsonResponse(), parseAuthorizationBearer() (+17 more)
 
 ### Community 95 - "Drizzle ORM Package"
-Cohesion: 0.12
-Nodes (14): parseValidConfig(), validEnv, appConfig, MediaUploadContract, assertSafeR2DryRunCommand(), R2BucketContract, R2BucketDefinition, R2BucketVisibility (+6 more)
+Cohesion: 0.14
+Nodes (15): parseValidConfig(), validEnv, MediaUploadContract, assertSafeR2DryRunCommand(), createR2BucketContract(), createR2UploadDryRun(), R2BucketContract, R2BucketDefinition (+7 more)
 
 ### Community 96 - "UI Design System"
-Cohesion: 0.04
-Nodes (42): createSupabaseAdoptionDonorListRepositories(), createWorkerSupabaseDependencies(), CreateWorkerSupabaseDependenciesInput, ResolveWorkerRequestDependenciesInput, WorkerSupabaseTableQueryLike, MediaAssetRepository, MediaUploadSigner, createSupabasePaymentWebhookRepositories() (+34 more)
-
-### Community 97 - "Shelter Member UI"
-Cohesion: 0.15
-Nodes (10): CatAdoptionModal(), defaultOptions, Lottie, style, CatAdoptionModal(), defaultOptions, Lottie, style (+2 more)
+Cohesion: 0.17
+Nodes (13): handleWorkerPetFeedRequest(), jsonResponse(), KNOWN_SPECIES, parseLimit(), parseLocation(), parseOffset(), parseSpecies(), PetFeedQuery (+5 more)
 
 ### Community 98 - "Web Sponsorship List UI"
 Cohesion: 0.12
-Nodes (17): attachMediaAssetToPetDraft(), AttachMediaAssetToPetDraftInput, AttachMediaAssetToPetDraftResult, AttachPetMediaBlockReason, hasPublishableMedia(), hasText(), PetDraftPublishingValidation, PetLifecycleSpecies (+9 more)
+Nodes (20): memberships, users, adopter, memberships, publishableDraft, shelterMember, users, AdoptionApplicationAccessRecord (+12 more)
 
 ### Community 99 - "Sponsorship Donor List Worker"
 Cohesion: 0.10
 Nodes (16): extractBearerToken(), handleWorkerShelterPetListRequest(), HandleWorkerShelterPetListRequestInput, jsonResponse(), ListShelterPetsQuery, ListShelterPetsResult, parseLimitParam(), parseOffsetParam() (+8 more)
 
 ### Community 100 - "Auth and Repository Testing"
-Cohesion: 0.07
-Nodes (26): PublicShelterProfile, ShelterKind, ShelterProfileRepository, ShelterVerificationStatus, handleWorkerShelterSearchRequest(), jsonResponse(), KNOWN_KINDS, parseKind() (+18 more)
+Cohesion: 0.06
+Nodes (30): jsonResponse(), PublicShelterProfile, ShelterKind, ShelterProfileQuery, ShelterProfileRepository, ShelterVerificationStatus, handleWorkerShelterSearchRequest(), jsonResponse() (+22 more)
 
 ### Community 101 - "Supabase Worker Dependencies"
 Cohesion: 0.11
@@ -1026,23 +1023,23 @@ Nodes (13): draftData, makeUi(), draftInput, createMobilePetDraftUi(), createWeb
 
 ### Community 103 - "Worker Environment Error Boundaries"
 Cohesion: 0.10
-Nodes (16): extractBearerToken(), handleWorkerShelterUpdateRequest(), HandleWorkerShelterUpdateRequestInput, isNonEmptyString(), jsonResponse(), KNOWN_SHELTER_KINDS, ShelterUpdateInput, ShelterUpdateRepository (+8 more)
+Nodes (17): extractBearerToken(), handleWorkerShelterUpdateRequest(), HandleWorkerShelterUpdateRequestInput, isNonEmptyString(), jsonResponse(), KNOWN_SHELTER_KINDS, parseCoordinate(), ShelterUpdateInput (+9 more)
 
 ### Community 104 - "Domain Package Configuration"
-Cohesion: 0.05
-Nodes (52): AdoptionStatusRecord, AdoptionStatusRow, createSupabaseAdoptionStatusRepositories(), CreateSupabaseAdoptionStatusRepositoriesInput, CreateSupabaseAdoptionStatusRepositoriesResult, SupabaseAdoptionStatusRepositoryError, UpdateAdoptionStatusInput, ROUTE_HANDLERS (+44 more)
+Cohesion: 0.07
+Nodes (26): extractBearerToken(), handleWorkerSponsorshipDonorListRequest(), HandleWorkerSponsorshipDonorListRequestInput, jsonResponse(), ListDonorSponsorshipsQuery, ListDonorSponsorshipsResult, parseLimitParam(), parseOffsetParam() (+18 more)
 
 ### Community 105 - "Zod Schema Package"
-Cohesion: 0.10
-Nodes (15): PetDraftInsertContract, PetDraftUpdateContract, adopter, publicImage, shelterMember, validDraftPayload, validEnv, actor (+7 more)
+Cohesion: 0.09
+Nodes (16): PetDraftInsertContract, PetDraftUpdateContract, SupabasePetRepositoryError, adopter, publicImage, shelterMember, validDraftPayload, validEnv (+8 more)
 
 ### Community 106 - "Domain Logic Package"
-Cohesion: 0.19
-Nodes (10): EnvironmentConfig, createR2Endpoint(), createR2UploadSigner(), CreateR2UploadSignerInput, createR2UploadSignerWorkerDependencies(), R2UploadPresigner, R2UploadPresignerInput, R2UploadPresignerResult (+2 more)
+Cohesion: 0.11
+Nodes (12): AdoptionApplicationStatus, AdoptionViewRecord, AdoptionViewRepository, extractBearerToken(), handleWorkerAdoptionViewRequest(), HandleWorkerAdoptionViewRequestInput, jsonResponse(), AdoptionViewRow (+4 more)
 
 ### Community 107 - "Mobile Pet Publish UI"
-Cohesion: 0.23
-Nodes (12): extractBearerToken(), handleWorkerSponsorshipRequest(), HandleWorkerSponsorshipRequestInput, isNonEmptyString(), isNullableString(), isPositiveInteger(), jsonResponse(), PAYMENT_METHODS (+4 more)
+Cohesion: 0.21
+Nodes (11): WorkerSupabaseClientFactory, WorkerSupabaseClientLike, createServerSafeSupabaseOptions(), createSupabaseSdkClientFactory(), CreateSupabaseSdkClientFactoryInput, createSupabaseSdkWorkerDependencies(), defaultCreateClient, SupabaseSdkClientFactoryError (+3 more)
 
 ### Community 115 - "Client TypeScript Configuration"
 Cohesion: 0.10
@@ -1053,12 +1050,12 @@ Cohesion: 0.10
 Nodes (20): dependencies, next, @pic4paws/client, @pic4paws/domain, @pic4paws/ui, react, react-dom, devDependencies (+12 more)
 
 ### Community 168 - "Media Upload Client Testing"
-Cohesion: 0.22
-Nodes (6): adopterActor, fakeAdopterAuth, fakeMemberAuth, sampleDonations, shelterMemberActor, validEnv
+Cohesion: 0.12
+Nodes (18): draftWithoutMedia, memberships, publicPetImage, shelterMember, users, attachMediaAssetToPetDraft(), AttachMediaAssetToPetDraftInput, AttachMediaAssetToPetDraftResult (+10 more)
 
 ### Community 169 - "Media Upload Flow Testing"
-Cohesion: 0.10
-Nodes (19): validEnv, getConfig(), validEnv, validUploadPayload, AppEnvironment, EnvironmentConfigError, environmentSchema, optionalSecret (+11 more)
+Cohesion: 0.14
+Nodes (11): validEnv, AppEnvironment, EnvironmentConfigError, environmentSchema, optionalSecret, ParseEnvironmentConfigResult, PrimaryPaymentProvider, redactEnvironmentConfig() (+3 more)
 
 ### Community 170 - "Shelter Member Client Testing"
 Cohesion: 0.13
@@ -1066,7 +1063,7 @@ Nodes (20): CurrencyCode, DatabaseCurrency, databaseSchemaStatus, assertNonDestr
 
 ### Community 171 - "Shelter Pet List Testing"
 Cohesion: 0.16
-Nodes (16): incompleteDraft, publicImage, createPetDraftInsertContract(), CreatePetDraftInsertContractInput, CreatePetDraftInsertContractResult, createPetDraftUpdateContract(), CreatePetDraftUpdateContractInput, CreatePetDraftUpdateContractResult (+8 more)
+Nodes (17): incompleteDraft, publicImage, createPetDraftInsertContract(), CreatePetDraftInsertContractInput, CreatePetDraftInsertContractResult, createPetDraftUpdateContract(), CreatePetDraftUpdateContractInput, CreatePetDraftUpdateContractResult (+9 more)
 
 ### Community 172 - "Sponsorship Client Testing"
 Cohesion: 0.10
@@ -1081,16 +1078,16 @@ Cohesion: 0.11
 Nodes (18): 1. Spec Compliance Score — 9/10, 2. Gap Analysis Matrix, 3. Deviations and Scope Creep, 4. Findings, 5. Closed Findings (from Prior Audit), 6. Actionable Next Steps, E1 — P2: `shelter-delete-supabase.ts` leaks raw Supabase error messages, E2 — P3: Sanitization test regex missing explicit `bearer` pattern check (+10 more)
 
 ### Community 207 - "Community 207"
-Cohesion: 0.09
-Nodes (26): memberships, users, adopter, memberships, publishableDraft, shelterMember, users, draftWithoutMedia (+18 more)
+Cohesion: 0.08
+Nodes (16): handleWorkerRequest(), WorkerEnv, PetMediaAttachRepository, PetPublishRepository, validEnv, adopter, draftWithoutMedia, publicImage (+8 more)
 
 ### Community 211 - "Community 211"
 Cohesion: 0.13
 Nodes (17): signin(), signup(), signupGoogle(), upload(), firebaseConfig, getAdditionalInfo(), isFirebaseConfigured, provider (+9 more)
 
 ### Community 212 - "Community 212"
-Cohesion: 0.11
-Nodes (16): AuthProviderWrapper(), Close, DarkMode, Help, LightMode, Menu, Message, Notifications (+8 more)
+Cohesion: 0.09
+Nodes (17): patchingFriend(), Friend(), PersonAddOutlined, PersonRemoveOutlined, AuthProviderWrapper(), Close, DarkMode, HeroNav() (+9 more)
 
 ### Community 213 - "Community 213"
 Cohesion: 0.05
@@ -1125,32 +1122,40 @@ Cohesion: 0.12
 Nodes (16): author, dependencies, dotenv, firebase-admin, mongoose, socket.io, description, devDependencies (+8 more)
 
 ### Community 236 - "Community 236"
-Cohesion: 0.06
-Nodes (5): SupabaseTableQueryLike, FakeSupabaseQuery, FakeSupabaseQuery, FakeSupabaseQuery, FakeSupabaseQuery
+Cohesion: 0.15
+Nodes (3): SupabaseTableQueryLike, FakeSupabaseQuery, FakeSupabaseQuery
 
 ### Community 237 - "Community 237"
 Cohesion: 0.12
 Nodes (16): compilerOptions, composite, incremental, jsx, noEmit, outDir, paths, plugins (+8 more)
 
 ### Community 238 - "Community 238"
-Cohesion: 0.22
-Nodes (5): adopter, publicImage, publishablePet, shelterMember, validEnv
+Cohesion: 0.18
+Nodes (6): WebFoundationContent, WebFoundationStatus, brandTokens, WebShelterMemberUiContent, WebShelterPetListUiContent, mojibakePatterns
 
 ### Community 239 - "Community 239"
 Cohesion: 0.10
-Nodes (16): createSupabaseAuthAdapter(), CreateSupabaseAuthAdapterInput, ShelterMembershipRow, SupabaseAuthAdapterError, SupabaseAuthClientLike, SupabaseAuthGetUserResult, SupabaseAuthQueryResult, SupabaseAuthTableQueryLike (+8 more)
+Nodes (15): CreateSupabaseAuthAdapterInput, ShelterMembershipRow, SupabaseAuthAdapterError, SupabaseAuthClientLike, SupabaseAuthGetUserResult, SupabaseAuthQueryResult, SupabaseAuthTableQueryLike, SupabaseAuthUserLike (+7 more)
 
 ### Community 240 - "Community 240"
-Cohesion: 0.29
-Nodes (6): makeClient(), sampleDonation, successBody, createDonationListClient(), DonationListApplication, DonationListClientSuccess
+Cohesion: 0.18
+Nodes (9): unsafeReasonMarkers, MobileDonationStatusFailedState, MobileDonationStatusForbiddenState, MobileDonationStatusIdleState, MobileDonationStatusLoadedState, MobileDonationStatusLoadingState, MobileDonationStatusNotFoundState, MobileDonationStatusResultViewModel (+1 more)
 
 ### Community 241 - "Community 241"
-Cohesion: 0.29
-Nodes (7): createMediaAssetInsertFromUploadIntent(), CreateMediaAssetInsertResult, hasScope(), MediaAssetInsertRejectionReason, PersistableMediaUploadIntent, MediaKind, MediaVisibility
+Cohesion: 0.18
+Nodes (8): WorkerSupabaseClientFactoryInput, activeMembershipRow, activeUserRow, FakeResponseMap, Operation, publicMediaRow, validDraftPayload, validEnv
 
 ### Community 242 - "Community 242"
 Cohesion: 0.12
 Nodes (15): compilerOptions, composite, declaration, declarationMap, outDir, paths, rootDir, types (+7 more)
+
+### Community 243 - "Community 243"
+Cohesion: 0.14
+Nodes (13): getConfig(), validEnv, validUploadPayload, EnvironmentRecord, optionalSecretToNullable(), parseEnvironmentConfig(), MediaUploadSigner, MediaUploadSignerInput (+5 more)
+
+### Community 244 - "Community 244"
+Cohesion: 0.18
+Nodes (11): devDependencies, eslint, eslint-config-prettier, @eslint/js, prettier, @types/node, typescript, typescript-eslint (+3 more)
 
 ### Community 245 - "Community 245"
 Cohesion: 0.13
@@ -1298,11 +1303,15 @@ Nodes (8): admin, Conversation, dotenv, firebaseApp, mongoose, onlineUsers, { Se
 
 ### Community 281 - "Community 281"
 Cohesion: 0.18
-Nodes (11): devDependencies, eslint, eslint-config-prettier, @eslint/js, prettier, @types/node, typescript, typescript-eslint (+3 more)
+Nodes (8): donorActor, fakeDonorAuth, fakeMemberAuth, fakeUnrelatedAuth, sampleSponsorship, shelterMemberActor, unrelatedActor, validEnv
+
+### Community 282 - "Community 282"
+Cohesion: 0.18
+Nodes (9): unsafeReasonMarkers, WebDonationStatusFailedState, WebDonationStatusForbiddenState, WebDonationStatusIdleState, WebDonationStatusLoadedState, WebDonationStatusLoadingState, WebDonationStatusNotFoundState, WebDonationStatusResultViewModel (+1 more)
 
 ### Community 283 - "Community 283"
-Cohesion: 0.09
-Nodes (20): WorkerSupabaseClientFactory, WorkerSupabaseClientFactoryInput, WorkerSupabaseClientLike, WorkerSupabaseWiringError, createServerSafeSupabaseOptions(), createSupabaseSdkClientFactory(), CreateSupabaseSdkClientFactoryInput, createSupabaseSdkWorkerDependencies() (+12 more)
+Cohesion: 0.19
+Nodes (10): EnvironmentConfig, createR2Endpoint(), createR2UploadSigner(), CreateR2UploadSignerInput, createR2UploadSignerWorkerDependencies(), R2UploadPresigner, R2UploadPresignerInput, R2UploadPresignerResult (+2 more)
 
 ### Community 284 - "Community 284"
 Cohesion: 0.18
@@ -1330,11 +1339,11 @@ Nodes (10): 1. Target Files, 2. Design, 3. Testing Strategy, 4. Validation Comma
 
 ### Community 290 - "Community 290"
 Cohesion: 0.18
-Nodes (8): donorActor, fakeDonorAuth, fakeMemberAuth, fakeUnrelatedAuth, sampleSponsorship, shelterMemberActor, unrelatedActor, validEnv
+Nodes (7): styles, mojibakePatterns, MobileFinancialsDashboardUiContent, MobileFoundationContent, MobileFoundationStatus, MobileShelterMemberUiContent, MobileShelterUpdateUiContent
 
 ### Community 291 - "Community 291"
 Cohesion: 0.20
-Nodes (9): Project Constitution, 1. Fresh Machine Setup, 2. Context Files To Read First, 4. Current State As Of 2026-06-13, 5. Recommended Next Work Item, 6. Handoff Prompt For New Agent Session, Agent Resume Guide, Merged Work Items (up to 2026-06-13) (+1 more)
+Nodes (9): Project Constitution, 1. Fresh Machine Setup, 2. Context Files To Read First, 4. Current State As Of 2026-06-14, 5. Recommended Next Work Item, 6. Handoff Prompt For New Agent Session, Agent Resume Guide, Merged Work Items (up to 2026-06-13) (+1 more)
 
 ### Community 292 - "Community 292"
 Cohesion: 0.20
@@ -1362,7 +1371,7 @@ Nodes (9): turbo, dependsOn, outputs, cache, persistent, $schema, tasks, build (
 
 ### Community 298 - "Community 298"
 Cohesion: 0.22
-Nodes (6): adopterActor, fakeAdopterAuth, fakeMemberAuth, sampleSponsorships, shelterMemberActor, validEnv
+Nodes (8): Close, DarkMode, Help, LightMode, Menu, Message, Notifications, Search
 
 ### Community 299 - "Community 299"
 Cohesion: 0.20
@@ -1404,6 +1413,10 @@ Nodes (8): compilerOptions, composite, declaration, declarationMap, outDir, root
 Cohesion: 0.22
 Nodes (8): compilerOptions, composite, declaration, declarationMap, outDir, rootDir, extends, include
 
+### Community 309 - "Community 309"
+Cohesion: 0.67
+Nodes (3): test, dependsOn, outputs
+
 ### Community 310 - "Community 310"
 Cohesion: 0.22
 Nodes (8): compilerOptions, composite, declaration, declarationMap, outDir, rootDir, extends, include
@@ -1441,12 +1454,12 @@ Cohesion: 0.22
 Nodes (8): 1. Target Files, 2. New Types, 3. Content (PT-PT), 4. Factory, 5. Foundation Update, 6. Testing Strategy, 7. Validation Commands, Work-Spec: Implementation Plan for WEB-PET-PROFILE-001
 
 ### Community 319 - "Community 319"
-Cohesion: 0.22
-Nodes (6): adopterActor, fakeAdopterAuth, fakeMemberAuth, sampleApplications, shelterMemberActor, validEnv
+Cohesion: 0.25
+Nodes (5): baseInput, file1, file2, createPetDraftSaveFlowClient(), PetDraftSaveFlowFileInput
 
 ### Community 320 - "Community 320"
-Cohesion: 0.22
-Nodes (6): applicationResult, fakeActor, fakeAuth, petContext, validEnv, validPayload
+Cohesion: 0.29
+Nodes (4): makeClient(), PET_FEED_PATH, createPetStatusHistoryClient(), PetStatusHistoryEvent
 
 ### Community 321 - "Community 321"
 Cohesion: 0.25
@@ -1469,20 +1482,16 @@ Cohesion: 0.25
 Nodes (7): Checkpoint: Full Donation Slice Complete, Current State, Files Changed, Items Merged In This Session, Recommended Next Work Item, Summary, Validation
 
 ### Community 326 - "Community 326"
-Cohesion: 0.25
-Nodes (5): baseInput, file1, file2, createPetDraftSaveFlowClient(), PetDraftSaveFlowFileInput
-
-### Community 328 - "Community 328"
 Cohesion: 0.29
-Nodes (6): makeClient(), sampleSponsorship, successBody, createSponsorshipListClient(), SponsorshipListClientSuccess, SponsorshipListItem
+Nodes (6): Affected files, Completion Notes, Contract, Goal, States, Work-Item: DB-SHELTER-GEO-001 - Canonical Shelter Coordinates
 
 ### Community 329 - "Community 329"
 Cohesion: 0.25
 Nodes (7): 1. Project Purpose, 2. Tech Stack, 3. Directory Conventions, 4. How Our Tooling Works, 5. Hard Rules, 6. References, AGENTS.md - Project Constitution
 
 ### Community 330 - "Community 330"
-Cohesion: 0.25
-Nodes (4): PetDraftLoadRecord, draftRecord, otherMember, shelterMember
+Cohesion: 0.40
+Nodes (4): makeClient(), shelterPath, throwingFetch, createShelterMemberClient()
 
 ### Community 331 - "Community 331"
 Cohesion: 0.25
@@ -1573,8 +1582,8 @@ Cohesion: 0.25
 Nodes (7): 1. Target Files, 2. Proposed Technical Approach, 3. Testing Strategy, 4. Validation Commands, 5. Risk Controls, 6. Implementation Notes, Work-Spec: Implementation Plan for WEB-PET-PUBLISH-001
 
 ### Community 353 - "Community 353"
-Cohesion: 0.25
-Nodes (5): fakeActor, fakeAuth, sponsorshipResult, validEnv, validPayload
+Cohesion: 0.13
+Nodes (12): unsafeReasonMarkers, sampleSponsorships, createMobileSponsorshipDonorListUi(), MobileSponsorshipDonorListEmptyState, MobileSponsorshipDonorListFailedState, MobileSponsorshipDonorListIdleState, MobileSponsorshipDonorListLoadedState, MobileSponsorshipDonorListLoadingState (+4 more)
 
 ### Community 354 - "Community 354"
 Cohesion: 0.29
@@ -1652,25 +1661,33 @@ Nodes (6): Checkpoint: MOBILE-PET-DRAFT-001, Completed, Current State, Recommend
 Cohesion: 0.29
 Nodes (6): Checkpoint: WEB-PET-DRAFT-001, Completed, Current State, Recommended Next Work Item, Summary, Validation
 
+### Community 373 - "Community 373"
+Cohesion: 0.40
+Nodes (3): FakeResponseMap, Operation, shelterRow
+
 ### Community 374 - "Community 374"
-Cohesion: 0.09
-Nodes (15): makeClient(), successBody, validInput, createDonationClient(), CreateDonationClientInput, CreateDonationListClientInput, CreateDonationStatusClientInput, DonationClientFailure (+7 more)
+Cohesion: 0.07
+Nodes (26): unsafeReasonMarkers, unsafeReasonMarkers, sampleDonation, createMobileDonationListUi(), createWebDonationListUi(), MobileDonationListEmptyState, MobileDonationListFailedState, MobileDonationListForbiddenState (+18 more)
 
 ### Community 375 - "Community 375"
-Cohesion: 0.06
-Nodes (26): FetchCall, uploadReadyIntent, FetchCall, validRequest, containsSecretLikeValue(), createMediaUploadBinaryClient(), CreateMediaUploadBinaryClientInput, createMediaUploadClient() (+18 more)
+Cohesion: 0.08
+Nodes (21): FetchCall, uploadReadyIntent, containsSecretLikeValue(), createMediaUploadBinaryClient(), CreateMediaUploadBinaryClientInput, CreateMediaUploadClientInput, isUnsafeUploadHeaderName(), MediaUploadBinaryClient (+13 more)
+
+### Community 376 - "Community 376"
+Cohesion: 0.18
+Nodes (9): unsafeReasonMarkers, WebSponsorshipListEmptyState, WebSponsorshipListFailedState, WebSponsorshipListForbiddenState, WebSponsorshipListIdleState, WebSponsorshipListLoadedState, WebSponsorshipListLoadingState, WebSponsorshipListResultViewModel (+1 more)
 
 ### Community 377 - "Community 377"
 Cohesion: 0.03
 Nodes (46): file, input, MediaUploadFlowClient, CreatePetArchiveClientInput, CreatePetDraftClientInput, CreatePetDraftSaveFlowClientInput, CreatePetFeedClientInput, CreatePetMediaAttachClientInput (+38 more)
 
 ### Community 378 - "Community 378"
-Cohesion: 0.07
-Nodes (15): baseInput, validInput, createSponsorshipClient(), CreateSponsorshipClientInput, CreateSponsorshipDonorListClientInput, CreateSponsorshipListClientInput, CreateSponsorshipManageClientInput, SponsorshipClientFailure (+7 more)
+Cohesion: 0.67
+Nodes (3): typecheck, dependsOn, outputs
 
 ### Community 379 - "Community 379"
-Cohesion: 0.09
-Nodes (18): adoptionsPath, makeClient(), throwingFetch, adoptionsPath, makeClient(), throwingFetch, makeClient(), sampleSponsorships (+10 more)
+Cohesion: 0.16
+Nodes (10): adoptionsPath, makeClient(), throwingFetch, makeClient(), sampleSponsorships, sponsorshipsPath, throwingFetch, createAdoptionStatusClient() (+2 more)
 
 ### Community 380 - "Community 380"
 Cohesion: 0.29
@@ -1682,11 +1699,11 @@ Nodes (6): name, packageManager, private, type, version, workspaces
 
 ### Community 382 - "Community 382"
 Cohesion: 0.29
-Nodes (7): postcss, postcss, overrides, @expo/metro-config, next, xcode, uuid
+Nodes (7): scripts, build, dev, format, lint, test, typecheck
 
 ### Community 383 - "Community 383"
-Cohesion: 0.29
-Nodes (7): scripts, build, dev, format, lint, test, typecheck
+Cohesion: 0.25
+Nodes (4): PetDraftLoadRecord, draftRecord, otherMember, shelterMember
 
 ### Community 384 - "Community 384"
 Cohesion: 0.29
@@ -1845,8 +1862,8 @@ Cohesion: 0.29
 Nodes (6): 1. Target Files, 2. Proposed Technical Approach, 3. Testing Strategy, 4. Validation Commands, 5. Risk Controls, Work-Spec: Implementation Plan for WORKERS-001
 
 ### Community 423 - "Community 423"
-Cohesion: 0.25
-Nodes (5): MediaAssetInsertContract, outsiderActor, shelterActor, validEnv, validUploadPayload
+Cohesion: 0.22
+Nodes (6): MediaAssetRepository, outsiderActor, shelterActor, signer(), validEnv, validUploadPayload
 
 ### Community 424 - "Community 424"
 Cohesion: 0.33
@@ -1859,6 +1876,14 @@ Nodes (5): Design System, Personality, Source References, Tokens, UI Rules
 ### Community 426 - "Community 426"
 Cohesion: 0.33
 Nodes (5): Core Product Capabilities Found, Current Reference Structure, Legacy App Audit, Remake Direction, Technical Risks To Address In V2
+
+### Community 427 - "Community 427"
+Cohesion: 0.29
+Nodes (6): makeClient(), sampleSponsorship, successBody, createSponsorshipListClient(), SponsorshipListClientSuccess, SponsorshipListItem
+
+### Community 429 - "Community 429"
+Cohesion: 0.60
+Nodes (5): getAccessToken(), handler(), isAllowedPath(), jsonResponse(), fetch()
 
 ### Community 430 - "Community 430"
 Cohesion: 0.33
@@ -2352,6 +2377,10 @@ Nodes (4): Checkpoint: Pet Status History Complete, Completed since last checkpo
 Cohesion: 0.50
 Nodes (3): makeClient(), samplePet, createPetFeedClient()
 
+### Community 553 - "Community 553"
+Cohesion: 0.07
+Nodes (21): makeClient(), successBody, validInput, makeClient(), sampleDonation, successBody, createDonationClient(), CreateDonationClientInput (+13 more)
+
 ### Community 554 - "Community 554"
 Cohesion: 0.50
 Nodes (3): makeClient(), samplePet, createPetProfileClient()
@@ -2400,13 +2429,17 @@ Nodes (4): Affected files, Contract, Goal, States
 Cohesion: 0.40
 Nodes (4): Affected files, Contract, Goal, States
 
+### Community 568 - "Community 568"
+Cohesion: 0.29
+Nodes (3): baseInput, validInput, createSponsorshipClient()
+
 ### Community 569 - "Community 569"
 Cohesion: 0.50
 Nodes (4): Default: one branch per work item, Exception: batch branch, General rules, Git Workflow
 
 ### Community 570 - "Community 570"
-Cohesion: 0.05
-Nodes (22): makeClient(), sampleApplication, successBody, AdoptionApplicationClientFailure, AdoptionApplicationStatus, AdoptionDonorListClientFailure, AdoptionDonorListClientResult, AdoptionDonorListClientSuccess (+14 more)
+Cohesion: 0.29
+Nodes (7): postcss, postcss, overrides, @expo/metro-config, next, xcode, uuid
 
 ### Community 571 - "Community 571"
 Cohesion: 0.50
@@ -2472,37 +2505,33 @@ Nodes (3): Affected files, Contract, Goal
 Cohesion: 0.67
 Nodes (3): dependsOn, outputs, lint
 
-### Community 591 - "Community 591"
-Cohesion: 0.67
-Nodes (3): test, dependsOn, outputs
-
-### Community 592 - "Community 592"
-Cohesion: 0.67
-Nodes (3): typecheck, dependsOn, outputs
+### Community 593 - "Community 593"
+Cohesion: 0.40
+Nodes (3): FakeResponseMap, Operation, petRow
 
 ## Ambiguous Edges - Review These
 - `Adoption View Client Work Item` → `Mobile Pet Archive Product Boundary Work Item`  [AMBIGUOUS]
    · relation: references
 
 ## Knowledge Gaps
-- **3289 isolated node(s):** `styles`, `name`, `version`, `private`, `type` (+3284 more)
+- **3294 isolated node(s):** `styles`, `name`, `version`, `private`, `type` (+3289 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **132 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **136 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
 - **What is the exact relationship between `Adoption View Client Work Item` and `Mobile Pet Archive Product Boundary Work Item`?**
   _Edge tagged AMBIGUOUS (relation: references) - confidence is low._
-- **Why does `PetLifecycleSpecies` connect `Web Sponsorship List UI` to `UI Design System`, `Sponsorship Donor List Worker`, `Shelter Pet List Testing`, `Community 375`, `Community 377`, `R2 Storage Contract`?**
-  _High betweenness centrality (0.047) - this node is a cross-community bridge._
-- **Why does `PublicPetMedicalStatus` connect `Web Sponsorship List UI` to `UI Design System`, `Community 377`, `Shelter Pet List Testing`, `Community 375`?**
-  _High betweenness centrality (0.029) - this node is a cross-community bridge._
-- **Why does `PetLifecycleStatus` connect `Community 375` to `UI Design System`, `Community 377`, `Web Sponsorship List UI`, `Shelter Pet List Testing`?**
-  _High betweenness centrality (0.028) - this node is a cross-community bridge._
+- **Why does `PetLifecycleSpecies` connect `Supabase Query Mocking` to `UI Design System`, `Sponsorship Donor List Worker`, `Next.js App Dependencies`, `Media Upload Client Testing`, `Shelter Pet List Testing`, `Media Upload Testing`, `Community 377`, `R2 Storage Contract`?**
+  _High betweenness centrality (0.051) - this node is a cross-community bridge._
+- **Why does `PublicPetMedicalStatus` connect `Supabase Query Mocking` to `Next.js App Dependencies`, `Media Upload Client Testing`, `Shelter Pet List Testing`, `Media Upload Testing`, `Community 377`?**
+  _High betweenness centrality (0.032) - this node is a cross-community bridge._
+- **Why does `PetLifecycleStatus` connect `Supabase Query Mocking` to `Next.js App Dependencies`, `Media Upload Client Testing`, `Shelter Pet List Testing`, `Media Upload Testing`, `Community 377`?**
+  _High betweenness centrality (0.032) - this node is a cross-community bridge._
 - **Are the 15 inferred relationships involving `canManageShelter()` (e.g. with `handleWorkerAdoptionListRequest()` and `handleWorkerAdoptionStatusRequest()`) actually correct?**
   _`canManageShelter()` has 15 INFERRED edges - model-reasoned connections that need verification._
 - **What connects `styles`, `name`, `version` to the rest of the system?**
-  _3289 weakly-connected nodes found - possible documentation gaps or missing edges._
+  _3294 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Adoption Application Client` be split into smaller, more focused modules?**
-  _Cohesion score 0.13333333333333333 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.04338487972508591 - nodes in this community are weakly interconnected._

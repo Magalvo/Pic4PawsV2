@@ -25,6 +25,8 @@ const toColumnMap = (input: ShelterUpdateInput): Record<string, unknown> => {
   if (input.publicEmail !== undefined) cols.public_email = input.publicEmail;
   if (input.publicPhone !== undefined) cols.public_phone = input.publicPhone;
   if (input.description !== undefined) cols.description = input.description;
+  if (input.latitude !== undefined) cols.latitude = input.latitude;
+  if (input.longitude !== undefined) cols.longitude = input.longitude;
   return cols;
 };
 

@@ -72,8 +72,31 @@ describe('validateShelterUpdatePayload', () => {
       publicEmail: 'x@x.pt',
       publicPhone: '+351',
       description: 'Desc',
+      latitude: '41.1579',
+      longitude: -8.6291,
     });
     expect(result.valid).toBe(true);
+    if (result.valid) {
+      expect(result.input.latitude).toBe(41.1579);
+      expect(result.input.longitude).toBe(-8.6291);
+    }
+  });
+
+  it('accepts null or blank coordinates as explicit clearing', () => {
+    const result = validateShelterUpdatePayload({ latitude: null, longitude: '   ' });
+    expect(result.valid).toBe(true);
+    if (result.valid) {
+      expect(result.input.latitude).toBeNull();
+      expect(result.input.longitude).toBeNull();
+    }
+  });
+
+  it('rejects non-numeric and out-of-range coordinates', () => {
+    const result = validateShelterUpdatePayload({ latitude: 'north', longitude: 181 });
+    expect(result.valid).toBe(false);
+    if (!result.valid) {
+      expect(result.reasons).toEqual(['latitude_invalid', 'longitude_invalid']);
+    }
   });
 
   it('returns no_fields_provided for empty object', () => {

@@ -69,6 +69,10 @@ describe('database migration artifacts', () => {
 
     expect(sql).toContain('constraint users_auth_user_id_unique unique (auth_user_id)');
     expect(sql).toContain('constraint shelters_slug_unique unique (slug)');
+    expect(sql).toContain('latitude numeric(9, 6)');
+    expect(sql).toContain('longitude numeric(9, 6)');
+    expect(sql).not.toContain('latitude text');
+    expect(sql).not.toContain('longitude text');
     expect(sql).toContain('references public.shelters (id)');
     expect(sql).toContain('references public.users (id)');
     expect(sql).toContain('alter table public.pets enable row level security;');
