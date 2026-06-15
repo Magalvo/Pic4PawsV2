@@ -13,6 +13,7 @@
   "dependencies": {
     "@pic4paws/client": "0.1.0",
     "@pic4paws/domain": "0.1.0",
+    "@supabase/supabase-js": "^2.107.0",
     "expo": "^54.0.24",
     "expo-router": "^6.0.15",
     "react": "^19.2.1",
