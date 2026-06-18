@@ -1,7 +1,7 @@
 ---
 id: WEB-SHELTER-PROFILE-PAGE-001
 title: Web shelter profile page
-status: in-progress
+status: done
 ---
 
 # Work-Item: WEB-SHELTER-PROFILE-PAGE-001 — Web Shelter Profile Page
@@ -31,3 +31,7 @@ Create the shelter profile page at `/abrigos/[shelterId]` wired to `createWebShe
 - `docs/work-items/WEB-SHELTER-PROFILE-PAGE-001-web-shelter-profile-page.md` (this file)
 - `apps/web/app/abrigos/[shelterId]/page.tsx` — new dynamic page
 - `tests/web/shelter-profile-page.test.ts` — boundary contract tests
+
+## Completion Notes
+
+- Shipped in PR #161. `apps/web/app/abrigos/[shelterId]/page.tsx` resets viewModel to `null` then re-fetches on `shelterId` change. Renders `null`/loading, `loaded`, `not_found`, `failed`, and `idle` branches.

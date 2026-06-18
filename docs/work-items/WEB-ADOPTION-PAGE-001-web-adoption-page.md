@@ -1,7 +1,7 @@
 ---
 id: WEB-ADOPTION-PAGE-001
 title: Web adoption application page
-status: in-progress
+status: done
 ---
 
 # Work-Item: WEB-ADOPTION-PAGE-001 — Web Adoption Application Page
@@ -31,6 +31,10 @@ Create the adoption application form page at `/animais/[petId]/adotar` wired to 
 
 - `docs/work-items/WEB-ADOPTION-PAGE-001-web-adoption-page.md` (this file)
 - `apps/web/src/supabase-browser.ts` — new shared browser client factory (used by all Phase 3+ pages)
-- `apps/web/app/entrar/page.tsx` — remove `persistSession: false` so sessions persist across navigation
+- `apps/web/app/entrar/page.tsx` — remove `persistSession: false` so sessions persist across navigation (applied in this PR)
 - `apps/web/app/animais/[petId]/adotar/page.tsx` — new dynamic form page
 - `tests/web/adoption-page.test.ts` — boundary contract tests
+
+## Completion Notes
+
+- Shipped in PR #163. `apps/web/app/animais/[petId]/adotar/page.tsx` stores UI in `useRef`, calls `getInitialState()` on mount, submits via `submitApplication`. Also introduced `apps/web/src/supabase-browser.ts` shared browser client factory and removed the original `persistSession: false` from `entrar/page.tsx` (session must persist for cross-page auth).

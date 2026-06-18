@@ -1,7 +1,7 @@
 ---
 id: WEB-DONATION-PAGE-001
 title: Web donation page
-status: in-progress
+status: done
 ---
 
 # Work-Item: WEB-DONATION-PAGE-001 — Web Donation Page
@@ -31,3 +31,7 @@ Create the donation form page at `/abrigos/[shelterId]/doar` wired to `createWeb
 - `docs/work-items/WEB-DONATION-PAGE-001-web-donation-page.md` (this file)
 - `apps/web/app/abrigos/[shelterId]/doar/page.tsx` — new dynamic form page
 - `tests/web/donation-page.test.ts` — boundary contract tests
+
+## Completion Notes
+
+- Shipped in PR #164. `apps/web/app/abrigos/[shelterId]/doar/page.tsx` uses `useRef` pattern for UI instance, derives `amountCents` from a euro-denominated number input (× 100), passes `dataProcessingAccepted: true` at submit time.

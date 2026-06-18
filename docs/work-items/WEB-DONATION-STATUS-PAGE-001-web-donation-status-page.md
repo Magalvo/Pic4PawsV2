@@ -1,7 +1,7 @@
 ---
 id: WEB-DONATION-STATUS-PAGE-001
 title: Web donation status page
-status: in-progress
+status: done
 ---
 
 # Work-Item: WEB-DONATION-STATUS-PAGE-001 — Web Donation Status Page
@@ -32,3 +32,7 @@ Create the donation status page at `/doacoes/[donationId]` wired to `createWebDo
 - `docs/work-items/WEB-DONATION-STATUS-PAGE-001-web-donation-status-page.md` (this file)
 - `apps/web/app/doacoes/[donationId]/page.tsx` — new dynamic page
 - `tests/web/donation-status-page.test.ts` — boundary contract tests
+
+## Completion Notes
+
+- Shipped in PR #165. `apps/web/app/doacoes/[donationId]/page.tsx` resets viewModel to `null` then calls `loadDonationStatus(donationId)` in `useEffect([donationId])`. Renders `loaded`, `not_found`, `forbidden`, `failed` (with `/entrar` link when unauthenticated), and defensive `idle`/`loading` branches.

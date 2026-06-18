@@ -45,19 +45,23 @@ export default function AnimaisScreen() {
     );
   }
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.list}>
-        <Text style={styles.title}>{viewModel.title}</Text>
-        {viewModel.pets.map((pet) => (
-          <View key={pet.id} style={styles.card}>
-            <Text style={styles.cardTitle}>{pet.name}</Text>
-            <Text style={styles.cardMeta}>{pet.species}{pet.locationLabel ? ` · ${pet.locationLabel}` : ''}</Text>
-          </View>
-        ))}
-      </ScrollView>
-    </SafeAreaView>
-  );
+  if (viewModel.state === 'loaded') {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ScrollView contentContainerStyle={styles.list}>
+          <Text style={styles.title}>{viewModel.title}</Text>
+          {viewModel.pets.map((pet) => (
+            <View key={pet.id} style={styles.card}>
+              <Text style={styles.cardTitle}>{pet.name}</Text>
+              <Text style={styles.cardMeta}>{pet.species}{pet.locationLabel ? ` · ${pet.locationLabel}` : ''}</Text>
+            </View>
+          ))}
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  return null;
 }
 
 const styles = StyleSheet.create({

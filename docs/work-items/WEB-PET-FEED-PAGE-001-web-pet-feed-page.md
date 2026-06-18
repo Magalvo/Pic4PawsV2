@@ -1,7 +1,7 @@
 ---
 id: WEB-PET-FEED-PAGE-001
 title: Web pet feed page
-status: in-progress
+status: done
 ---
 
 # Work-Item: WEB-PET-FEED-PAGE-001 — Web Pet Feed Page
@@ -48,3 +48,7 @@ export const workerUrl = (): string => {
 - `apps/web/src/env.ts` — new: `workerUrl()` helper
 - `apps/web/app/animais/page.tsx` — new: pet feed Client Component
 - `tests/web/env-wiring.test.ts` — new: verifies `workerUrl()` reads the env var
+
+## Completion Notes
+
+- Shipped in PR #158. `apps/web/src/env.ts` exports `workerUrl()`. `apps/web/app/animais/page.tsx` renders all five states (`null`/loading, `idle`, `loaded`, `empty`, `failed`) wired to `createWebPetFeedUi`. Pattern reused by all subsequent web pages.

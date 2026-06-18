@@ -1,7 +1,7 @@
 ---
 id: WEB-PET-PROFILE-PAGE-001
 title: Web pet profile page
-status: in-progress
+status: done
 ---
 
 # Work-Item: WEB-PET-PROFILE-PAGE-001 — Web Pet Profile Page
@@ -30,3 +30,7 @@ Create the pet profile page at `/animais/[petId]` wired to `createWebPetProfileU
 - `docs/work-items/WEB-PET-PROFILE-PAGE-001-web-pet-profile-page.md` (this file)
 - `apps/web/app/animais/[petId]/page.tsx` — new dynamic page
 - `tests/web/pet-profile-page.test.ts` — verifies the page module exports a default component
+
+## Completion Notes
+
+- Shipped in PR #159. `apps/web/app/animais/[petId]/page.tsx` unwraps `params` via `use(params)`, creates client + UI in `useEffect([petId])`, renders `null`/loading, `loaded`, `not_found`, and `failed` branches.

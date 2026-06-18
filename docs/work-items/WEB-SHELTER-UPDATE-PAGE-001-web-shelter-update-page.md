@@ -1,7 +1,7 @@
 ---
 id: WEB-SHELTER-UPDATE-PAGE-001
 title: Web shelter update page
-status: in-progress
+status: done
 ---
 
 # Work-Item: WEB-SHELTER-UPDATE-PAGE-001 — Web Shelter Update Page
@@ -32,3 +32,7 @@ Create the shelter edit page at `/abrigos/[shelterId]/editar` wired to `createWe
 - `docs/work-items/WEB-SHELTER-UPDATE-PAGE-001-web-shelter-update-page.md` (this file)
 - `apps/web/app/abrigos/[shelterId]/editar/page.tsx` — new dynamic form page
 - `tests/web/shelter-update-page.test.ts` — boundary contract tests
+
+## Completion Notes
+
+- Shipped in PR #167. `apps/web/app/abrigos/[shelterId]/editar/page.tsx` is two-phase: `useEffect([shelterId])` loads the shelter profile to pre-fill form fields, then stores `createWebShelterUpdateUi` in `useRef`. Empty strings coerced to `undefined`/`null` on submit.
