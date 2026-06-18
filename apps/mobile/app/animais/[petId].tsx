@@ -46,22 +46,26 @@ export default function AnimalScreen() {
     );
   }
 
-  const { pet } = viewModel;
+  if (viewModel.state === 'loaded') {
+    const { pet } = viewModel;
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>{pet.name}</Text>
-        <View style={styles.metaRow}>
-          <Text style={styles.meta}>{pet.species}</Text>
-          {pet.locationLabel ? <Text style={styles.meta}>{pet.locationLabel}</Text> : null}
-        </View>
-        {pet.shortDescription ? (
-          <Text style={styles.description}>{pet.shortDescription}</Text>
-        ) : null}
-      </ScrollView>
-    </SafeAreaView>
-  );
+    return (
+      <SafeAreaView style={styles.container}>
+        <ScrollView contentContainerStyle={styles.content}>
+          <Text style={styles.title}>{pet.name}</Text>
+          <View style={styles.metaRow}>
+            <Text style={styles.meta}>{pet.species}</Text>
+            {pet.locationLabel ? <Text style={styles.meta}>{pet.locationLabel}</Text> : null}
+          </View>
+          {pet.shortDescription ? (
+            <Text style={styles.description}>{pet.shortDescription}</Text>
+          ) : null}
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  return null;
 }
 
 const styles = StyleSheet.create({

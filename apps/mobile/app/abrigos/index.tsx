@@ -44,19 +44,23 @@ export default function AbrigosScreen() {
     );
   }
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.list}>
-        <Text style={styles.title}>{viewModel.title}</Text>
-        {viewModel.shelters.map((shelter) => (
-          <View key={shelter.id} style={styles.card}>
-            <Text style={styles.cardTitle}>{shelter.name}</Text>
-            <Text style={styles.cardMeta}>{shelter.city}</Text>
-          </View>
-        ))}
-      </ScrollView>
-    </SafeAreaView>
-  );
+  if (viewModel.state === 'loaded') {
+    return (
+      <SafeAreaView style={styles.container}>
+        <ScrollView contentContainerStyle={styles.list}>
+          <Text style={styles.title}>{viewModel.title}</Text>
+          {viewModel.shelters.map((shelter) => (
+            <View key={shelter.id} style={styles.card}>
+              <Text style={styles.cardTitle}>{shelter.name}</Text>
+              <Text style={styles.cardMeta}>{shelter.city}</Text>
+            </View>
+          ))}
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  return null;
 }
 
 const styles = StyleSheet.create({

@@ -46,28 +46,32 @@ export default function AbrigoScreen() {
     );
   }
 
-  const { shelter } = viewModel;
+  if (viewModel.state === 'loaded') {
+    const { shelter } = viewModel;
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.title}>{shelter.name}</Text>
-        <View style={styles.metaRow}>
-          <Text style={styles.meta}>{shelter.city}</Text>
-          {shelter.district ? <Text style={styles.meta}>{shelter.district}</Text> : null}
-        </View>
-        {shelter.publicEmail ? (
-          <Text style={styles.contact}>{shelter.publicEmail}</Text>
-        ) : null}
-        {shelter.publicPhone ? (
-          <Text style={styles.contact}>{shelter.publicPhone}</Text>
-        ) : null}
-        {shelter.description ? (
-          <Text style={styles.description}>{shelter.description}</Text>
-        ) : null}
-      </ScrollView>
-    </SafeAreaView>
-  );
+    return (
+      <SafeAreaView style={styles.container}>
+        <ScrollView contentContainerStyle={styles.content}>
+          <Text style={styles.title}>{shelter.name}</Text>
+          <View style={styles.metaRow}>
+            <Text style={styles.meta}>{shelter.city}</Text>
+            {shelter.district ? <Text style={styles.meta}>{shelter.district}</Text> : null}
+          </View>
+          {shelter.publicEmail ? (
+            <Text style={styles.contact}>{shelter.publicEmail}</Text>
+          ) : null}
+          {shelter.publicPhone ? (
+            <Text style={styles.contact}>{shelter.publicPhone}</Text>
+          ) : null}
+          {shelter.description ? (
+            <Text style={styles.description}>{shelter.description}</Text>
+          ) : null}
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  return null;
 }
 
 const styles = StyleSheet.create({

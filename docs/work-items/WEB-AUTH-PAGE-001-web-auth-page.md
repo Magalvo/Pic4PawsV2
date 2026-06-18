@@ -8,7 +8,7 @@ status: in-progress
 
 ## Goal
 
-Create the login page at `/entrar` wired to `createWebAuthUi`. The user submits email and password; on success the Supabase session is available in component state. Auth token never touches localStorage (persistSession: false).
+Create the login page at `/entrar` wired to `createWebAuthUi`. The user submits email and password; on success the Supabase session is stored and available to subsequent authenticated pages.
 
 ## States
 
@@ -20,9 +20,9 @@ Create the login page at `/entrar` wired to `createWebAuthUi`. The user submits 
 
 `apps/web/app/entrar/page.tsx` is a `'use client'` Next.js App Router page that:
 - Keeps local `email`, `password`, `submitting` state for the controlled form
-- On submit: creates `SupabaseBrowserClient` + `WebAuthUi` inside the handler, calls `signIn(email, password)`
+- On submit: creates a Supabase client + `WebAuthUi` inside the handler, calls `signIn(email, password)`
 - `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY` accessed only inside the handler (never at module level)
-- `persistSession: false` — no localStorage writes; token lives in React state only
+- Session is persisted via the default Supabase storage (`persistSession: true`) so that subsequent pages (adoption form, shelter edit, donation, etc.) can retrieve the access token via `supabase.auth.getSession()`
 - Uses `createWebAuthUi` from `apps/web/src/auth.ts`
 
 ## Affected Files
@@ -34,3 +34,7 @@ Create the login page at `/entrar` wired to `createWebAuthUi`. The user submits 
 - `apps/web/package.json` — add @supabase/supabase-js
 - `tests/web/auth-page.test.ts` — boundary contract tests
 - `.env.example` — add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+## Completion Notes
+
+- Shipped in PR #162. `apps/web/src/auth.ts` defines `createWebAuthUi` against `SupabaseBrowserAuthClientLike`. `apps/web/app/entrar/page.tsx` creates the Supabase client inside the submit handler using default `persistSession: true` (the earlier spec said `false`, but PR #163 removed that override so sessions survive navigation to adoption/donation/shelter-edit pages).
