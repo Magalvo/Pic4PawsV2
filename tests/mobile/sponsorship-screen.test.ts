@@ -13,6 +13,7 @@ const input: SponsorshipClientInput = {
   amountCents: 1000,
   paymentMethod: 'card',
   recurringInterval: 'monthly',
+  dataProcessingAccepted: true,
 };
 
 describe('mobile sponsorship screen — boundary contract', () => {
@@ -22,6 +23,10 @@ describe('mobile sponsorship screen — boundary contract', () => {
       status: 'sponsorship_created',
       sponsorshipId: 'sp-001',
       amountCents: 1000,
+      currency: 'EUR',
+      recurringInterval: 'monthly',
+      shelterId: 'shelter-001',
+      createdAt: '2026-01-01T00:00:00Z',
     });
     const ui = createMobileSponsorshipUi({ sponsorshipClient: client });
     const result = await ui.submitSponsorship(input);
@@ -34,6 +39,10 @@ describe('mobile sponsorship screen — boundary contract', () => {
       status: 'sponsorship_created',
       sponsorshipId: 'sp-001',
       amountCents: 1000,
+      currency: 'EUR',
+      recurringInterval: 'monthly',
+      shelterId: 'shelter-001',
+      createdAt: '2026-01-01T00:00:00Z',
     });
     const ui = createMobileSponsorshipUi({ sponsorshipClient: client });
     const result = await ui.submitSponsorship(input);

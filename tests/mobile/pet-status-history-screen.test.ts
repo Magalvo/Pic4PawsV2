@@ -20,14 +20,14 @@ const event = {
 
 describe('mobile pet status history screen — boundary contract', () => {
   it('produces loaded state with events', async () => {
-    const client = makeClient({ ok: true, status: 'ok', events: [event] });
+    const client = makeClient({ ok: true, status: 'ok', petId: 'pet-001', events: [event] });
     const ui = createMobilePetStatusHistoryUi({ petStatusHistoryClient: client });
     const result = await ui.loadHistory('pet-001');
     expect(result.state).toBe('loaded');
   });
 
   it('loaded state includes events array', async () => {
-    const client = makeClient({ ok: true, status: 'ok', events: [event] });
+    const client = makeClient({ ok: true, status: 'ok', petId: 'pet-001', events: [event] });
     const ui = createMobilePetStatusHistoryUi({ petStatusHistoryClient: client });
     const result = await ui.loadHistory('pet-001');
     if (result.state === 'loaded') {
@@ -51,7 +51,7 @@ describe('mobile pet status history screen — boundary contract', () => {
   });
 
   it('getInitialState returns idle state', () => {
-    const client = makeClient({ ok: true, status: 'ok', events: [] });
+    const client = makeClient({ ok: true, status: 'ok', petId: 'pet-001', events: [] });
     const ui = createMobilePetStatusHistoryUi({ petStatusHistoryClient: client });
     expect(ui.getInitialState().state).toBe('idle');
   });

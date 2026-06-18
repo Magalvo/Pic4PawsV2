@@ -20,7 +20,7 @@ const event = {
 
 describe('web pet status history page — boundary contract', () => {
   it('produces loaded state with events', async () => {
-    const client = makeClient({ ok: true, status: 'ok', events: [event] });
+    const client = makeClient({ ok: true, status: 'ok', petId: 'pet-001', events: [event] });
     const ui = createWebPetStatusHistoryUi({ petStatusHistoryClient: client });
     const result = await ui.loadHistory('pet-001');
     expect(result.state).toBe('loaded');
