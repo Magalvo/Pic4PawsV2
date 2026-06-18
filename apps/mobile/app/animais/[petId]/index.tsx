@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { createPetProfileClient } from '@pic4paws/client';
-import { createMobilePetProfileUi, type MobilePetProfileResultViewModel } from '../../src/pet-profile';
-import { workerUrl } from '../../src/env';
+import { createMobilePetProfileUi, type MobilePetProfileResultViewModel } from '../../../src/pet-profile';
+import { workerUrl } from '../../../src/env';
 
 export default function AnimalScreen() {
   const { petId } = useLocalSearchParams<{ petId: string }>();
