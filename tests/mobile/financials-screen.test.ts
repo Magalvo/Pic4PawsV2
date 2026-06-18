@@ -12,7 +12,7 @@ const summary = {
   shelterId: 'shelter-001',
   currency: 'EUR',
   donations: { count: 2, paidTotalCents: 5000, byStatus: [] },
-  sponsorships: { activeCount: 1, monthlyTotalCents: 1000, byStatus: [] },
+  sponsorships: { activeCount: 1, pausedCount: 0, cancelledCount: 0, activeTotalCents: 1000 },
 };
 
 describe('mobile financials screen — boundary contract', () => {

@@ -10,7 +10,7 @@ const makeClient = (
 
 describe('web shelter delete page — boundary contract', () => {
   it('produces deleted state on success', async () => {
-    const client = makeClient({ ok: true, status: 'ok', shelterId: 'shelter-001' });
+    const client = makeClient({ ok: true, status: 'deleted', shelterId: 'shelter-001' });
     const ui = createWebShelterDeletionUi({ shelterDeletionClient: client });
     const result = await ui.deleteShelter('shelter-001');
     expect(result.state).toBe('deleted');
