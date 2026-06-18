@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { createShelterProfileClient } from '@pic4paws/client';
-import { createMobileShelterProfileUi, type MobileShelterProfileResultViewModel } from '../../src/shelter-profile';
-import { workerUrl } from '../../src/env';
+import { createMobileShelterProfileUi, type MobileShelterProfileResultViewModel } from '../../../src/shelter-profile';
+import { workerUrl } from '../../../src/env';
 
 export default function AbrigoScreen() {
   const { shelterId } = useLocalSearchParams<{ shelterId: string }>();
