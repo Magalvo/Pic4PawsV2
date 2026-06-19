@@ -39,7 +39,7 @@ export default function GerirApadrinhamentoScreen() {
   const manage = useCallback(
     (newStatus: SponsorshipClientStatus) => {
       setViewModel({ state: 'submitting', title: 'A processar...', message: 'A atualizar o estado do apadrinhamento.' });
-      const supabase = createClient(supabaseUrl(), supabaseAnonKey());
+      const supabase = createClient(supabaseUrl(), supabaseAnonKey(), { auth: { persistSession: false } });
       const getAccessToken = async () => {
         const { data: { session } } = await supabase.auth.getSession();
         return session?.access_token ?? null;

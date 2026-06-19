@@ -1,7 +1,7 @@
 ---
 id: WEB-AUTH-PAGE-001
 title: Web auth page — login
-status: in-progress
+status: done
 ---
 
 # Work-Item: WEB-AUTH-PAGE-001 — Web Auth Page (Login)

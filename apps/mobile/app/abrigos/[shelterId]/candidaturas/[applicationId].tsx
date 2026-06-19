@@ -27,7 +27,7 @@ const STATUS_OPTIONS: Array<{ status: AdoptionStatusShelterManageStatus; label: 
 export default function EstadoCandidaturaScreen() {
   const { applicationId } = useLocalSearchParams<{ applicationId: string }>();
   const [viewModel, setViewModel] = useState<MobileAdoptionStatusResultViewModel>(() => {
-    const supabase = createClient(supabaseUrl(), supabaseAnonKey());
+    const supabase = createClient(supabaseUrl(), supabaseAnonKey(), { auth: { persistSession: false } });
     const getAccessToken = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       return session?.access_token ?? null;
@@ -42,7 +42,7 @@ export default function EstadoCandidaturaScreen() {
   });
 
   const makeUi = useCallback(() => {
-    const supabase = createClient(supabaseUrl(), supabaseAnonKey());
+    const supabase = createClient(supabaseUrl(), supabaseAnonKey(), { auth: { persistSession: false } });
     const getAccessToken = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       return session?.access_token ?? null;

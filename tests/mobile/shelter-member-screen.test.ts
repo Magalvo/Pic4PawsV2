@@ -76,4 +76,13 @@ describe('mobile shelter member screen — boundary contract', () => {
     const ui = createMobileShelterMemberUi({ shelterMemberClient: client });
     expect(ui.getInitialState().state).toBe('idle');
   });
+
+  it('failed state does not expose bearer or service-role', async () => {
+    const client = makeClient({ load: { ok: false, status: 'forbidden', reasons: ['Bearer eyJ...', 'service-role key leaked'] } });
+    const ui = createMobileShelterMemberUi({ shelterMemberClient: client });
+    const result = await ui.loadShelterMembers('shelter-001');
+    const serialized = JSON.stringify(result).toLowerCase();
+    expect(serialized).not.toContain('service-role');
+    expect(serialized).not.toContain('bearer ');
+  });
 });

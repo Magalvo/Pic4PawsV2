@@ -59,4 +59,13 @@ describe('web donation list screen — boundary contract', () => {
     const result = await ui.loadDonations('shelter-001');
     expect(result.state).toBe('failed');
   });
+
+  it('failed state does not expose bearer or service-role', async () => {
+    const client = makeClient({ ok: false, status: 'worker_request_failed', reasons: ['Bearer eyJ...', 'service-role key leaked'] });
+    const ui = createWebDonationListUi({ donationListClient: client });
+    const result = await ui.loadDonations('shelter-001');
+    const serialized = JSON.stringify(result).toLowerCase();
+    expect(serialized).not.toContain('service-role');
+    expect(serialized).not.toContain('bearer ');
+  });
 });

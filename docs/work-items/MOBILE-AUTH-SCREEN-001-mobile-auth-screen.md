@@ -1,7 +1,7 @@
 ---
 id: MOBILE-AUTH-SCREEN-001
 title: Mobile auth screen
-status: in-progress
+status: done
 ---
 
 # Work-Item: MOBILE-AUTH-SCREEN-001 — Mobile Auth Screen
@@ -17,6 +17,16 @@ dependency.
 - `null` (local) — not yet submitted
 - `signed_in` — sign-in succeeded, access token available
 - `failed` — wrong credentials or network error
+
+## Contract
+
+`apps/mobile/app/entrar.tsx` is a screen that:
+- Creates a Supabase client inside the submit handler with `{ auth: { persistSession: false } }` — no AsyncStorage dependency
+- Uses `createMobileAuthUi({ authClient })` from `apps/mobile/src/auth.ts`
+- Calls `ui.signIn(email, password)` on button press; result drives the rendered state
+- `getInitialState()` returns `{ state: 'idle', title, message, primaryAction }` for the initial render without a real auth client
+- On success: `{ state: 'signed_in', ... }` — navigates to the previous route
+- On failure: `{ state: 'failed', title, message, reasons }` — reasons sanitized (no bearer/service-role markers)
 
 ## Affected Files
 

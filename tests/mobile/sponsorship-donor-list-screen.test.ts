@@ -65,4 +65,13 @@ describe('mobile sponsorship donor list screen — boundary contract', () => {
     expect(state.state).toBe('idle');
     expect(state.title).toBeTruthy();
   });
+
+  it('failed state does not expose bearer or service-role', async () => {
+    const client = makeClient({ ok: false, status: 'worker_request_failed', reasons: ['Bearer eyJ...', 'service-role key leaked'] });
+    const ui = createMobileSponsorshipDonorListUi({ sponsorshipDonorListClient: client });
+    const result = await ui.loadDonorSponsorships();
+    const serialized = JSON.stringify(result).toLowerCase();
+    expect(serialized).not.toContain('service-role');
+    expect(serialized).not.toContain('bearer ');
+  });
 });

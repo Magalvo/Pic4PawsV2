@@ -29,7 +29,7 @@ export default function PreferenciasNotificacaoScreen() {
   const [viewModel, setViewModel] = useState<MobileNotificationPreferencesState | null>(null);
 
   const makeUi = useCallback(() => {
-    const supabase = createClient(supabaseUrl(), supabaseAnonKey());
+    const supabase = createClient(supabaseUrl(), supabaseAnonKey(), { auth: { persistSession: false } });
     const getAccessToken = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       return session?.access_token ?? null;

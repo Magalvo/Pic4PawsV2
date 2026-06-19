@@ -54,4 +54,13 @@ describe('mobile notification preferences screen — boundary contract', () => {
     const ui = createMobileNotificationPreferencesUi({ notificationPreferencesClient: client });
     expect(ui.getInitialState().state).toBe('idle');
   });
+
+  it('failed state does not expose bearer or service-role', async () => {
+    const client = makeClient({ load: { ok: false, status: 'worker_request_failed', reasons: ['Bearer eyJ...', 'service-role key leaked'] } });
+    const ui = createMobileNotificationPreferencesUi({ notificationPreferencesClient: client });
+    const result = await ui.loadPreferences();
+    const serialized = JSON.stringify(result).toLowerCase();
+    expect(serialized).not.toContain('service-role');
+    expect(serialized).not.toContain('bearer ');
+  });
 });

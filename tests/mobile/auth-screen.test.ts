@@ -46,4 +46,16 @@ describe('auth screen — boundary contract', () => {
     const result = await ui.signIn('user@example.com', 'secret');
     expect(result.state).toBe('failed');
   });
+
+  it('failed state does not expose bearer or service-role', async () => {
+    const client = makeClient({
+      data: null,
+      error: { message: 'Bearer eyJ... service-role key leaked' },
+    });
+    const ui = createMobileAuthUi({ authClient: client });
+    const result = await ui.signIn('bad@example.com', 'wrong');
+    const serialized = JSON.stringify(result).toLowerCase();
+    expect(serialized).not.toContain('service-role');
+    expect(serialized).not.toContain('bearer ');
+  });
 });

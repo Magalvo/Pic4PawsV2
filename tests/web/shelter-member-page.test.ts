@@ -41,4 +41,13 @@ describe('web shelter member page — boundary contract', () => {
     const result = await ui.addShelterMember('shelter-001', { userId: 'u2', role: 'shelter_member' });
     expect(result.state).toBe('member_added');
   });
+
+  it('failed state does not expose bearer or service-role', async () => {
+    const client = makeClient({ load: { ok: false, status: 'forbidden', reasons: ['Bearer eyJ...', 'service-role key leaked'] } });
+    const ui = createWebShelterMemberUi({ shelterMemberClient: client });
+    const result = await ui.loadShelterMembers('shelter-001');
+    const serialized = JSON.stringify(result).toLowerCase();
+    expect(serialized).not.toContain('service-role');
+    expect(serialized).not.toContain('bearer ');
+  });
 });

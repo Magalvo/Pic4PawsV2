@@ -95,4 +95,13 @@ describe('shelter update screen — boundary contract', () => {
     expect(calls[0]?.id).toBe('shelter-001');
     expect(calls[0]?.input.name).toBe('Abrigo dos Patinhas Actualizado');
   });
+
+  it('failed state does not expose bearer or service-role', async () => {
+    const client = makeClient({ ok: false, status: 'worker_request_failed', reasons: ['Bearer eyJ...', 'service-role key leaked'] });
+    const ui = createMobileShelterUpdateUi({ shelterUpdateClient: client });
+    const result = await ui.updateShelter('shelter-001', validInput);
+    const serialized = JSON.stringify(result).toLowerCase();
+    expect(serialized).not.toContain('service-role');
+    expect(serialized).not.toContain('bearer ');
+  });
 });

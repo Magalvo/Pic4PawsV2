@@ -47,4 +47,13 @@ describe('mobile notification screen — boundary contract', () => {
     const ui = createMobileNotificationUi({ notificationClient: client });
     expect(ui.getInitialState().state).toBe('idle');
   });
+
+  it('failed state does not expose bearer or service-role', async () => {
+    const client = makeClient({ ok: false, status: 'worker_request_failed', reasons: ['Bearer eyJ...', 'service-role key leaked'] });
+    const ui = createMobileNotificationUi({ notificationClient: client });
+    const result = await ui.loadNotifications();
+    const serialized = JSON.stringify(result).toLowerCase();
+    expect(serialized).not.toContain('service-role');
+    expect(serialized).not.toContain('bearer ');
+  });
 });
