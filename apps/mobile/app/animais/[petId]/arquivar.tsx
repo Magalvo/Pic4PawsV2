@@ -37,7 +37,7 @@ export default function ArquivarScreen() {
 
   const confirmArchive = useCallback(() => {
     setViewModel({ state: 'submitting', title: 'A processar...', message: 'A arquivar o animal.' });
-    const supabase = createClient(supabaseUrl(), supabaseAnonKey());
+    const supabase = createClient(supabaseUrl(), supabaseAnonKey(), { auth: { persistSession: false } });
     const getAccessToken = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       return session?.access_token ?? null;

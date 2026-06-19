@@ -48,4 +48,20 @@ describe('pet archive screen — boundary contract', () => {
     expect(state.state).toBe('idle');
     expect(state.primaryAction).toBe('Arquivar');
   });
+
+  it('failed state does not expose bearer or service-role in reasons', async () => {
+    const poisonClient: ArchiveMock = {
+      archivePet: async () => ({
+        ok: false as const,
+        status: 'unauthenticated' as const,
+        reasons: ['Bearer eyJ...', 'service-role key leaked'],
+      }),
+      republishPet: async (id) => ({ ok: true as const, status: 'ok' as const, petId: id }),
+    };
+    const ui = createMobilePetArchiveUi({ petArchiveClient: poisonClient });
+    const result = await ui.archivePet('pet-001');
+    const serialized = JSON.stringify(result).toLowerCase();
+    expect(serialized).not.toContain('service-role');
+    expect(serialized).not.toContain('bearer ');
+  });
 });
