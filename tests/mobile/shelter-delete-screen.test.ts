@@ -38,4 +38,13 @@ describe('mobile shelter delete screen — boundary contract', () => {
     const ui = createMobileShelterDeletionUi({ shelterDeletionClient: client });
     expect(ui.getInitialState().state).toBe('idle');
   });
+
+  it('failed state does not expose bearer or service-role', async () => {
+    const client = makeClient({ ok: false, status: 'worker_request_failed', reasons: ['Bearer eyJ...', 'service-role key leaked'] });
+    const ui = createMobileShelterDeletionUi({ shelterDeletionClient: client });
+    const result = await ui.deleteShelter('shelter-001');
+    const serialized = JSON.stringify(result).toLowerCase();
+    expect(serialized).not.toContain('service-role');
+    expect(serialized).not.toContain('bearer ');
+  });
 });

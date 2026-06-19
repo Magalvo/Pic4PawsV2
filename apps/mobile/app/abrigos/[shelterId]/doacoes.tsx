@@ -47,7 +47,7 @@ export default function DoacoesAbrigoScreen() {
 
   const load = useCallback(() => {
     setViewModel(null);
-    const supabase = createClient(supabaseUrl(), supabaseAnonKey());
+    const supabase = createClient(supabaseUrl(), supabaseAnonKey(), { auth: { persistSession: false } });
     const getAccessToken = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       return session?.access_token ?? null;

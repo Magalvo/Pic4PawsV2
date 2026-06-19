@@ -46,4 +46,13 @@ describe('web notification preferences page — boundary contract', () => {
     const result = await ui.updatePreference(loaded, 'donation_paid', false);
     expect(result.state).toBe('loaded');
   });
+
+  it('failed state does not expose bearer or service-role', async () => {
+    const client = makeClient({ load: { ok: false, status: 'worker_request_failed', reasons: ['Bearer eyJ...', 'service-role key leaked'] } });
+    const ui = createWebNotificationPreferencesUi({ notificationPreferencesClient: client });
+    const result = await ui.loadPreferences();
+    const serialized = JSON.stringify(result).toLowerCase();
+    expect(serialized).not.toContain('service-role');
+    expect(serialized).not.toContain('bearer ');
+  });
 });

@@ -47,4 +47,13 @@ describe('web sponsorship page — boundary contract', () => {
     const result = await ui.submitSponsorship(input);
     expect(result.state).toBe('failed');
   });
+
+  it('failed state does not expose bearer or service-role', async () => {
+    const client = makeClient({ ok: false, status: 'worker_request_failed', reasons: ['Bearer eyJ...', 'service-role key leaked'] });
+    const ui = createWebSponsorshipUi({ sponsorshipClient: client });
+    const result = await ui.submitSponsorship(input);
+    const serialized = JSON.stringify(result).toLowerCase();
+    expect(serialized).not.toContain('service-role');
+    expect(serialized).not.toContain('bearer ');
+  });
 });

@@ -64,7 +64,7 @@ export default function RegistarAbrigoScreen() {
   const handleSubmit = async () => {
     if (!canSubmit) return;
     setSubmitting(true);
-    const supabase = createClient(supabaseUrl(), supabaseAnonKey());
+    const supabase = createClient(supabaseUrl(), supabaseAnonKey(), { auth: { persistSession: false } });
     const { data: { session } } = await supabase.auth.getSession();
     const shelterRegistrationClient = createShelterRegistrationClient({
       workerBaseUrl: workerUrl(),

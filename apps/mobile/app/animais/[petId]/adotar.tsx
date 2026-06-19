@@ -66,7 +66,7 @@ export default function AdotarScreen() {
   const handleSubmit = async () => {
     if (!form.dataProcessingAccepted || !form.shelterContactAccepted) return;
     setSubmitting(true);
-    const supabase = createClient(supabaseUrl(), supabaseAnonKey());
+    const supabase = createClient(supabaseUrl(), supabaseAnonKey(), { auth: { persistSession: false } });
     const { data: { session } } = await supabase.auth.getSession();
     const adoptionApplicationClient = createAdoptionApplicationClient({
       workerBaseUrl: workerUrl(),

@@ -63,7 +63,7 @@ export default function EditarAbrigoScreen() {
   const handleSubmit = async () => {
     if (submitting) return;
     setSubmitting(true);
-    const supabase = createClient(supabaseUrl(), supabaseAnonKey());
+    const supabase = createClient(supabaseUrl(), supabaseAnonKey(), { auth: { persistSession: false } });
     const { data: { session } } = await supabase.auth.getSession();
     const shelterUpdateClient = createShelterUpdateClient({
       workerBaseUrl: workerUrl(),

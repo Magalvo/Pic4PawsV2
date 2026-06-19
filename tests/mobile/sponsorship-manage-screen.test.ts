@@ -66,4 +66,13 @@ describe('mobile sponsorship manage screen — boundary contract', () => {
     expect(state.state).toBe('idle');
     expect(state.title).toBeTruthy();
   });
+
+  it('failed state does not expose bearer or service-role', async () => {
+    const client = makeClient({ ok: false, status: 'worker_request_failed', reasons: ['Bearer eyJ...', 'service-role key leaked'] });
+    const ui = createMobileSponsorshipManageUi({ sponsorshipManageClient: client });
+    const result = await ui.manageSponsorship('sp-001', 'cancelled');
+    const serialized = JSON.stringify(result).toLowerCase();
+    expect(serialized).not.toContain('service-role');
+    expect(serialized).not.toContain('bearer ');
+  });
 });

@@ -31,4 +31,13 @@ describe('web shelter delete page — boundary contract', () => {
     expect(result.state).toBe('failed');
     if (result.state === 'failed') expect(result.canRetry).toBe(true);
   });
+
+  it('failed state does not expose bearer or service-role', async () => {
+    const client = makeClient({ ok: false, status: 'worker_request_failed', reasons: ['Bearer eyJ...', 'service-role key leaked'] });
+    const ui = createWebShelterDeletionUi({ shelterDeletionClient: client });
+    const result = await ui.deleteShelter('shelter-001');
+    const serialized = JSON.stringify(result).toLowerCase();
+    expect(serialized).not.toContain('service-role');
+    expect(serialized).not.toContain('bearer ');
+  });
 });

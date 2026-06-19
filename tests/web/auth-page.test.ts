@@ -53,4 +53,20 @@ describe('auth page — boundary contract', () => {
     await ui.signIn('test@pic4paws.pt', 'secret-pass');
     expect(seen).toEqual([{ email: 'test@pic4paws.pt', password: 'secret-pass' }]);
   });
+
+  it('failed state does not expose bearer or service-role', async () => {
+    const poisonClient: SupabaseBrowserAuthClientLike = {
+      auth: {
+        signInWithPassword: async () => ({
+          data: null,
+          error: { message: 'Bearer eyJ... service-role key leaked' },
+        }),
+      },
+    };
+    const ui = createWebAuthUi({ authClient: poisonClient });
+    const result = await ui.signIn('bad@example.com', 'wrong');
+    const serialized = JSON.stringify(result).toLowerCase();
+    expect(serialized).not.toContain('service-role');
+    expect(serialized).not.toContain('bearer ');
+  });
 });
