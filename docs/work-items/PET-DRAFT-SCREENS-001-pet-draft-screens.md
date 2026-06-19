@@ -58,5 +58,5 @@ description, and medical toggles.
 - `PublicPetMedicalStatus` fields all optional booleans
 - `shelterId` for create comes from URL search params
 - `petId: ''` passed in create draft input (ignored by worker POST route)
-- Mobile import depths: `../../../../src/` (novo), `../../../../../src/` (editar)
-- Web import depths: `../../../../../src/` (novo), `../../../../../../src/` (editar)
+- Mobile import depths: `../../../src/` (novo), `../../../../src/` (editar)
+- Web import depths: `../../../../src/` (novo), `../../../../../src/` (editar)
