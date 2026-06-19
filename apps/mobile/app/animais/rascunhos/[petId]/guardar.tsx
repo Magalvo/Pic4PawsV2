@@ -25,6 +25,7 @@ import {
 } from '../../../../src/pet-draft';
 import {
   createMobilePetDraftSaveFlowUi,
+  type MobilePetDraftSaveFlowReadyViewModel,
   type MobilePetDraftSaveFlowResultViewModel,
 } from '../../../../src/pet-draft-save-flow';
 import { workerUrl, supabaseUrl, supabaseAnonKey } from '../../../../src/env';
@@ -97,6 +98,11 @@ export default function GuardarDraftScreen() {
   const [form, setForm] = useState<FormState | null>(null);
   const [fileUri, setFileUri] = useState('');
   const [saving, setSaving] = useState(false);
+  const [saveFlowReady, setSaveFlowReady] = useState<MobilePetDraftSaveFlowReadyViewModel>(() =>
+    createMobilePetDraftSaveFlowUi({
+      saveFlowClient: { savePetDraft: async () => { throw new Error('unreachable'); } },
+    }).getInitialState({ petName: null })
+  );
   const [saveResult, setSaveResult] = useState<MobilePetDraftSaveFlowResultViewModel | null>(null);
 
   useEffect(() => {
@@ -116,6 +122,11 @@ export default function GuardarDraftScreen() {
       setLoadViewModel(result);
       if (result.state === 'loaded') {
         setForm(fromDraft(result.draft));
+        setSaveFlowReady(
+          createMobilePetDraftSaveFlowUi({
+            saveFlowClient: { savePetDraft: async () => { throw new Error('unreachable'); } },
+          }).getInitialState({ petName: result.draft.name ?? null })
+        );
       }
     });
   }, [petId]);
@@ -241,7 +252,7 @@ export default function GuardarDraftScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={styles.heading}>Guardar rascunho com imagem</Text>
+        <Text style={styles.heading}>{saveFlowReady.title}</Text>
 
         <View style={styles.field}>
           <Text style={styles.label}>Nome do animal</Text>

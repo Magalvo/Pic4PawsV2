@@ -1,8 +1,10 @@
 import { describe, it, expect } from 'vitest';
 import { createMobilePetDraftSaveFlowUi } from '../../apps/mobile/src/pet-draft-save-flow';
-import type { PetDraftSaveFlowClient, PetDraftSaveFlowInput } from '@pic4paws/client';
+import { createMobilePetDraftUi } from '../../apps/mobile/src/pet-draft';
+import type { PetDraftClient, PetDraftSaveFlowClient, PetDraftSaveFlowInput } from '@pic4paws/client';
 
 type SaveFlowMock = Pick<PetDraftSaveFlowClient, 'savePetDraft'>;
+type LoadMock = Pick<PetDraftClient, 'createPetDraft' | 'updatePetDraft' | 'loadPetDraft'>;
 
 const sampleDraft: PetDraftSaveFlowInput = {
   operation: 'update',
@@ -33,6 +35,16 @@ const makeClient = (ok: boolean): SaveFlowMock => ({
           status: 'unauthenticated' as const,
           reasons: [],
         },
+});
+
+const makeLoadClient = (loadResult: 'not_found' | 'forbidden' | 'failed'): LoadMock => ({
+  createPetDraft: async () => { throw new Error('unreachable'); },
+  updatePetDraft: async () => { throw new Error('unreachable'); },
+  loadPetDraft: async () => {
+    if (loadResult === 'not_found') return { ok: false as const, status: 'pet_draft_not_found' as const, reasons: [] };
+    if (loadResult === 'forbidden') return { ok: false as const, status: 'forbidden' as const, reasons: [] };
+    return { ok: false as const, status: 'unauthenticated' as const, reasons: ['Bearer eyJ...', 'service-role key leaked'] };
+  },
 });
 
 describe('pet draft save flow screen — boundary contract', () => {
@@ -80,6 +92,35 @@ describe('pet draft save flow screen — boundary contract', () => {
     expect(state.state).toBe('ready');
     expect(state.primaryAction).toBeDefined();
     expect(state.petName).toBe('Bolinha');
+  });
+
+  it('loadDraft produces not_found state', async () => {
+    const ui = createMobilePetDraftUi({ draftClient: makeLoadClient('not_found') });
+    const result = await ui.loadDraft('pet-001');
+    expect(result.state).toBe('not_found');
+    if (result.state === 'not_found') {
+      expect(result.title).toBeDefined();
+      expect(result.message).toBeDefined();
+    }
+  });
+
+  it('loadDraft produces forbidden state', async () => {
+    const ui = createMobilePetDraftUi({ draftClient: makeLoadClient('forbidden') });
+    const result = await ui.loadDraft('pet-001');
+    expect(result.state).toBe('forbidden');
+    if (result.state === 'forbidden') {
+      expect(result.title).toBeDefined();
+      expect(result.message).toBeDefined();
+    }
+  });
+
+  it('loadDraft failed state does not expose bearer or service-role in reasons', async () => {
+    const ui = createMobilePetDraftUi({ draftClient: makeLoadClient('failed') });
+    const result = await ui.loadDraft('pet-001');
+    expect(result.state).toBe('failed');
+    const serialized = JSON.stringify(result).toLowerCase();
+    expect(serialized).not.toContain('service-role');
+    expect(serialized).not.toContain('bearer ');
   });
 
   it('failed state does not expose bearer or service-role in reasons', async () => {

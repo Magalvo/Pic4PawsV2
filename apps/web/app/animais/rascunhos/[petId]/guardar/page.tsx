@@ -17,6 +17,7 @@ import {
 } from '../../../../../src/pet-draft';
 import {
   createWebPetDraftSaveFlowUi,
+  type WebPetDraftSaveFlowReadyViewModel,
   type WebPetDraftSaveFlowResultViewModel,
 } from '../../../../../src/pet-draft-save-flow';
 import { workerUrl } from '../../../../../src/env';
@@ -87,6 +88,11 @@ export default function GuardarDraftPage({ params }: { params: Promise<{ petId: 
   const router = useRouter();
   const [loadViewModel, setLoadViewModel] = useState<WebPetDraftLoadViewModel | null>(null);
   const [form, setForm] = useState<FormState | null>(null);
+  const [saveFlowReady, setSaveFlowReady] = useState<WebPetDraftSaveFlowReadyViewModel>(() =>
+    createWebPetDraftSaveFlowUi({
+      saveFlowClient: { savePetDraft: async () => { throw new Error('unreachable'); } },
+    }).getInitialState({ petName: null })
+  );
   const [saving, setSaving] = useState(false);
   const [saveResult, setSaveResult] = useState<WebPetDraftSaveFlowResultViewModel | null>(null);
 
@@ -107,6 +113,11 @@ export default function GuardarDraftPage({ params }: { params: Promise<{ petId: 
       setLoadViewModel(result);
       if (result.state === 'loaded') {
         setForm(fromDraft(result.draft));
+        setSaveFlowReady(
+          createWebPetDraftSaveFlowUi({
+            saveFlowClient: { savePetDraft: async () => { throw new Error('unreachable'); } },
+          }).getInitialState({ petName: result.draft.name ?? null })
+        );
       }
     });
   }, [petId]);
@@ -231,7 +242,7 @@ export default function GuardarDraftPage({ params }: { params: Promise<{ petId: 
 
   return (
     <main>
-      <h1>Guardar rascunho com imagem</h1>
+      <h1>{saveFlowReady.title}</h1>
 
       <label>
         Nome do animal
