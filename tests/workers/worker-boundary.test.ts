@@ -18,6 +18,13 @@ const validEnv: WorkerEnv = {
   EUPAGO_WEBHOOK_SECRET: 'eupago-webhook-secret',
 };
 
+const validIfthenpayEnv: WorkerEnv = {
+  ...validEnv,
+  PAYMENT_PRIMARY_PROVIDER: 'ifthenpay',
+  IFTHENPAY_API_KEY: 'ifthenpay-api-key',
+  IFTHENPAY_WEBHOOK_SECRET: 'ifthenpay-anti-phishing-key',
+};
+
 const json = async (response: Response) => response.json() as Promise<Record<string, unknown>>;
 
 describe('worker health boundary', () => {
@@ -58,16 +65,47 @@ describe('worker health boundary', () => {
 });
 
 describe('worker payment webhook boundary', () => {
-  it('uses the validated environment webhook path and rejects non-POST requests', async () => {
+  it('uses the validated environment webhook path and rejects GET for POST providers', async () => {
     const response = await handleWorkerRequest(
       new Request('https://worker.test/webhooks/payments'),
       { ...validEnv, PAYMENT_WEBHOOKS_ENABLED: 'true' },
     );
 
     expect(response.status).toBe(405);
+    expect(response.headers.get('Allow')).toBe('POST');
     await expect(json(response)).resolves.toEqual({
       status: 'method_not_allowed',
       allowedMethods: ['POST'],
+    });
+  });
+
+  it('allows GET for Ifthenpay callbacks and reaches verifier composition', async () => {
+    const response = await handleWorkerRequest(
+      new Request('https://worker.test/webhooks/payments?key=ifthenpay-anti-phishing-key'),
+      { ...validIfthenpayEnv, PAYMENT_WEBHOOKS_ENABLED: 'true' },
+    );
+
+    expect(response.status).toBe(501);
+    await expect(json(response)).resolves.toEqual({
+      status: 'payment_webhook_verifier_not_configured',
+      provider: 'ifthenpay',
+    });
+  });
+
+  it('rejects POST for Ifthenpay callbacks', async () => {
+    const response = await handleWorkerRequest(
+      new Request('https://worker.test/webhooks/payments', {
+        method: 'POST',
+        body: '{}',
+      }),
+      { ...validIfthenpayEnv, PAYMENT_WEBHOOKS_ENABLED: 'true' },
+    );
+
+    expect(response.status).toBe(405);
+    expect(response.headers.get('Allow')).toBe('GET');
+    await expect(json(response)).resolves.toEqual({
+      status: 'method_not_allowed',
+      allowedMethods: ['GET'],
     });
   });
 

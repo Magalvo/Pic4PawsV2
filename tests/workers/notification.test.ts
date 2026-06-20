@@ -382,7 +382,7 @@ describe('dispatch side-effects', () => {
         rawProviderEventIds: ['evt-001'],
       }),
     };
-    const verifier = vi.fn().mockReturnValue({
+    const verifier = vi.fn().mockResolvedValue({
       providerEventId: 'evt-001',
       providerPaymentId: 'pay-001',
       newStatus: 'paid',

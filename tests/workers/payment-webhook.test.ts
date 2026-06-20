@@ -194,6 +194,7 @@ describe('handleWorkerPaymentWebhookRequest', () => {
 
     expect(verifier).toHaveBeenCalledWith({
       rawBody,
+      requestUrl: 'https://worker.example.com/webhooks/payments',
       signatureHeader: 't=123,v1=sigvalue',
       secret: 'whsec_real_secret',
     });
@@ -243,7 +244,7 @@ describe('handleWorkerPaymentWebhookRequest', () => {
 
   it('PROVIDER_SIGNATURE_HEADERS exports correct header names for all providers', () => {
     expect(PROVIDER_SIGNATURE_HEADERS.eupago).toBe('x-eupago-signature');
-    expect(PROVIDER_SIGNATURE_HEADERS.ifthenpay).toBe('x-ifthenpay-signature');
+    expect(PROVIDER_SIGNATURE_HEADERS.ifthenpay).toBeNull();
     expect(PROVIDER_SIGNATURE_HEADERS.stripe).toBe('stripe-signature');
   });
 });
