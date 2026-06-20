@@ -55,7 +55,6 @@ export type WebPasswordResetRequestViewModel =
 
 export type WebPasswordConfirmViewModel =
   | { state: 'idle' }
-  | { state: 'updating' }
   | { state: 'updated'; title: string; message: string }
   | { state: 'invalid_link'; title: string; message: string }
   | { state: 'failed'; title: string; message: string; canRetry: true };
