@@ -120,3 +120,8 @@ export const canPublishPet = (
   pet: PetPublishAccessRecord,
 ): boolean =>
   pet.shelterVerificationStatus === 'verified' && canManageShelter(actor, pet.shelterId);
+
+export const canVerifyShelter = (actor: AuthenticatedActor | null): boolean => {
+  if (!actor) return false;
+  return actor.role === 'admin';
+};

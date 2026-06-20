@@ -445,6 +445,56 @@ export type ShelterDeletionClient = {
   deleteShelter: (shelterId: string) => Promise<DeleteShelterClientResult>;
 };
 
+// ─── Shelter Verification types ───────────────────────────────────────────────
+
+export type ShelterVerificationTargetStatus =
+  | 'pending_review'
+  | 'verified'
+  | 'rejected'
+  | 'suspended';
+
+export type UpdateVerificationClientSuccess = {
+  ok: true;
+  status: 'updated';
+  shelterId: string;
+  verificationStatus: ShelterVerificationTargetStatus;
+};
+
+export type UpdateVerificationClientFailureStatus =
+  | 'unauthenticated'
+  | 'forbidden'
+  | 'invalid_payload'
+  | 'shelter_not_found'
+  | 'invalid_transition'
+  | 'shelter_verification_repository_not_configured'
+  | 'auth_adapter_not_configured'
+  | 'worker_request_failed'
+  | 'worker_response_invalid';
+
+export type UpdateVerificationClientFailure = {
+  ok: false;
+  status: UpdateVerificationClientFailureStatus;
+  reasons: string[];
+};
+
+export type UpdateVerificationClientResult =
+  | UpdateVerificationClientSuccess
+  | UpdateVerificationClientFailure;
+
+export type CreateShelterVerificationClientInput = {
+  workerBaseUrl: string;
+  shelterPath: `/${string}`;
+  getAccessToken: () => Promise<string | null>;
+  fetch: typeof globalThis.fetch;
+};
+
+export type ShelterVerificationClient = {
+  updateVerificationStatus: (
+    shelterId: string,
+    targetStatus: ShelterVerificationTargetStatus,
+  ) => Promise<UpdateVerificationClientResult>;
+};
+
 // ─── Private helpers ──────────────────────────────────────────────────────────
 
 const parseShelterProfileSuccess = (
@@ -1145,6 +1195,89 @@ export const createShelterUpdateClient = ({
 
     if (!success) {
       return { ok: false, status: 'worker_request_failed', reasons: ['invalid_worker_response'] };
+    }
+
+    return success;
+  },
+});
+
+const parseVerificationFailureStatus = (
+  body: Record<string, unknown> | null,
+): UpdateVerificationClientFailureStatus => {
+  const status = body?.status;
+  if (status === 'unauthenticated') return 'unauthenticated';
+  if (status === 'forbidden') return 'forbidden';
+  if (status === 'invalid_payload') return 'invalid_payload';
+  if (status === 'shelter_not_found') return 'shelter_not_found';
+  if (status === 'invalid_transition') return 'invalid_transition';
+  if (status === 'shelter_verification_repository_not_configured')
+    return 'shelter_verification_repository_not_configured';
+  if (status === 'auth_adapter_not_configured') return 'auth_adapter_not_configured';
+  return 'worker_request_failed';
+};
+
+const parseUpdateVerificationSuccess = (
+  body: Record<string, unknown> | null,
+): UpdateVerificationClientSuccess | null => {
+  if (
+    !body ||
+    body.status !== 'updated' ||
+    typeof body.shelterId !== 'string' ||
+    typeof body.verificationStatus !== 'string'
+  ) {
+    return null;
+  }
+  return {
+    ok: true,
+    status: 'updated',
+    shelterId: body.shelterId,
+    verificationStatus: body.verificationStatus as ShelterVerificationTargetStatus,
+  };
+};
+
+export const createShelterVerificationClient = ({
+  workerBaseUrl,
+  shelterPath,
+  getAccessToken,
+  fetch,
+}: CreateShelterVerificationClientInput): ShelterVerificationClient => ({
+  updateVerificationStatus: async (shelterId, targetStatus) => {
+    const accessToken = await getAccessToken();
+
+    if (!accessToken?.trim()) {
+      return { ok: false, status: 'unauthenticated', reasons: ['missing_access_token'] };
+    }
+
+    let response: Response;
+
+    try {
+      response = await fetch(
+        `${createWorkerUrl(workerBaseUrl, shelterPath)}/${shelterId}/verification`,
+        {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ status: targetStatus }),
+        },
+      );
+    } catch {
+      return { ok: false, status: 'worker_request_failed', reasons: ['network_error'] };
+    }
+
+    const body = await parseJsonResponse(response);
+
+    if (!response.ok) {
+      const status = parseVerificationFailureStatus(body);
+      const reasons = Array.isArray(body?.reasons) ? parseReasons(body) : [status];
+      return { ok: false, status, reasons: sanitizeReasons(reasons, status) };
+    }
+
+    const success = parseUpdateVerificationSuccess(body);
+
+    if (!success) {
+      return { ok: false, status: 'worker_response_invalid', reasons: ['invalid_worker_response'] };
     }
 
     return success;

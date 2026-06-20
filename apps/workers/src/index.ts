@@ -107,6 +107,21 @@ export {
   createSupabaseShelterRepositories,
   SupabaseShelterRepositoryError,
 } from './shelter-supabase';
+export {
+  handleWorkerShelterVerifyRequest,
+  matchWorkerShelterVerificationId,
+} from './shelter-verify';
+export type {
+  ShelterVerificationRepository,
+} from './shelter-verify';
+export {
+  createSupabaseShelterVerifyRepositories,
+  SupabaseShelterVerifyRepositoryError,
+} from './shelter-verify-supabase';
+export type {
+  CreateSupabaseShelterVerifyRepositoriesInput,
+  CreateSupabaseShelterVerifyRepositoriesResult,
+} from './shelter-verify-supabase';
 export type {
   CreateSupabaseShelterRepositoriesInput,
   CreateSupabaseShelterRepositoriesResult,
