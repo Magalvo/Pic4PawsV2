@@ -2,12 +2,22 @@ import { describe, it, expect } from 'vitest';
 import { createWebAuthUi } from '../../apps/web/src/auth';
 import type { SupabaseBrowserAuthClientLike } from '../../apps/web/src/auth';
 
+const noopPasswordResetMethods: Pick<
+  SupabaseBrowserAuthClientLike['auth'],
+  'resetPasswordForEmail' | 'exchangeCodeForSession' | 'updateUser'
+> = {
+  resetPasswordForEmail: async () => ({ error: null }),
+  exchangeCodeForSession: async () => ({ data: { session: { access_token: '' } }, error: null }),
+  updateUser: async () => ({ error: null }),
+};
+
 const failedAuthClient: SupabaseBrowserAuthClientLike = {
   auth: {
     signInWithPassword: async () => ({
       data: null,
       error: { message: 'Invalid login credentials' },
     }),
+    ...noopPasswordResetMethods,
   },
 };
 
@@ -17,6 +27,7 @@ const successAuthClient: SupabaseBrowserAuthClientLike = {
       data: { session: { access_token: 'tok-abc-123' } },
       error: null,
     }),
+    ...noopPasswordResetMethods,
   },
 };
 
@@ -47,6 +58,7 @@ describe('auth page — boundary contract', () => {
           seen.push(credentials);
           return { data: null, error: { message: 'Invalid login credentials' } };
         },
+        ...noopPasswordResetMethods,
       },
     };
     const ui = createWebAuthUi({ authClient: trackingClient });
@@ -73,6 +85,7 @@ describe('auth page — boundary contract', () => {
           data: null,
           error: { message: 'Bearer eyJ... service-role key leaked' },
         }),
+        ...noopPasswordResetMethods,
       },
     };
     const ui = createWebAuthUi({ authClient: poisonClient });

@@ -114,4 +114,16 @@ describe('middleware — auth guard', () => {
     const res = await middleware(makeRequest('/dashboard'));
     expect(res.status).not.toBe(307);
   });
+
+  it('unauthenticated request to /recuperar-palavra-passe passes through', async () => {
+    const { middleware } = await import('../../apps/web/middleware');
+    const res = await middleware(makeRequest('/recuperar-palavra-passe'));
+    expect(res.status).not.toBe(307);
+  });
+
+  it('unauthenticated request to /recuperar-palavra-passe/confirmar passes through', async () => {
+    const { middleware } = await import('../../apps/web/middleware');
+    const res = await middleware(makeRequest('/recuperar-palavra-passe/confirmar'));
+    expect(res.status).not.toBe(307);
+  });
 });
