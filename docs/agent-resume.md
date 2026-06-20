@@ -61,9 +61,9 @@ Do not batch items that can be reviewed or merged independently.
 
 ## 4. Current State As Of 2026-06-20
 
-**Repository status**: 1939 tests passing (242 test files), all work items `done` — foundation, screens, auth, navigation, and Ifthenpay payment webhook verifier complete; latest audit score 9/10 (PRs #197–#198).
+**Repository status**: 1968 tests passing (244 test files), all work items `done` — foundation, screens, auth, navigation, Ifthenpay payment webhook verifier, and mobile auth guard routing complete; latest audit score 9/10 (PRs #199–#203).
 
-**Main branch HEAD**: PR #202 (IFTHENPAY-WEBHOOK-001 remediation — align callback verifier with provider docs)
+**Main branch HEAD**: PR #205 (MOBILE-ABRIGOS-PUBLIC-001 — `/abrigos` public on mobile, matching web middleware)
 - `npm run typecheck` ✅
 - `npm run lint` ✅
 - `npm run test` ✅
@@ -405,8 +405,9 @@ per deployment.
 
 **Track B complete**: `IFTHENPAY-WEBHOOK-001` — Ifthenpay payment webhook verifier (PRs #201 + #202). Official GET callback protocol, anti-phishing key, Zod schema, MB WAY + Multibanco support, end-to-end Worker composition test.
 
-**Suggested next track**:
-- **Track C**: React Native Testing Library setup + mobile routing integration test (resolves deferred P2-B from audit `2026-06-20-sdd-audit-prs-197-198.md`).
+**Track C complete**: `MOBILE-AUTH-GUARD-001` (PR #203) + `MOBILE-ABRIGOS-PUBLIC-001` (PR #205). Auth guard extracted to `computeAuthRedirect` pure function; `/abrigos` added as public route on mobile matching web middleware; 30 auth-guard tests total.
+
+**Suggested next track**: agree with the user — candidates include Eupago PSP verifier, password reset flow, shelter verification workflow, or a second audit cycle.
 
 Agree the next track with the user before creating any work items.
 
@@ -423,10 +424,8 @@ Continue Pic4Paws V2 development from main using strict SDD/TDD:
 - Validate: npm run typecheck, lint, test, build
 - After any env.ts change: npm run build --workspace=packages/config
 
-Current state (2026-06-20, PR #202): all work items done, 1939 tests passing.
-Track A (real UI + auth + navigation) complete. Track B (Ifthenpay webhook verifier) complete.
-Latest audit: 9/10, no open P1s.
-Deferred: mobile routing integration test (needs React Native Testing Library).
-Next track: Track C (RNTI setup + mobile routing integration test).
+Current state (2026-06-20, PR #205): all work items done, 1968 tests passing.
+Track A (real UI + auth + navigation) complete. Track B (Ifthenpay webhook verifier) complete. Track C (mobile auth guard + abrigos public route) complete.
+Latest audit: 9/10 (PRs #199-203), no open P1/P2 findings.
 Agree the next track with the user before writing any work items.
 ```
