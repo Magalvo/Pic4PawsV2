@@ -1,11 +1,15 @@
 'use client';
 
-import { useState } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { Suspense, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { createWebAuthUi, type WebAuthSignInResultViewModel } from '../../src/auth';
-import { supabaseUrl, supabaseAnonKey } from '../../src/env';
+import { createSupabaseBrowserClient } from '../../src/supabase-browser';
+import { validateNextPath } from '../../src/nav';
 
-export default function EntrarPage() {
+function EntrarForm() {
+  const searchParams = useSearchParams();
+  const returnTo = validateNextPath(searchParams.get('next')) ?? '/animais';
+
   const [result, setResult] = useState<WebAuthSignInResultViewModel | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [email, setEmail] = useState('');
@@ -15,11 +19,14 @@ export default function EntrarPage() {
     e.preventDefault();
     setSubmitting(true);
     setResult(null);
-    const authClient = createClient(supabaseUrl(), supabaseAnonKey());
+    const authClient = createSupabaseBrowserClient();
     const ui = createWebAuthUi({ authClient });
     const next = await ui.signIn(email, password);
     setResult(next);
     setSubmitting(false);
+    if (next.state === 'signed_in') {
+      window.location.href = returnTo;
+    }
   };
 
   if (result?.state === 'signed_in') {
@@ -27,7 +34,6 @@ export default function EntrarPage() {
       <main>
         <h1>{result.title}</h1>
         <p>{result.message}</p>
-        <a href="/animais">Ver animais</a>
       </main>
     );
   }
@@ -64,5 +70,13 @@ export default function EntrarPage() {
         </button>
       </form>
     </main>
+  );
+}
+
+export default function EntrarPage() {
+  return (
+    <Suspense>
+      <EntrarForm />
+    </Suspense>
   );
 }
