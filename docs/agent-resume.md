@@ -61,9 +61,9 @@ Do not batch items that can be reviewed or merged independently.
 
 ## 4. Current State As Of 2026-06-20
 
-**Repository status**: 1926 tests passing (241 test files), all work items `done` — foundation, screens, auth, and navigation complete; latest audit score 9/10 (PRs #197–#198).
+**Repository status**: 1939 tests passing (242 test files), all work items `done` — foundation, screens, auth, navigation, and Ifthenpay payment webhook verifier complete; latest audit score 9/10 (PRs #197–#198).
 
-**Main branch HEAD**: PR #199 (SDD audit report — PRs #197–#198)
+**Main branch HEAD**: PR #202 (IFTHENPAY-WEBHOOK-001 remediation — align callback verifier with provider docs)
 - `npm run typecheck` ✅
 - `npm run lint` ✅
 - `npm run test` ✅
@@ -403,8 +403,9 @@ per deployment.
 **Known deferred item** (documented in MOBILE-NAV-001 completion notes):
 - Mobile routing integration test (unauthenticated → redirect → sign-in → `returnTo`) requires React Native Testing Library. Not yet set up. When RNTI is available, add `tests/mobile/routing-integration.test.ts` proving the full auth-guard round-trip.
 
-**Suggested next tracks**:
-- **Track B**: Supabase local dev tooling + PSP adapter — implement `PaymentWebhookVerifier` for Eupago or Stripe; lift the `PAYMENT_WEBHOOKS_ENABLED` gate in the Worker.
+**Track B complete**: `IFTHENPAY-WEBHOOK-001` — Ifthenpay payment webhook verifier (PRs #201 + #202). Official GET callback protocol, anti-phishing key, Zod schema, MB WAY + Multibanco support, end-to-end Worker composition test.
+
+**Suggested next track**:
 - **Track C**: React Native Testing Library setup + mobile routing integration test (resolves deferred P2-B from audit `2026-06-20-sdd-audit-prs-197-198.md`).
 
 Agree the next track with the user before creating any work items.
@@ -422,9 +423,10 @@ Continue Pic4Paws V2 development from main using strict SDD/TDD:
 - Validate: npm run typecheck, lint, test, build
 - After any env.ts change: npm run build --workspace=packages/config
 
-Current state (2026-06-20, PR #199): all work items done, 1926 tests passing.
-Track A (real UI + auth + navigation) is complete. Latest audit: 9/10, no open P1s.
+Current state (2026-06-20, PR #202): all work items done, 1939 tests passing.
+Track A (real UI + auth + navigation) complete. Track B (Ifthenpay webhook verifier) complete.
+Latest audit: 9/10, no open P1s.
 Deferred: mobile routing integration test (needs React Native Testing Library).
-Next tracks: Track B (PSP adapter / PaymentWebhookVerifier) or Track C (RNTI setup).
+Next track: Track C (RNTI setup + mobile routing integration test).
 Agree the next track with the user before writing any work items.
 ```
