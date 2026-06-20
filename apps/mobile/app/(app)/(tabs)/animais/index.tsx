@@ -1,27 +1,28 @@
 import { useState, useEffect } from 'react';
 import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { createShelterSearchClient } from '@pic4paws/client';
-import { createMobileShelterSearchUi, type MobileShelterSearchResultViewModel } from '../../src/shelter-search';
-import { workerUrl } from '../../src/env';
+import { createPetFeedClient } from '@pic4paws/client';
+import { createMobilePetFeedUi, type MobilePetFeedResultViewModel } from '../../../../src/pet-feed';
+import { workerUrl } from '../../../../src/env';
 
-export default function AbrigosScreen() {
-  const [viewModel, setViewModel] = useState<MobileShelterSearchResultViewModel | null>(null);
+export default function AnimaisScreen() {
+  const [viewModel, setViewModel] = useState<MobilePetFeedResultViewModel | null>(null);
 
   useEffect(() => {
     setViewModel(null);
-    const shelterSearchClient = createShelterSearchClient({
+    const feedClient = createPetFeedClient({
       workerBaseUrl: workerUrl(),
-      shelterPath: '/shelters',
+      petFeedPath: '/pets',
       fetch: globalThis.fetch,
     });
-    const ui = createMobileShelterSearchUi({ shelterSearchClient });
-    ui.searchShelters({}).then(setViewModel);
+    const ui = createMobilePetFeedUi({ feedClient });
+    setViewModel(ui.getInitialState());
+    ui.loadFeed({ query: {} }).then(setViewModel);
   }, []);
 
-  if (viewModel === null) {
+  if (viewModel === null || viewModel.state === 'idle') {
     return (
       <SafeAreaView style={styles.container}>
-        <Text style={styles.loading}>A carregar abrigos...</Text>
+        <Text style={styles.loading}>A carregar animais...</Text>
       </SafeAreaView>
     );
   }
@@ -49,10 +50,10 @@ export default function AbrigosScreen() {
       <SafeAreaView style={styles.container}>
         <ScrollView contentContainerStyle={styles.list}>
           <Text style={styles.title}>{viewModel.title}</Text>
-          {viewModel.shelters.map((shelter) => (
-            <View key={shelter.id} style={styles.card}>
-              <Text style={styles.cardTitle}>{shelter.name}</Text>
-              <Text style={styles.cardMeta}>{shelter.city}</Text>
+          {viewModel.pets.map((pet) => (
+            <View key={pet.id} style={styles.card}>
+              <Text style={styles.cardTitle}>{pet.name}</Text>
+              <Text style={styles.cardMeta}>{pet.species}{pet.locationLabel ? ` · ${pet.locationLabel}` : ''}</Text>
             </View>
           ))}
         </ScrollView>
