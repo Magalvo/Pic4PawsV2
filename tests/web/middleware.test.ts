@@ -70,6 +70,18 @@ describe('middleware — auth guard', () => {
     expect(res.status).not.toBe(307);
   });
 
+  it('unauthenticated request to /abrigos passes through', async () => {
+    const { middleware } = await import('../../apps/web/middleware');
+    const res = await middleware(makeRequest('/abrigos'));
+    expect(res.status).not.toBe(307);
+  });
+
+  it('unauthenticated request to /abrigos/[shelterId] passes through', async () => {
+    const { middleware } = await import('../../apps/web/middleware');
+    const res = await middleware(makeRequest('/abrigos/shelter-001'));
+    expect(res.status).not.toBe(307);
+  });
+
   it('authenticated user on /entrar redirects to /animais by default', async () => {
     _mockGetUser = async () => ({ data: { user: { id: 'u-1' } }, error: null });
     const { middleware } = await import('../../apps/web/middleware');

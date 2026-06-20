@@ -59,11 +59,11 @@ Do not batch items that can be reviewed or merged independently.
 - `npm run test`
 - `npm run build`
 
-## 4. Current State As Of 2026-06-14
+## 4. Current State As Of 2026-06-20
 
-**Repository status**: 1580 tests passing (176 test files), full foundation complete — all domain slices wired, dispatcher and client modularized per domain, security hardening and audit remediation applied.
+**Repository status**: 1926 tests passing (241 test files), all work items `done` — foundation, screens, auth, and navigation complete; latest audit score 9/10 (PRs #197–#198).
 
-**Main branch HEAD**: PR #156 (PAYMENT-WEBHOOK-VERIFIER-001 — webhook endpoint feature flag gate)
+**Main branch HEAD**: PR #199 (SDD audit report — PRs #197–#198)
 - `npm run typecheck` ✅
 - `npm run lint` ✅
 - `npm run test` ✅
@@ -71,7 +71,9 @@ Do not batch items that can be reviewed or merged independently.
 
 > **Note**: `packages/config/dist/` is gitignored. After pulling or switching branches, run `npm run build --workspace=packages/config` if typecheck fails on `EnvironmentConfig`.
 
-**Latest checkpoint**: [2026-06-13-shelter-update-atomic-complete.md](docs/checkpoints/2026-06-13-shelter-update-atomic-complete.md)
+**Latest checkpoint**: [2026-06-13-shelter-update-atomic-complete.md](docs/checkpoints/2026-06-13-shelter-update-atomic-complete.md) *(stale — reflects PR #136; latest audit report `docs/audits/2026-06-20-sdd-audit-prs-197-198.md` is the authoritative current-state reference)*
+
+**Latest audit**: [2026-06-20-sdd-audit-prs-197-198.md](docs/audits/2026-06-20-sdd-audit-prs-197-198.md) — score 9/10, no P1 findings open
 
 ### Merged Work Items (up to 2026-06-13)
 
@@ -214,6 +216,15 @@ Do not batch items that can be reviewed or merged independently.
 - `SHELTER-REGISTER-RPC-HARDEN-001` — `register_shelter` RPC hardened: `set search_path = public`, schema-qualified table names, `p_verification_status`/`p_role` removed from signature (hardcoded to `draft`/`shelter_owner`), `REVOKE EXECUTE` from public/anon/authenticated, `GRANT EXECUTE` to service_role; `p_kind` typed as `public.shelter_kind`; old 14-arg unsafe overload dropped; RPC added to `migrationArtifacts` as `0003_register_shelter_rpc`.
 - `SHELTER-PROFILE-VISIBILITY-001` — public `GET /shelters/:shelterId` now filters `verification_status = 'verified'`; draft and rejected shelters return 404. Decision: Option A (public-only). No authenticated preview route added.
 - `WORKER-DISPATCH-MODULAR-001` — Worker dispatcher split into 8 per-domain route modules under `apps/workers/src/routes/` (pets, shelters, adoptions, donations, sponsorships, notifications, media, webhooks); `@pic4paws/client` split into per-domain modules with `index.ts` re-exporting everything. Route ordering enforced by `tests/workers/route-table.test.ts`.
+
+Real UI screens, auth, and navigation (PRs #157–#199):
+
+- `WEB-AUTH-PAGE-001` / `MOBILE-AUTH-SCREEN-001` — sign-in page/screen using `createWebAuthUi` / `createMobileAuthUi`; PT-PT; `persistSession: false` on mobile; sanitization tests assert both `service-role` and `bearer ` absent from failed state
+- `WEB-NAV-001` — Next.js middleware auth guard: `createServerClient` from `@supabase/ssr`, `getUser()` for server-validated JWT, `isPublicRoute` for `/entrar`/`/animais`/`/abrigos` and their detail pages, return-URL via `?next=` with `validateNextPath` validation; `apps/web/src/supabase-browser.ts` updated to `createBrowserClient` so cookies are set for middleware to read
+- `MOBILE-NAV-001` — Expo Router navigation shell: root `_layout.tsx` session guard with `mobileSupabaseClient` singleton, `(auth)` group (Stack, `entrar.tsx` with `returnTo`), `(app)/(tabs)` group (5-tab Tabs: Animais / Adoções / Patrocínios / Abrigos / Notificações); `apps/mobile/src/nav.ts` with `validateReturnTo`
+- `MOBILE-AUTH-P1-001` — fixed two-client bug: `apps/mobile/src/supabase.ts` exports `mobileSupabaseClient` singleton shared by root layout and sign-in screen so `onAuthStateChange` fires correctly after sign-in
+- `WEB-MIDDLEWARE-P1-001` — replaced `getSession()` with `getUser()` in middleware; added `tests/web/middleware.test.ts` (7 tests covering unauthenticated redirect, public pass-throughs, open-redirect rejection, authenticated `/entrar` redirect)
+- All SCREEN work items for web and mobile (adoption, donation, sponsorship, notification, shelter, pet screens) — wired existing product-boundary components into real Expo Router and Next.js App Router pages
 
 Security hardening + audit remediation (PRs #149–#156):
 - `DB-SHELTER-GEO-001` — canonical geographic coordinate contract: `decimal`/`numeric` in Postgres, `number | null` at TS boundaries, validation before persistence.
@@ -387,33 +398,23 @@ per deployment.
 
 ## 5. Recommended Next Work Item
 
-The foundation now covers (as of PR #136):
-- All write paths (pet drafts, media, adoption, donation, sponsorship, sponsorship manage, adoption status management, pet archive + republish, shelter registration, shelter update)
-- All read paths (pet feed + location filter, pet profile, shelter profile + search, adoption view, adoption list, donation list/status, sponsorship list/donor-list, notifications, financials, shelter-side pet list, pet draft pre-fill load — all 4 layers each)
-- Shelter-side list views (adoption list, donation list, sponsorship list, financial summary, pet list)
-- Full payment confirmation pipeline (webhook → donor status polling)
-- Sponsorship lifecycle management (cancel/pause/resume — dual access: shelter OR donor)
-- Notification dispatch gated by per-user preferences
-- Public shelter search with filters
-- Worker error boundary (structured 500 on uncaught throws)
-- Shelter registration (atomic via `register_shelter` Supabase RPC)
-- Shelter profile update (partial, `canManageShelter`, not-found via `maybeSingle`)
+**Status as of 2026-06-20**: all known work items are `done`. Track A (real UI screens, auth, navigation) is complete. No open backlog.
 
-**Suggested next** (updated 2026-06-14):
+**Known deferred item** (documented in MOBILE-NAV-001 completion notes):
+- Mobile routing integration test (unauthenticated → redirect → sign-in → `returnTo`) requires React Native Testing Library. Not yet set up. When RNTI is available, add `tests/mobile/routing-integration.test.ts` proving the full auth-guard round-trip.
 
-The remake-foundation work track and all security hardening PRs are **complete** (through PR #156). The agreed next tracks are:
+**Suggested next tracks**:
+- **Track B**: Supabase local dev tooling + PSP adapter — implement `PaymentWebhookVerifier` for Eupago or Stripe; lift the `PAYMENT_WEBHOOKS_ENABLED` gate in the Worker.
+- **Track C**: React Native Testing Library setup + mobile routing integration test (resolves deferred P2-B from audit `2026-06-20-sdd-audit-prs-197-198.md`).
 
-- **Track A** (first): Real UI — migrate `apps/web` from React/Vite to Next.js App Router; wire existing Web boundary components into real Next.js pages; set up Expo Router in `apps/mobile` with real screens using existing Mobile boundary components.
-- **Track B** (after A): Supabase local dev tooling + PSP adapter (implement `PaymentWebhookVerifier` for Eupago or Stripe; lift the `PAYMENT_WEBHOOKS_ENABLED` gate).
-
-Open `docs/work-tracks/track-a-real-ui.md` before implementing any Track A items.
+Agree the next track with the user before creating any work items.
 
 ## 6. Handoff Prompt For New Agent Session
 
-Use this prompt in a new AI agent session (Claude Web UI):
+Use this prompt in a new AI agent session:
 
 ```text
-Read AGENTS.md, docs/agent-resume.md, docs/canonical/architecture-proposal.md, docs/canonical/sdd.md, and docs/work-tracks/track-a-real-ui.md (if it exists).
+Read AGENTS.md and docs/agent-resume.md first.
 
 Continue Pic4Paws V2 development from main using strict SDD/TDD:
 - 1 branch per work item: agent/<WORK-ITEM-ID>
@@ -421,8 +422,9 @@ Continue Pic4Paws V2 development from main using strict SDD/TDD:
 - Validate: npm run typecheck, lint, test, build
 - After any env.ts change: npm run build --workspace=packages/config
 
-The remake-foundation work track and all security hardening PRs are complete (through
-PR #156). The current focus is Track A: migrate apps/web from React/Vite to Next.js
-App Router, then set up Expo Router screens in apps/mobile. Read the work track doc
-before implementing any item.
+Current state (2026-06-20, PR #199): all work items done, 1926 tests passing.
+Track A (real UI + auth + navigation) is complete. Latest audit: 9/10, no open P1s.
+Deferred: mobile routing integration test (needs React Native Testing Library).
+Next tracks: Track B (PSP adapter / PaymentWebhookVerifier) or Track C (RNTI setup).
+Agree the next track with the user before writing any work items.
 ```
