@@ -11,6 +11,10 @@ import { handleWorkerShelterPetListRequest, matchWorkerShelterPetsShelterId } fr
 import { handleWorkerShelterRegistrationRequest } from '../shelter-register';
 import { handleWorkerShelterUpdateRequest } from '../shelter-update';
 import { handleWorkerShelterDeleteRequest } from '../shelter-delete';
+import {
+  handleWorkerShelterVerifyRequest,
+  matchWorkerShelterVerificationId,
+} from '../shelter-verify';
 import { handleWorkerAdoptionListRequest, matchWorkerAdoptionListShelterId } from '../adoption-list';
 import { handleWorkerDonationListRequest, matchWorkerDonationListShelterId } from '../donation-list';
 import { handleWorkerSponsorshipListRequest, matchWorkerSponsorshipListShelterId } from '../sponsorship-list';
@@ -78,6 +82,18 @@ export const handle = async (
       request,
       shelterId: shelterPetListShelterId,
       shelterPetListRepository: dependencies.shelterPetListRepository,
+      authenticator: dependencies.petDraftAuthenticator,
+    });
+  }
+
+  const verificationShelterId = matchWorkerShelterVerificationId(url.pathname, config.workers.shelterPath);
+  if (verificationShelterId !== null) {
+    const payload = await request.json().catch(() => null);
+    return handleWorkerShelterVerifyRequest({
+      request,
+      shelterId: verificationShelterId,
+      payload,
+      shelterVerificationRepository: dependencies.shelterVerificationRepository,
       authenticator: dependencies.petDraftAuthenticator,
     });
   }

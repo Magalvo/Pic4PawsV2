@@ -66,6 +66,8 @@ import type { ShelterUpdateRepository } from './shelter-update';
 import { createSupabaseShelterUpdateRepositories } from './shelter-update-supabase';
 import type { ShelterDeletionRepository } from './shelter-delete';
 import { createSupabaseShelterDeletionRepositories } from './shelter-delete-supabase';
+import type { ShelterVerificationRepository } from './shelter-verify';
+import { createSupabaseShelterVerifyRepositories } from './shelter-verify-supabase';
 
 export type WorkerSupabaseTableQueryLike = SupabaseAuthTableQueryLike & SupabaseTableQueryLike;
 
@@ -117,6 +119,7 @@ export type WorkerRequestDependencies = {
   shelterRegistrationRepository?: ShelterRegistrationRepository;
   shelterUpdateRepository?: ShelterUpdateRepository;
   shelterDeletionRepository?: ShelterDeletionRepository;
+  shelterVerificationRepository?: ShelterVerificationRepository;
   supabaseClientFactory?: WorkerSupabaseClientFactory;
   now?: () => string;
 };
@@ -179,6 +182,7 @@ export const createWorkerSupabaseDependencies = ({
     const shelterRegistrationRepositories = createSupabaseShelterRegistrationRepositories({ client });
     const shelterUpdateRepositories = createSupabaseShelterUpdateRepositories({ client });
     const shelterDeletionRepositories = createSupabaseShelterDeletionRepositories({ client });
+    const shelterVerifyRepositories = createSupabaseShelterVerifyRepositories({ client });
     const notificationRepositories = createSupabaseNotificationRepositories({
       client,
       notificationPreferencesRepository: notificationPreferencesRepositories.notificationPreferencesRepository,
@@ -217,6 +221,7 @@ export const createWorkerSupabaseDependencies = ({
       shelterRegistrationRepository: shelterRegistrationRepositories.shelterRegistrationRepository,
       shelterUpdateRepository: shelterUpdateRepositories.shelterUpdateRepository,
       shelterDeletionRepository: shelterDeletionRepositories.shelterDeletionRepository,
+      shelterVerificationRepository: shelterVerifyRepositories.shelterVerificationRepository,
       // paymentWebhookVerifier is intentionally NOT set here — it is provider-SDK-specific
       // and must be injected by the production fetch handler or tests
       now,
@@ -316,5 +321,7 @@ export const resolveWorkerRequestDependencies = ({
       dependencies.shelterUpdateRepository ?? supabaseDependencies.shelterUpdateRepository,
     shelterDeletionRepository:
       dependencies.shelterDeletionRepository ?? supabaseDependencies.shelterDeletionRepository,
+    shelterVerificationRepository:
+      dependencies.shelterVerificationRepository ?? supabaseDependencies.shelterVerificationRepository,
   };
 };
