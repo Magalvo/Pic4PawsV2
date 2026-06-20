@@ -54,6 +54,18 @@ describe('auth page — boundary contract', () => {
     expect(seen).toEqual([{ email: 'test@pic4paws.pt', password: 'secret-pass' }]);
   });
 
+  it('signed_in result carries the accessToken needed for client-side redirect', async () => {
+    // The page reads result.accessToken to confirm sign-in before calling router.replace.
+    // This test ensures the token is present so the redirect condition can be evaluated.
+    const ui = createWebAuthUi({ authClient: successAuthClient });
+    const result = await ui.signIn('user@example.com', 'correct-password');
+    expect(result.state).toBe('signed_in');
+    if (result.state === 'signed_in') {
+      expect(typeof result.accessToken).toBe('string');
+      expect(result.accessToken.length).toBeGreaterThan(0);
+    }
+  });
+
   it('failed state does not expose bearer or service-role', async () => {
     const poisonClient: SupabaseBrowserAuthClientLike = {
       auth: {

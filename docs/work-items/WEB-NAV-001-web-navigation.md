@@ -1,7 +1,7 @@
 ---
 id: WEB-NAV-001
 title: Web navigation — auth middleware + return URL
-status: in-progress
+status: done
 ---
 
 # Work-Item: WEB-NAV-001 — Web Navigation
@@ -72,3 +72,19 @@ issues a redirect or passes through. No local component state involved.
 - `apps/web/middleware.ts` — new file, auth guard
 - `apps/web/app/entrar/page.tsx` — add `next` param handling + post-login redirect
 - `tests/web/auth-page.test.ts` — extend with redirect-after-login assertion
+- `tests/web/middleware.test.ts` — middleware guard tests (added in follow-up fix)
+
+## Completion Notes
+
+- Middleware and `entrar` page implemented and merged in PR #195.
+- Post-merge audit (2026-06-20) found that `middleware.ts` used `getSession()` for
+  server-side authorization. Supabase documentation for `@supabase/ssr` states that
+  `getSession()` reads from the cookie without server-validating the JWT; `getUser()`
+  must be used for authorization decisions as it validates the token with the auth server.
+  A tampered or replayed cookie would have bypassed the middleware guard.
+- Fixed by replacing `getSession()` with `getUser()` and guarding on `user` instead of
+  `session` (one-line change in `middleware.ts`).
+- `tests/web/middleware.test.ts` added with 7 tests covering: unauthenticated redirect,
+  public route pass-through, authenticated `/entrar` redirect, validated `next` param,
+  and open-redirect rejection.
+- `tests/web/auth-page.test.ts` extended with a redirect-after-login contract test.
