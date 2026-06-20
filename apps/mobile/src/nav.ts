@@ -16,6 +16,10 @@ export function isPublicRoute(segments: string[]): boolean {
   if (segments[0] === '(app)' && segments[1] === '(tabs)' && segments[2] === 'animais' && !segments[3]) return true;
   // animais/[petId] public detail
   if (segments[0] === 'animais' && segments[1] && !segments[2]) return true;
+  // abrigos tab root — (app)/(tabs)/abrigos (matches web middleware)
+  if (segments[0] === '(app)' && segments[1] === '(tabs)' && segments[2] === 'abrigos' && !segments[3]) return true;
+  // abrigos/[shelterId] public detail (matches web middleware)
+  if (segments[0] === 'abrigos' && segments[1] && !segments[2]) return true;
   return false;
 }
 
