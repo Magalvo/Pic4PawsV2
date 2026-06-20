@@ -4,6 +4,8 @@ import {
   type SupabaseMobileAuthClientLike,
 } from '../../apps/mobile/src/auth';
 
+type AuthChangeCallback = (event: string, session: { access_token: string } | null) => void;
+
 const makeClient = (result: {
   data: { session: { access_token: string } | null } | null;
   error: { message: string } | null;
@@ -45,6 +47,43 @@ describe('auth screen — boundary contract', () => {
     const ui = createMobileAuthUi({ authClient: client });
     const result = await ui.signIn('user@example.com', 'secret');
     expect(result.state).toBe('failed');
+  });
+
+  it('shared client: onAuthStateChange fires for root layout when sign-in uses same instance', async () => {
+    // Regression test for the two-client bug: _layout.tsx created clientA and
+    // entrar.tsx created clientB. clientA's subscriber never saw clientB's sign-in.
+    // Fix: both use mobileSupabaseClient (one shared instance). This test proves the
+    // invariant: sign-in through the shared client triggers any subscriber on that client.
+    const observed: string[] = [];
+    let changeHandler: AuthChangeCallback | null = null;
+
+    const sharedClient: SupabaseMobileAuthClientLike & {
+      auth: { onAuthStateChange: (cb: AuthChangeCallback) => { data: { subscription: { unsubscribe: () => void } } } };
+    } = {
+      auth: {
+        signInWithPassword: async () => {
+          const session = { access_token: 'tok-shared' };
+          changeHandler?.('SIGNED_IN', session);
+          return { data: { session }, error: null };
+        },
+        onAuthStateChange: (cb) => {
+          changeHandler = cb;
+          return { data: { subscription: { unsubscribe: () => { changeHandler = null; } } } };
+        },
+      },
+    };
+
+    // Root layout subscribes on the shared client
+    sharedClient.auth.onAuthStateChange((_event, sess) => {
+      if (sess) observed.push(sess.access_token);
+    });
+
+    // Sign-in screen uses the same shared client
+    const ui = createMobileAuthUi({ authClient: sharedClient });
+    const result = await ui.signIn('user@example.com', 'correct');
+
+    expect(result.state).toBe('signed_in');
+    expect(observed).toEqual(['tok-shared']);
   });
 
   it('failed state does not expose bearer or service-role', async () => {

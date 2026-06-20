@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Slot, useRouter, useSegments, usePathname } from 'expo-router';
-import { createClient } from '@supabase/supabase-js';
 import type { Session } from '@supabase/supabase-js';
-import { supabaseUrl, supabaseAnonKey } from '../src/env';
+import { mobileSupabaseClient } from '../src/supabase';
 
 function isPublicRoute(segments: string[]): boolean {
   if (segments[0] === '(auth)') return true;
@@ -20,15 +19,11 @@ export default function RootLayout() {
   const pathname = usePathname();
 
   useEffect(() => {
-    const supabase = createClient(supabaseUrl(), supabaseAnonKey(), {
-      auth: { persistSession: false },
-    });
-
-    supabase.auth.getSession().then(({ data }) => {
+    mobileSupabaseClient.auth.getSession().then(({ data }) => {
       setSession(data.session);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, sess) => {
+    const { data: { subscription } } = mobileSupabaseClient.auth.onAuthStateChange((_event, sess) => {
       setSession(sess);
     });
 
