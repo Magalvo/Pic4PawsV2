@@ -41,8 +41,20 @@ describe('isPublicRoute', () => {
     expect(isPublicRoute(['(app)', '(tabs)', 'patrocinios'])).toBe(false);
   });
 
-  it('returns false for abrigos tab', () => {
-    expect(isPublicRoute(['(app)', '(tabs)', 'abrigos'])).toBe(false);
+  it('returns true for abrigos tab root in (app)/(tabs)', () => {
+    expect(isPublicRoute(['(app)', '(tabs)', 'abrigos'])).toBe(true);
+  });
+
+  it('returns false for abrigos tab with a child segment', () => {
+    expect(isPublicRoute(['(app)', '(tabs)', 'abrigos', 'shelter-123'])).toBe(false);
+  });
+
+  it('returns true for abrigos/[shelterId] public detail', () => {
+    expect(isPublicRoute(['abrigos', 'shelter-abc'])).toBe(true);
+  });
+
+  it('returns false for abrigos/[shelterId]/sub-path (candidaturas, animais, etc. require auth)', () => {
+    expect(isPublicRoute(['abrigos', 'shelter-abc', 'candidaturas'])).toBe(false);
   });
 
   it('returns false for empty segments', () => {
@@ -107,6 +119,36 @@ describe('computeAuthRedirect', () => {
       pathname: '/animais/pet-abc',
     });
     expect(result).toBeNull();
+  });
+
+  it('does not redirect unauthenticated user on abrigos tab root', () => {
+    const result = computeAuthRedirect({
+      session: null,
+      segments: ['(app)', '(tabs)', 'abrigos'],
+      pathname: '/(app)/(tabs)/abrigos',
+    });
+    expect(result).toBeNull();
+  });
+
+  it('does not redirect unauthenticated user on abrigos/[shelterId] public detail', () => {
+    const result = computeAuthRedirect({
+      session: null,
+      segments: ['abrigos', 'shelter-abc'],
+      pathname: '/abrigos/shelter-abc',
+    });
+    expect(result).toBeNull();
+  });
+
+  it('redirects unauthenticated user on abrigos sub-path to entrar', () => {
+    const result = computeAuthRedirect({
+      session: null,
+      segments: ['abrigos', 'shelter-abc', 'candidaturas'],
+      pathname: '/abrigos/shelter-abc/candidaturas',
+    });
+    expect(result).toEqual({
+      action: 'replace',
+      href: '/(auth)/entrar?returnTo=%2Fabrigos%2Fshelter-abc%2Fcandidaturas',
+    });
   });
 
   it('redirects authenticated user in (auth) group to animais home', () => {
