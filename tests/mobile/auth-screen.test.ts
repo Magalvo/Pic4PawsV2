@@ -12,6 +12,7 @@ const makeClient = (result: {
 }): SupabaseMobileAuthClientLike => ({
   auth: {
     signInWithPassword: async () => result,
+    resetPasswordForEmail: async () => ({ error: null }),
   },
 });
 
@@ -70,6 +71,7 @@ describe('auth screen — boundary contract', () => {
           changeHandler = cb;
           return { data: { subscription: { unsubscribe: () => { changeHandler = null; } } } };
         },
+        resetPasswordForEmail: async () => ({ error: null }),
       },
     };
 
