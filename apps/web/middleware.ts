@@ -1,4 +1,4 @@
-import { createServerClient } from '@supabase/ssr';
+import { createServerClient, type CookieOptions } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import { validateNextPath } from './src/nav';
 
@@ -22,7 +22,7 @@ export async function middleware(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: Array<{ name: string; value: string; options: CookieOptions }>) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
           response = NextResponse.next({ request: { headers: request.headers } });
           cookiesToSet.forEach(({ name, value, options }) =>
@@ -33,16 +33,16 @@ export async function middleware(request: NextRequest) {
     }
   );
 
-  const { data: { session } } = await supabase.auth.getSession();
+  const { data: { user } } = await supabase.auth.getUser();
 
   const { pathname, search } = request.nextUrl;
 
-  if (!session && !isPublicRoute(pathname)) {
+  if (!user && !isPublicRoute(pathname)) {
     const next = encodeURIComponent(pathname + search);
     return NextResponse.redirect(new URL(`/entrar?next=${next}`, request.url));
   }
 
-  if (session && pathname === '/entrar') {
+  if (user && pathname === '/entrar') {
     const nextParam = request.nextUrl.searchParams.get('next');
     const dest = validateNextPath(nextParam) ?? '/animais';
     return NextResponse.redirect(new URL(dest, request.url));
