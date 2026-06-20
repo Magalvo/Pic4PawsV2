@@ -134,3 +134,7 @@ unauthenticated users to `/entrar` before this screen ever renders.
   instance, ensuring auth state changes propagate correctly.
 - `tests/mobile/auth-screen.test.ts` extended with a shared-client propagation test that
   would have caught this bug before merge.
+- **Deferred**: a full routing integration test (unauthenticated → redirect → sign-in →
+  land on `returnTo`) was not written because it requires rendering `RootLayout` with
+  mocked `expo-router` hooks, which needs React Native Testing Library. Revisit when
+  RNTI is set up for the mobile app.
