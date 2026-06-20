@@ -119,4 +119,18 @@ unauthenticated users to `/entrar` before this screen ever renders.
 - `apps/mobile/app/(app)/(tabs)/abrigos/index.tsx` — moved from `app/abrigos/index.tsx`
 - `apps/mobile/app/(app)/(tabs)/notificacoes/index.tsx` — moved from `app/notificacoes/index.tsx`
 - `apps/mobile/app/index.tsx` — replace with redirect to `/(tabs)/animais`
-- `tests/mobile/auth-screen.test.ts` — extend with returnTo redirect assertion
+- `apps/mobile/src/supabase.ts` — shared client singleton (added in follow-up fix)
+- `tests/mobile/auth-screen.test.ts` — shared-client propagation test (added in follow-up fix)
+
+## Completion Notes
+
+- Root layout, auth stack, app stack, and 5-tab bar implemented and merged in PR #196.
+- Post-merge audit (2026-06-20) found a two-client bug: `_layout.tsx` and `entrar.tsx`
+  each called `createClient(...)` independently with `persistSession: false`, so the root
+  layout's `onAuthStateChange` subscriber never fired when the sign-in screen signed in,
+  causing an immediate redirect loop back to login.
+- Fixed by extracting a module-level singleton (`apps/mobile/src/supabase.ts`) shared by
+  both files. Both the root layout guard and the sign-in screen now use the same client
+  instance, ensuring auth state changes propagate correctly.
+- `tests/mobile/auth-screen.test.ts` extended with a shared-client propagation test that
+  would have caught this bug before merge.

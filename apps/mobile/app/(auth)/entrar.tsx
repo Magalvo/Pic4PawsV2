@@ -10,9 +10,8 @@ import {
   View,
 } from 'react-native';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import { createClient } from '@supabase/supabase-js';
 import { createMobileAuthUi, type MobileAuthSignInResultViewModel } from '../../src/auth';
-import { supabaseUrl, supabaseAnonKey } from '../../src/env';
+import { mobileSupabaseClient } from '../../src/supabase';
 import { validateReturnTo } from '../../src/nav';
 
 export default function EntrarScreen() {
@@ -28,10 +27,7 @@ export default function EntrarScreen() {
   const handleSubmit = async () => {
     setSubmitting(true);
     setResult(null);
-    const authClient = createClient(supabaseUrl(), supabaseAnonKey(), {
-      auth: { persistSession: false },
-    });
-    const ui = createMobileAuthUi({ authClient });
+    const ui = createMobileAuthUi({ authClient: mobileSupabaseClient });
     const next = await ui.signIn(email, password);
     setResult(next);
     setSubmitting(false);
