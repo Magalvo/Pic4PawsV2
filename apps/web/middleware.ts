@@ -8,6 +8,8 @@ function isPublicRoute(pathname: string): boolean {
   if (/^\/animais\/[^/]+$/.test(pathname)) return true;
   if (pathname === '/abrigos') return true;
   if (/^\/abrigos\/[^/]+$/.test(pathname)) return true;
+  if (pathname === '/recuperar-palavra-passe') return true;
+  if (pathname === '/recuperar-palavra-passe/confirmar') return true;
   return false;
 }
 
