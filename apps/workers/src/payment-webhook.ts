@@ -16,6 +16,7 @@ export type ParsedWebhookEvent = {
 
 export type PaymentWebhookVerifier = (params: {
   rawBody: string;
+  requestUrl: string;
   signatureHeader: string | null;
   secret: string;
 }) => Promise<ParsedWebhookEvent | null>;
@@ -55,9 +56,9 @@ export type PaymentWebhookRepository = {
   ) => Promise<PaymentWebhookProcessingResult>;
 };
 
-export const PROVIDER_SIGNATURE_HEADERS: Record<DonationProvider, string> = {
+export const PROVIDER_SIGNATURE_HEADERS: Record<DonationProvider, string | null> = {
   eupago: 'x-eupago-signature',
-  ifthenpay: 'x-ifthenpay-signature',
+  ifthenpay: null,
   stripe: 'stripe-signature',
 };
 
@@ -94,8 +95,14 @@ export const handleWorkerPaymentWebhookRequest = async ({
   }
 
   // 2. Verify and parse event
-  const signatureHeader = request.headers.get(PROVIDER_SIGNATURE_HEADERS[provider]);
-  const parsed = await paymentWebhookVerifier({ rawBody, signatureHeader, secret: webhookSecret });
+  const signatureHeaderName = PROVIDER_SIGNATURE_HEADERS[provider];
+  const signatureHeader = signatureHeaderName ? request.headers.get(signatureHeaderName) : null;
+  const parsed = await paymentWebhookVerifier({
+    rawBody,
+    requestUrl: request.url,
+    signatureHeader,
+    secret: webhookSecret,
+  });
 
   if (!parsed) {
     return jsonResponse({ status: 'webhook_signature_invalid' }, { status: 401 });

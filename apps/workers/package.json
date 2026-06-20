@@ -17,7 +17,8 @@
     "@pic4paws/database": "0.1.0",
     "@pic4paws/domain": "0.1.0",
     "@pic4paws/payments": "0.1.0",
-    "@supabase/supabase-js": "^2.107.0"
+    "@supabase/supabase-js": "^2.107.0",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20251208.0",
