@@ -1,7 +1,7 @@
 ---
 id: MOBILE-AUTH-GUARD-001
 title: Mobile auth guard routing — extract and test computeAuthRedirect
-status: in-progress
+status: done
 ---
 
 # Work-Item: MOBILE-AUTH-GUARD-001 — Mobile Auth Guard Routing
@@ -69,3 +69,12 @@ if (redirect) router[redirect.action](redirect.href as Href);
 - `apps/mobile/src/nav.ts` — add `isPublicRoute` + `computeAuthRedirect`
 - `apps/mobile/app/_layout.tsx` — use `computeAuthRedirect`, remove inline logic
 - `tests/mobile/auth-guard.test.ts` — new: full auth-guard routing tests
+
+## Completion Notes
+
+- Extracted `isPublicRoute` and `computeAuthRedirect` from `_layout.tsx` into `nav.ts`; both exported and independently testable.
+- `_layout.tsx` routing effect reduced to a single `computeAuthRedirect` call — no inline guard logic remains.
+- PR #203 (initial): 23 tests covering all routing branches: loading state, unauthenticated on all public routes, unauthenticated on protected route with encoded `returnTo`, authenticated in auth group, authenticated on app routes.
+- PR #205 (`MOBILE-ABRIGOS-PUBLIC-001`): extended `isPublicRoute` to include `(app)/(tabs)/abrigos` and `abrigos/[shelterId]`, matching web middleware parity; 4 additional tests added.
+- Resolves the deferred P2-B from audit `2026-06-20-sdd-audit-prs-197-198.md` without React Native Testing Library, by testing the pure routing decision function.
+- Validation: `npm run typecheck` ✅ · `npm run lint` ✅ · `npm run test` 1968/1968 (244 files) ✅ · `npm run build` ✅
