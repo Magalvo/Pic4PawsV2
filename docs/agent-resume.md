@@ -61,9 +61,9 @@ Do not batch items that can be reviewed or merged independently.
 
 ## 4. Current State As Of 2026-06-20
 
-**Repository status**: 1968 tests passing (244 test files), all work items `done` — foundation, screens, auth, navigation, Ifthenpay payment webhook verifier, and mobile auth guard routing complete; latest audit score 9/10 (PRs #199–#203).
+**Repository status**: 1979 tests passing (246 test files), all work items `done` — foundation, screens, auth, navigation, Ifthenpay webhook verifier, mobile auth guard routing, and password reset complete; latest audit score 9/10 (PRs #205–#208).
 
-**Main branch HEAD**: PR #205 (MOBILE-ABRIGOS-PUBLIC-001 — `/abrigos` public on mobile, matching web middleware)
+**Main branch HEAD**: PR #208 (PASSWD-RESET-MOBILE-001) — `9b7307f`
 - `npm run typecheck` ✅
 - `npm run lint` ✅
 - `npm run test` ✅
@@ -71,9 +71,11 @@ Do not batch items that can be reviewed or merged independently.
 
 > **Note**: `packages/config/dist/` is gitignored. After pulling or switching branches, run `npm run build --workspace=packages/config` if typecheck fails on `EnvironmentConfig`.
 
-**Latest checkpoint**: [2026-06-13-shelter-update-atomic-complete.md](docs/checkpoints/2026-06-13-shelter-update-atomic-complete.md) *(stale — reflects PR #136; latest audit report `docs/audits/2026-06-20-sdd-audit-prs-197-198.md` is the authoritative current-state reference)*
+**Latest checkpoint**: [2026-06-20-password-reset-complete.md](docs/checkpoints/2026-06-20-password-reset-complete.md) — covers Tracks A–E, PRs #157–#208, 1979 tests
 
-**Latest audit**: [2026-06-20-sdd-audit-prs-197-198.md](docs/audits/2026-06-20-sdd-audit-prs-197-198.md) — score 9/10, no P1 findings open
+**Latest audit**: [2026-06-20-sdd-audit-prs-205-208.md](docs/audits/2026-06-20-sdd-audit-prs-205-208.md) — score 9/10, no open P1 findings
+
+**Track E complete**: `PASSWD-RESET-WEB-001` (PR #207) + `PASSWD-RESET-MOBILE-001` (PR #208). Web: `/recuperar-palavra-passe` + `/recuperar-palavra-passe/confirmar`; mobile: `(auth)/recuperar-palavra-passe` screen (confirm step on web). Mobile `redirectTo` uses `EXPO_PUBLIC_WEB_BASE_URL ?? 'https://pic4paws.pt'`.
 
 ### Merged Work Items (up to 2026-06-13)
 

@@ -28,6 +28,18 @@ describe('requestPasswordReset', () => {
     expect(result.state).toBe('failed');
     if (result.state === 'failed') expect(result.canRetry).toBe(true);
   });
+
+  it('failed state does not expose bearer or service-role', async () => {
+    const ui = createWebAuthUi({
+      authClient: makeClient({
+        resetPasswordForEmail: async () => ({ error: { message: 'Bearer eyJ... service-role key leaked' } }),
+      }),
+    });
+    const result = await ui.requestPasswordReset('bad@example.com', 'https://app.test/recuperar-palavra-passe/confirmar');
+    const serialized = JSON.stringify(result).toLowerCase();
+    expect(serialized).not.toContain('service-role');
+    expect(serialized).not.toContain('bearer ');
+  });
 });
 
 describe('exchangeResetCode', () => {
@@ -78,5 +90,17 @@ describe('updatePassword', () => {
     const result = await ui.updatePassword('123');
     expect(result.state).toBe('failed');
     if (result.state === 'failed') expect(result.canRetry).toBe(true);
+  });
+
+  it('failed state does not expose bearer or service-role', async () => {
+    const ui = createWebAuthUi({
+      authClient: makeClient({
+        updateUser: async () => ({ error: { message: 'Bearer eyJ... service-role key leaked' } }),
+      }),
+    });
+    const result = await ui.updatePassword('any-password');
+    const serialized = JSON.stringify(result).toLowerCase();
+    expect(serialized).not.toContain('service-role');
+    expect(serialized).not.toContain('bearer ');
   });
 });
