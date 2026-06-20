@@ -18,7 +18,7 @@ export type PaymentWebhookVerifier = (params: {
   rawBody: string;
   signatureHeader: string | null;
   secret: string;
-}) => ParsedWebhookEvent | null;
+}) => Promise<ParsedWebhookEvent | null>;
 
 export type RecordWebhookEventInput = {
   providerEventId: string;
@@ -95,7 +95,7 @@ export const handleWorkerPaymentWebhookRequest = async ({
 
   // 2. Verify and parse event
   const signatureHeader = request.headers.get(PROVIDER_SIGNATURE_HEADERS[provider]);
-  const parsed = paymentWebhookVerifier({ rawBody, signatureHeader, secret: webhookSecret });
+  const parsed = await paymentWebhookVerifier({ rawBody, signatureHeader, secret: webhookSecret });
 
   if (!parsed) {
     return jsonResponse({ status: 'webhook_signature_invalid' }, { status: 401 });

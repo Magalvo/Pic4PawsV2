@@ -22,7 +22,7 @@ const sampleParsedEvent: ParsedWebhookEvent = {
 };
 
 const makeVerifier = (result: ParsedWebhookEvent | null): PaymentWebhookVerifier =>
-  vi.fn().mockReturnValue(result);
+  vi.fn().mockResolvedValue(result);
 
 const sampleProcessingResult: PaymentWebhookProcessingResult = {
   alreadyProcessed: false,
