@@ -9,11 +9,17 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import { createClient } from '@supabase/supabase-js';
-import { createMobileAuthUi, type MobileAuthSignInResultViewModel } from '../src/auth';
-import { supabaseUrl, supabaseAnonKey } from '../src/env';
+import { createMobileAuthUi, type MobileAuthSignInResultViewModel } from '../../src/auth';
+import { supabaseUrl, supabaseAnonKey } from '../../src/env';
+import { validateReturnTo } from '../../src/nav';
 
 export default function EntrarScreen() {
+  const router = useRouter();
+  const { returnTo } = useLocalSearchParams<{ returnTo?: string }>();
+  const dest = validateReturnTo(returnTo) ?? '/(app)/(tabs)/animais';
+
   const [result, setResult] = useState<MobileAuthSignInResultViewModel | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [email, setEmail] = useState('');
@@ -29,6 +35,9 @@ export default function EntrarScreen() {
     const next = await ui.signIn(email, password);
     setResult(next);
     setSubmitting(false);
+    if (next.state === 'signed_in') {
+      router.replace(dest);
+    }
   };
 
   if (result?.state === 'signed_in') {

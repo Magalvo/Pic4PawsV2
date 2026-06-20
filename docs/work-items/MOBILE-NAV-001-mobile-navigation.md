@@ -1,7 +1,7 @@
 ---
 id: MOBILE-NAV-001
 title: Mobile navigation — root layout, auth routing, tab bar
-status: in-progress
+status: done
 ---
 
 # Work-Item: MOBILE-NAV-001 — Mobile Navigation

@@ -9,39 +9,36 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { createClient } from '@supabase/supabase-js';
-import { createAdoptionDonorListClient } from '@pic4paws/client';
-import type { AdoptionApplicationStatus } from '@pic4paws/client';
+import { createSponsorshipDonorListClient } from '@pic4paws/client';
+import type { SponsorshipClientStatus, SponsorshipClientRecurringInterval } from '@pic4paws/client';
 import {
-  createMobileAdoptionDonorListUi,
-  type MobileAdoptionDonorListResultViewModel,
-} from '../../src/adoption-donor-list';
-import { workerUrl, supabaseUrl, supabaseAnonKey } from '../../src/env';
+  createMobileSponsorshipDonorListUi,
+  type MobileSponsorshipDonorListResultViewModel,
+} from '../../../../src/sponsorship-donor-list';
+import { workerUrl, supabaseUrl, supabaseAnonKey } from '../../../../src/env';
 
-const STATUS_LABELS: Record<AdoptionApplicationStatus, string> = {
-  draft: 'Rascunho',
-  submitted: 'Submetida',
-  under_review: 'Em análise',
-  more_info_requested: 'Info. solicitada',
-  approved: 'Aprovada',
-  rejected: 'Rejeitada',
-  withdrawn: 'Retirada',
-  expired: 'Expirada',
+const STATUS_LABELS: Record<SponsorshipClientStatus, string> = {
+  active: 'Ativo',
+  cancelled: 'Cancelado',
+  paused: 'Em pausa',
 };
 
-const STATUS_COLORS: Record<AdoptionApplicationStatus, string> = {
-  draft: '#94a3b8',
-  submitted: '#3b82f6',
-  under_review: '#f59e0b',
-  more_info_requested: '#8b5cf6',
-  approved: '#22c55e',
-  rejected: '#ef4444',
-  withdrawn: '#64748b',
-  expired: '#94a3b8',
+const STATUS_COLORS: Record<SponsorshipClientStatus, string> = {
+  active: '#22c55e',
+  cancelled: '#ef4444',
+  paused: '#f59e0b',
 };
 
-export default function MinhasCandidaturasScreen() {
+const INTERVAL_LABELS: Record<SponsorshipClientRecurringInterval, string> = {
+  monthly: 'Mensal',
+  quarterly: 'Trimestral',
+  annual: 'Anual',
+};
+
+export default function MeusApadrinhamentosScreen() {
   const router = useRouter();
-  const [viewModel, setViewModel] = useState<MobileAdoptionDonorListResultViewModel | null>(null);
+  const [viewModel, setViewModel] =
+    useState<MobileSponsorshipDonorListResultViewModel | null>(null);
 
   const load = useCallback(() => {
     setViewModel(null);
@@ -50,14 +47,14 @@ export default function MinhasCandidaturasScreen() {
       const { data: { session } } = await supabase.auth.getSession();
       return session?.access_token ?? null;
     };
-    const adoptionDonorListClient = createAdoptionDonorListClient({
+    const sponsorshipDonorListClient = createSponsorshipDonorListClient({
       workerBaseUrl: workerUrl(),
-      adoptionsPath: '/adoptions',
+      sponsorshipsPath: '/sponsorships',
       getAccessToken,
       fetch: globalThis.fetch,
     });
-    const ui = createMobileAdoptionDonorListUi({ adoptionDonorListClient });
-    ui.loadDonorAdoptions().then(setViewModel);
+    const ui = createMobileSponsorshipDonorListUi({ sponsorshipDonorListClient });
+    ui.loadDonorSponsorships().then(setViewModel);
   }, []);
 
   useEffect(() => { load(); }, [load]);
@@ -65,7 +62,7 @@ export default function MinhasCandidaturasScreen() {
   if (viewModel === null || viewModel.state === 'idle' || viewModel.state === 'loading') {
     return (
       <SafeAreaView style={styles.container}>
-        <Text style={styles.loading}>A carregar os meus pedidos...</Text>
+        <Text style={styles.loading}>A carregar apadrinhamentos...</Text>
       </SafeAreaView>
     );
   }
@@ -76,9 +73,6 @@ export default function MinhasCandidaturasScreen() {
         <View style={styles.content}>
           <Text style={styles.title}>{viewModel.title}</Text>
           <Text style={styles.message}>{viewModel.message}</Text>
-          <TouchableOpacity style={styles.button} onPress={() => router.push('/animais' as never)}>
-            <Text style={styles.buttonText}>Ver animais disponíveis</Text>
-          </TouchableOpacity>
         </View>
       </SafeAreaView>
     );
@@ -108,23 +102,26 @@ export default function MinhasCandidaturasScreen() {
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.title}>{viewModel.title}</Text>
         <Text style={styles.subtitle}>{viewModel.message}</Text>
-        {viewModel.applications.map((app) => (
+        {viewModel.sponsorships.map((sp) => (
           <TouchableOpacity
-            key={app.applicationId}
+            key={sp.sponsorshipId}
             style={styles.card}
-            onPress={() => router.push(`/adocoes/${app.applicationId}` as never)}
+            onPress={() => router.push(`/patrocinios/${sp.sponsorshipId}` as never)}
           >
             <View style={styles.cardHeader}>
-              <Text style={styles.petLabel}>Animal: {app.petId}</Text>
-              <Text style={[styles.statusBadge, { color: STATUS_COLORS[app.status] ?? '#64748b' }]}>
-                {STATUS_LABELS[app.status] ?? app.status}
+              <Text style={styles.amount}>
+                {(sp.amountCents / 100).toFixed(2)} {sp.currency} · {INTERVAL_LABELS[sp.recurringInterval]}
+              </Text>
+              <Text style={[styles.statusBadge, { color: STATUS_COLORS[sp.status] }]}>
+                {STATUS_LABELS[sp.status]}
               </Text>
             </View>
-            {app.submittedAt ? (
-              <Text style={styles.cardDate}>
-                {new Date(app.submittedAt).toLocaleDateString('pt-PT')}
-              </Text>
+            {sp.petId ? (
+              <Text style={styles.cardSub}>Animal: {sp.petId}</Text>
             ) : null}
+            <Text style={styles.cardDate}>
+              {new Date(sp.createdAt).toLocaleDateString('pt-PT')}
+            </Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
@@ -144,12 +141,13 @@ const styles = StyleSheet.create({
     borderColor: '#e2e8f0',
     borderRadius: 8,
     borderWidth: 1,
-    gap: 6,
+    gap: 4,
     padding: 14,
   },
   cardHeader: { alignItems: 'center', flexDirection: 'row', justifyContent: 'space-between' },
-  petLabel: { color: '#0f172a', fontSize: 14, fontWeight: '600', flexShrink: 1 },
+  amount: { color: '#0f172a', fontSize: 15, fontWeight: '700', flexShrink: 1 },
   statusBadge: { fontSize: 12, fontWeight: '700', textTransform: 'uppercase' },
+  cardSub: { color: '#64748b', fontSize: 13 },
   cardDate: { color: '#94a3b8', fontSize: 12 },
   button: {
     alignItems: 'center',

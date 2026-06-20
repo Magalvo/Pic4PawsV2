@@ -14,8 +14,8 @@ import {
   createMobileNotificationUi,
   type MobileNotificationState,
   type MobileNotificationLoadedState,
-} from '../../src/notification';
-import { workerUrl, supabaseUrl, supabaseAnonKey } from '../../src/env';
+} from '../../../../src/notification';
+import { workerUrl, supabaseUrl, supabaseAnonKey } from '../../../../src/env';
 
 const TYPE_LABELS: Record<NotificationClientType, string> = {
   adoption_status_changed: 'Estado de adoção alterado',
