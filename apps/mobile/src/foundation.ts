@@ -98,6 +98,10 @@ import {
   mobileShelterUpdateUiContent,
   type MobileShelterUpdateUiContent,
 } from './shelter-update';
+import {
+  mobileUserRegistrationUiContent,
+  type MobileUserRegistrationUiContent,
+} from './user-register';
 
 export type MobileFoundationStatus = 'contract-ready';
 
@@ -142,6 +146,7 @@ export type MobileFoundationContent = {
   shelterPetList: Pick<MobileShelterPetListUiContent, 'title' | 'description' | 'status'>;
   shelterRegistration: Pick<MobileShelterRegistrationUiContent, 'title' | 'description' | 'status'>;
   shelterUpdate: Pick<MobileShelterUpdateUiContent, 'title' | 'description' | 'status'>;
+  userRegistration: Pick<MobileUserRegistrationUiContent, 'title' | 'description' | 'status'>;
   readiness: Array<{
     id: 'database' | 'auth' | 'pets' | 'payments' | 'media' | 'workers';
     label: string;
@@ -311,6 +316,11 @@ export const mobileFoundationContent: MobileFoundationContent = {
     title: mobileShelterUpdateUiContent.title,
     description: mobileShelterUpdateUiContent.description,
     status: mobileShelterUpdateUiContent.status,
+  },
+  userRegistration: {
+    title: mobileUserRegistrationUiContent.title,
+    description: mobileUserRegistrationUiContent.description,
+    status: mobileUserRegistrationUiContent.status,
   },
   readiness: [
     {
