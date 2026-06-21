@@ -11,13 +11,13 @@ import {
   View,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { createClient } from '@supabase/supabase-js';
 import { createShelterUpdateClient } from '@pic4paws/client';
 import {
   createMobileShelterUpdateUi,
   type MobileShelterUpdateState,
 } from '../../../src/shelter-update';
-import { workerUrl, supabaseUrl, supabaseAnonKey } from '../../../src/env';
+import { mobileSupabaseClient } from '../../../src/supabase';
+import { workerUrl } from '../../../src/env';
 
 type ShelterKind = 'shelter' | 'sanctuary' | 'association' | 'foster_network';
 
@@ -63,8 +63,7 @@ export default function EditarAbrigoScreen() {
   const handleSubmit = async () => {
     if (submitting) return;
     setSubmitting(true);
-    const supabase = createClient(supabaseUrl(), supabaseAnonKey(), { auth: { persistSession: false } });
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session } } = await mobileSupabaseClient.auth.getSession();
     const shelterUpdateClient = createShelterUpdateClient({
       workerBaseUrl: workerUrl(),
       shelterPath: '/shelters',
