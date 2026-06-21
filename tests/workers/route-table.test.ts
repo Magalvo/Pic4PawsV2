@@ -7,6 +7,8 @@ import { handle as handleAdoptions } from '../../apps/workers/src/routes/adoptio
 import { handle as handleDonations } from '../../apps/workers/src/routes/donations';
 import { handle as handleSponsorships } from '../../apps/workers/src/routes/sponsorships';
 import { handle as handleNotifications } from '../../apps/workers/src/routes/notifications';
+import { matchWorkerShelterVerificationId } from '../../apps/workers/src/shelter-verify';
+import { matchWorkerShelterProfileId } from '../../apps/workers/src/shelter-profile';
 import type { WorkerParsedConfig } from '../../apps/workers/src/routes/shared';
 
 const PATHS = {
@@ -113,5 +115,11 @@ describe('route-table: ROUTE_HANDLERS ordering contract', () => {
     const sponsorshipListPath = `${PATHS.shelter}/abc123/sponsorships`;
     const result = await handleSponsorships(get(sponsorshipListPath), config, deps);
     expect(result).toBeNull();
+  });
+
+  it('matchWorkerShelterVerificationId claims verification path before matchWorkerShelterProfileId', () => {
+    const verificationPath = `${PATHS.shelter}/abc123/verification`;
+    expect(matchWorkerShelterVerificationId(verificationPath, PATHS.shelter)).toBe('abc123');
+    expect(matchWorkerShelterProfileId(verificationPath, PATHS.shelter)).toBeNull();
   });
 });
