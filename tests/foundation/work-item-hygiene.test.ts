@@ -107,4 +107,71 @@ Ship a boundary.
       },
     ]);
   });
+
+  it('fails completion notes without status metadata', () => {
+    const repoRoot = makeRepo();
+    writeWorkItem(
+      repoRoot,
+      'NO-STATUS-001.md',
+      `# NO-STATUS-001
+
+## Goal
+Ship a boundary.
+
+## States
+- done
+
+## Contract
+- The boundary is explicit.
+
+## Affected files
+- apps/example.ts
+
+## Completion Notes
+- Implemented and validated.
+`,
+    );
+
+    expect(checkWorkItemFiles({ repoRoot })).toEqual([
+      {
+        file: 'docs/work-items/NO-STATUS-001.md',
+        message: 'Missing status metadata',
+      },
+    ]);
+  });
+
+  it('fails done work items with open acceptance criteria', () => {
+    const repoRoot = makeRepo();
+    writeWorkItem(
+      repoRoot,
+      'OPEN-CRITERIA-001.md',
+      `---
+id: OPEN-CRITERIA-001
+status: done
+---
+
+## Goal
+Ship a boundary.
+
+## States
+- done
+
+## Acceptance Criteria
+- [ ] Important criterion still open.
+
+## Affected Files
+- apps/example.ts
+
+## Completion Notes
+- Implemented and validated.
+`,
+    );
+
+    expect(checkWorkItemFiles({ repoRoot })).toEqual([
+      {
+        file: 'docs/work-items/OPEN-CRITERIA-001.md',
+        message: 'Open acceptance criteria on done work item',
+      },
+    ]);
+  });
 });
