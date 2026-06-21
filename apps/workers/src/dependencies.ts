@@ -70,6 +70,8 @@ import type { ShelterVerificationRepository } from './shelter-verify';
 import { createSupabaseShelterVerifyRepositories } from './shelter-verify-supabase';
 import type { AdminPendingSheltersRepository } from './admin-pending-shelters';
 import { createSupabaseAdminPendingSheltersRepositories } from './admin-pending-shelters-supabase';
+import type { UserRegistrationRepository } from './user-register';
+import { createSupabaseUserRegistrationRepositories } from './user-register-supabase';
 
 export type WorkerSupabaseTableQueryLike = SupabaseAuthTableQueryLike & SupabaseTableQueryLike;
 
@@ -123,6 +125,7 @@ export type WorkerRequestDependencies = {
   shelterDeletionRepository?: ShelterDeletionRepository;
   shelterVerificationRepository?: ShelterVerificationRepository;
   adminPendingSheltersRepository?: AdminPendingSheltersRepository;
+  userRegistrationRepository?: UserRegistrationRepository;
   supabaseClientFactory?: WorkerSupabaseClientFactory;
   now?: () => string;
 };
@@ -187,6 +190,7 @@ export const createWorkerSupabaseDependencies = ({
     const shelterDeletionRepositories = createSupabaseShelterDeletionRepositories({ client });
     const shelterVerifyRepositories = createSupabaseShelterVerifyRepositories({ client });
     const adminPendingSheltersRepositories = createSupabaseAdminPendingSheltersRepositories({ client });
+    const userRegistrationRepositories = createSupabaseUserRegistrationRepositories({ client });
     const notificationRepositories = createSupabaseNotificationRepositories({
       client,
       notificationPreferencesRepository: notificationPreferencesRepositories.notificationPreferencesRepository,
@@ -228,6 +232,7 @@ export const createWorkerSupabaseDependencies = ({
       shelterVerificationRepository: shelterVerifyRepositories.shelterVerificationRepository,
       adminPendingSheltersRepository:
         adminPendingSheltersRepositories.adminPendingSheltersRepository,
+      userRegistrationRepository: userRegistrationRepositories.userRegistrationRepository,
       // paymentWebhookVerifier is intentionally NOT set here — it is provider-SDK-specific
       // and must be injected by the production fetch handler or tests
       now,
@@ -332,5 +337,7 @@ export const resolveWorkerRequestDependencies = ({
     adminPendingSheltersRepository:
       dependencies.adminPendingSheltersRepository ??
       supabaseDependencies.adminPendingSheltersRepository,
+    userRegistrationRepository:
+      dependencies.userRegistrationRepository ?? supabaseDependencies.userRegistrationRepository,
   };
 };
