@@ -134,4 +134,68 @@ describe('createMobileShelterVerifyUi — updateVerificationStatus', () => {
     expect(serialized).not.toContain('service-role');
     expect(serialized).not.toContain('bearer ');
   });
+
+  it('sanitizes credentials in forbidden failed state', async () => {
+    const ui = createMobileShelterVerifyUi({
+      shelterVerificationClient: makeClient({
+        ok: false,
+        status: 'forbidden',
+        reasons: ['service-role-key', 'bearer token-value'],
+      }),
+    });
+    const state = await ui.updateVerificationStatus('shelter-1', 'verified');
+
+    expect(state.state).toBe('failed');
+    const serialized = JSON.stringify(state);
+    expect(serialized).not.toContain('service-role');
+    expect(serialized).not.toContain('bearer ');
+  });
+
+  it('sanitizes credentials in invalid_transition failed state', async () => {
+    const ui = createMobileShelterVerifyUi({
+      shelterVerificationClient: makeClient({
+        ok: false,
+        status: 'invalid_transition',
+        reasons: ['service-role-key', 'bearer token-value'],
+      }),
+    });
+    const state = await ui.updateVerificationStatus('shelter-1', 'verified');
+
+    expect(state.state).toBe('failed');
+    const serialized = JSON.stringify(state);
+    expect(serialized).not.toContain('service-role');
+    expect(serialized).not.toContain('bearer ');
+  });
+
+  it('sanitizes credentials in shelter_not_found failed state', async () => {
+    const ui = createMobileShelterVerifyUi({
+      shelterVerificationClient: makeClient({
+        ok: false,
+        status: 'shelter_not_found',
+        reasons: ['service-role-key', 'bearer token-value'],
+      }),
+    });
+    const state = await ui.updateVerificationStatus('missing', 'pending_review');
+
+    expect(state.state).toBe('failed');
+    const serialized = JSON.stringify(state);
+    expect(serialized).not.toContain('service-role');
+    expect(serialized).not.toContain('bearer ');
+  });
+
+  it('sanitizes credentials in unauthenticated failed state', async () => {
+    const ui = createMobileShelterVerifyUi({
+      shelterVerificationClient: makeClient({
+        ok: false,
+        status: 'unauthenticated',
+        reasons: ['service-role-key', 'bearer token-value'],
+      }),
+    });
+    const state = await ui.updateVerificationStatus('shelter-1', 'pending_review');
+
+    expect(state.state).toBe('failed');
+    const serialized = JSON.stringify(state);
+    expect(serialized).not.toContain('service-role');
+    expect(serialized).not.toContain('bearer ');
+  });
 });

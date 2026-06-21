@@ -113,7 +113,7 @@ export const createWebShelterVerifyUi = ({
           title: 'Sem permissão',
           message: 'Não tens permissão para efetuar esta ação.',
           status: result.status,
-          reasons: result.reasons,
+          reasons: sanitizeReasons(result.reasons, result.status),
           canRetry: true,
         };
       }
@@ -124,7 +124,7 @@ export const createWebShelterVerifyUi = ({
           title: 'Transição inválida',
           message: 'O abrigo não pode passar para este estado a partir do estado atual.',
           status: result.status,
-          reasons: result.reasons,
+          reasons: sanitizeReasons(result.reasons, result.status),
           canRetry: true,
         };
       }
@@ -135,7 +135,7 @@ export const createWebShelterVerifyUi = ({
           title: 'Abrigo não encontrado',
           message: 'O abrigo indicado não existe.',
           status: result.status,
-          reasons: result.reasons,
+          reasons: sanitizeReasons(result.reasons, result.status),
           canRetry: true,
         };
       }
@@ -146,7 +146,7 @@ export const createWebShelterVerifyUi = ({
           title: 'Sessão expirada',
           message: 'A tua sessão expirou. Inicia sessão de novo.',
           status: result.status,
-          reasons: result.reasons,
+          reasons: sanitizeReasons(result.reasons, result.status),
           canRetry: true,
         };
       }

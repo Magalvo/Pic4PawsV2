@@ -59,11 +59,11 @@ Do not batch items that can be reviewed or merged independently.
 - `npm run test`
 - `npm run build`
 
-## 4. Current State As Of 2026-06-20
+## 4. Current State As Of 2026-06-21
 
-**Repository status**: 1979 tests passing (246 test files), all work items `done` — foundation, screens, auth, navigation, Ifthenpay webhook verifier, mobile auth guard routing, and password reset complete; latest audit score 9/10 (PRs #205–#208).
+**Repository status**: 2031 tests passing (249 test files), all work items `done` — foundation, screens, auth, navigation, Ifthenpay webhook verifier, mobile auth guard routing, password reset, and shelter verification complete; latest audit score 9/10 (PRs #209–#212).
 
-**Main branch HEAD**: PR #208 (PASSWD-RESET-MOBILE-001) — `9b7307f`
+**Main branch HEAD**: PR #212 (SHELTER-VERIFY-WEB-001 + SHELTER-VERIFY-MOBILE-001) — `0bb885d`
 - `npm run typecheck` ✅
 - `npm run lint` ✅
 - `npm run test` ✅
@@ -71,11 +71,13 @@ Do not batch items that can be reviewed or merged independently.
 
 > **Note**: `packages/config/dist/` is gitignored. After pulling or switching branches, run `npm run build --workspace=packages/config` if typecheck fails on `EnvironmentConfig`.
 
-**Latest checkpoint**: [2026-06-20-password-reset-complete.md](docs/checkpoints/2026-06-20-password-reset-complete.md) — covers Tracks A–E, PRs #157–#208, 1979 tests
+**Latest checkpoint**: [2026-06-21-shelter-verification-complete.md](docs/checkpoints/2026-06-21-shelter-verification-complete.md) — covers Tracks A–F, PRs #157–#212, 2031 tests
 
-**Latest audit**: [2026-06-20-sdd-audit-prs-205-208.md](docs/audits/2026-06-20-sdd-audit-prs-205-208.md) — score 9/10, no open P1 findings
+**Latest audit**: [2026-06-21-sdd-audit-prs-209-212.md](docs/audits/2026-06-21-sdd-audit-prs-209-212.md) — score 9/10, no open P1 findings
 
 **Track E complete**: `PASSWD-RESET-WEB-001` (PR #207) + `PASSWD-RESET-MOBILE-001` (PR #208). Web: `/recuperar-palavra-passe` + `/recuperar-palavra-passe/confirmar`; mobile: `(auth)/recuperar-palavra-passe` screen (confirm step on web). Mobile `redirectTo` uses `EXPO_PUBLIC_WEB_BASE_URL ?? 'https://pic4paws.pt'`.
+
+**Track F complete**: `SHELTER-VERIFY-001` (PR #211) + `SHELTER-VERIFY-WEB-001` + `SHELTER-VERIFY-MOBILE-001` (PR #212). Worker: `PATCH /shelters/:shelterId/verification` with `ShelterVerificationTargetStatus` (`pending_review | verified | rejected | suspended`), `canVerifyShelter` domain guard, Supabase repository, route registered before profile matcher. Client: `createShelterVerificationClient` in `@pic4paws/client`. Web: `/abrigos/:shelterId/verificar` page with dual-role panel (shelter owner submits; admin approves/rejects/suspends). Mobile: `abrigos/:shelterId/verificar` screen with same dual-role layout.
 
 ### Merged Work Items (up to 2026-06-13)
 
@@ -400,7 +402,7 @@ per deployment.
 
 ## 5. Recommended Next Work Item
 
-**Status as of 2026-06-20**: all known work items are `done`. Track A (real UI screens, auth, navigation) is complete. No open backlog.
+**Status as of 2026-06-21**: all known work items are `done`. Tracks A–F complete. No open backlog.
 
 **Known deferred item** (documented in MOBILE-NAV-001 completion notes):
 - Mobile routing integration test (unauthenticated → redirect → sign-in → `returnTo`) requires React Native Testing Library. Not yet set up. When RNTI is available, add `tests/mobile/routing-integration.test.ts` proving the full auth-guard round-trip.
@@ -409,7 +411,7 @@ per deployment.
 
 **Track C complete**: `MOBILE-AUTH-GUARD-001` (PR #203) + `MOBILE-ABRIGOS-PUBLIC-001` (PR #205). Auth guard extracted to `computeAuthRedirect` pure function; `/abrigos` added as public route on mobile matching web middleware; 30 auth-guard tests total.
 
-**Suggested next track**: agree with the user — candidates include Eupago PSP verifier, password reset flow, shelter verification workflow, or a second audit cycle.
+**Suggested next track**: agree with the user — candidates include Eupago PSP verifier, shelter verification entry-point navigation (link from shelter management pages to `/verificar`), admin pending-shelters listing, or another audit cycle.
 
 Agree the next track with the user before creating any work items.
 
@@ -426,8 +428,8 @@ Continue Pic4Paws V2 development from main using strict SDD/TDD:
 - Validate: npm run typecheck, lint, test, build
 - After any env.ts change: npm run build --workspace=packages/config
 
-Current state (2026-06-20, PR #205): all work items done, 1968 tests passing.
-Track A (real UI + auth + navigation) complete. Track B (Ifthenpay webhook verifier) complete. Track C (mobile auth guard + abrigos public route) complete.
-Latest audit: 9/10 (PRs #199-203), no open P1/P2 findings.
+Current state (2026-06-21, PR #212): all work items done, 2031 tests passing.
+Tracks A–F complete. Track F = shelter verification (SHELTER-VERIFY-001 + WEB + MOBILE, PRs #211-212).
+Latest audit: 9/10 (PRs #209-212), no open P1/P2 findings.
 Agree the next track with the user before writing any work items.
 ```
