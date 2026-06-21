@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
-import { SafeAreaView, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useRouter } from 'expo-router';
 import { createShelterSearchClient } from '@pic4paws/client';
 import { createMobileShelterSearchUi, type MobileShelterSearchResultViewModel } from '../../../../src/shelter-search';
 import { workerUrl } from '../../../../src/env';
 
 export default function AbrigosScreen() {
+  const router = useRouter();
   const [viewModel, setViewModel] = useState<MobileShelterSearchResultViewModel | null>(null);
 
   useEffect(() => {
@@ -55,6 +57,12 @@ export default function AbrigosScreen() {
               <Text style={styles.cardMeta}>{shelter.city}</Text>
             </View>
           ))}
+          <TouchableOpacity
+            style={styles.adminLink}
+            onPress={() => router.push('/admin/abrigos-pendentes' as never)}
+          >
+            <Text style={styles.adminLinkText}>Fila de revisão</Text>
+          </TouchableOpacity>
         </ScrollView>
       </SafeAreaView>
     );
@@ -79,4 +87,6 @@ const styles = StyleSheet.create({
   },
   cardTitle: { color: '#0f172a', fontSize: 17, fontWeight: '700' },
   cardMeta: { color: '#64748b', fontSize: 14 },
+  adminLink: { marginTop: 8, alignItems: 'center', paddingVertical: 12 },
+  adminLinkText: { color: '#2aa7a2', fontSize: 14, fontWeight: '600' },
 });

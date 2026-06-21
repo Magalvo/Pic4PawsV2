@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -18,20 +18,30 @@ import {
 import { mobileSupabaseClient } from '../../src/supabase';
 import { workerUrl } from '../../src/env';
 
+type AdminPendingSheltersUi = ReturnType<typeof createMobileAdminPendingSheltersUi>;
+
 export default function AdminAbrigosPendentesScreen() {
   const router = useRouter();
   const [viewModel, setViewModel] = useState<MobileAdminPendingSheltersState | null>(null);
+  const uiRef = useRef<AdminPendingSheltersUi | null>(null);
 
-  const load = async () => {
-    const { data: { session } } = await mobileSupabaseClient.auth.getSession();
+  const getUi = (): AdminPendingSheltersUi => {
+    if (uiRef.current) return uiRef.current;
     const adminPendingSheltersClient = createAdminPendingSheltersClient({
       workerBaseUrl: workerUrl(),
       shelterPath: '/shelters',
-      getAccessToken: async () => session?.access_token ?? null,
+      getAccessToken: async () => {
+        const { data: { session } } = await mobileSupabaseClient.auth.getSession();
+        return session?.access_token ?? null;
+      },
       fetch: globalThis.fetch,
     });
-    const ui = createMobileAdminPendingSheltersUi({ adminPendingSheltersClient });
-    const result = await ui.loadPendingShelters();
+    uiRef.current = createMobileAdminPendingSheltersUi({ adminPendingSheltersClient });
+    return uiRef.current;
+  };
+
+  const load = async () => {
+    const result = await getUi().loadPendingShelters();
     setViewModel(result);
   };
 

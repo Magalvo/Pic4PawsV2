@@ -61,6 +61,7 @@ export default function AbrigosPage() {
           </li>
         ))}
       </ul>
+      <a href="/admin/abrigos-pendentes">Fila de revisão</a>
     </main>
   );
 }
