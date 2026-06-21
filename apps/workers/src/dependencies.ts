@@ -71,7 +71,10 @@ import { createSupabaseShelterVerifyRepositories } from './shelter-verify-supaba
 import type { AdminPendingSheltersRepository } from './admin-pending-shelters';
 import { createSupabaseAdminPendingSheltersRepositories } from './admin-pending-shelters-supabase';
 import type { UserRegistrationRepository } from './user-register';
-import { createSupabaseUserRegistrationRepositories } from './user-register-supabase';
+import {
+  createSupabaseUserRegistrationRepositories,
+  type UserRegistrationSupabaseClientLike,
+} from './user-register-supabase';
 
 export type WorkerSupabaseTableQueryLike = SupabaseAuthTableQueryLike & SupabaseTableQueryLike;
 
@@ -190,7 +193,9 @@ export const createWorkerSupabaseDependencies = ({
     const shelterDeletionRepositories = createSupabaseShelterDeletionRepositories({ client });
     const shelterVerifyRepositories = createSupabaseShelterVerifyRepositories({ client });
     const adminPendingSheltersRepositories = createSupabaseAdminPendingSheltersRepositories({ client });
-    const userRegistrationRepositories = createSupabaseUserRegistrationRepositories({ client });
+    const userRegistrationRepositories = createSupabaseUserRegistrationRepositories({
+      client: client as unknown as UserRegistrationSupabaseClientLike,
+    });
     const notificationRepositories = createSupabaseNotificationRepositories({
       client,
       notificationPreferencesRepository: notificationPreferencesRepositories.notificationPreferencesRepository,
