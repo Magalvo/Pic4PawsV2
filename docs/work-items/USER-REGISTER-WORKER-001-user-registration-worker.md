@@ -1,6 +1,6 @@
 ---
 id: USER-REGISTER-WORKER-001
-status: in-progress
+status: done
 ---
 
 # USER-REGISTER-WORKER-001 — User Registration Worker Route
