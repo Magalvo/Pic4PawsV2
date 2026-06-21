@@ -8,8 +8,8 @@ import {
 import {
   createSupabaseUserRegistrationRepositories,
   SupabaseUserRegistrationRepositoryError,
+  type UserRegistrationSupabaseClientLike,
 } from '../../apps/workers/src/user-register-supabase';
-import type { SupabaseClientLike } from '../../apps/workers/src/pet-supabase';
 
 const makeRequest = (method = 'POST'): Request =>
   new Request('https://example.com/users/register', { method });
@@ -198,14 +198,28 @@ describe('handleWorkerUserRegisterRequest', () => {
 // createSupabaseUserRegistrationRepositories
 // ---------------------------------------------------------------------------
 
+const FAKE_AUTH_USER_ID = '00000000-0000-0000-0000-000000000001';
+
+const makeAdminResult = (error: { message?: string } | null = null) => ({
+  data: error ? null : { user: { id: FAKE_AUTH_USER_ID } },
+  error,
+});
+
 const makeRpcResult = (error: { message?: string } | null = null) => ({
   data: null,
   error,
   count: null,
 });
 
-const makeClient = (rpcResult = makeRpcResult()): SupabaseClientLike => ({
-  from: vi.fn() as SupabaseClientLike['from'],
+const makeClient = (
+  adminResult = makeAdminResult(),
+  rpcResult = makeRpcResult(),
+): UserRegistrationSupabaseClientLike => ({
+  auth: {
+    admin: {
+      createUser: vi.fn().mockResolvedValue(adminResult),
+    },
+  },
   rpc: vi.fn().mockResolvedValue(rpcResult),
 });
 
@@ -218,15 +232,28 @@ const registrationInput = {
 const registrationNow = '2026-06-21T00:00:00.000Z';
 
 describe('createSupabaseUserRegistrationRepositories', () => {
-  it('calls register_user RPC with correct parameters', async () => {
+  it('calls auth.admin.createUser with correct email and password', async () => {
+    const client = makeClient();
+    const { userRegistrationRepository } = createSupabaseUserRegistrationRepositories({ client });
+
+    await userRegistrationRepository.registerUser(registrationInput, registrationNow);
+
+    expect(client.auth.admin.createUser).toHaveBeenCalledWith({
+      email: 'test@teste.pt',
+      password: 'senha-de-teste-valida',
+      email_confirm: true,
+    });
+  });
+
+  it('calls register_user RPC with auth_user_id (not the password)', async () => {
     const client = makeClient();
     const { userRegistrationRepository } = createSupabaseUserRegistrationRepositories({ client });
 
     await userRegistrationRepository.registerUser(registrationInput, registrationNow);
 
     expect(client.rpc).toHaveBeenCalledWith('register_user', {
+      p_auth_user_id: FAKE_AUTH_USER_ID,
       p_email: 'test@teste.pt',
-      p_password: 'senha-de-teste-valida',
       p_display_name: 'Teste',
       p_gdpr_consent_version: 'v1',
       p_gdpr_consent_accepted_at: registrationNow,
@@ -241,9 +268,9 @@ describe('createSupabaseUserRegistrationRepositories', () => {
     expect(result.ok).toBe(true);
   });
 
-  it('returns email_already_registered when RPC reports user already registered', async () => {
+  it('returns email_already_registered when admin API reports user already registered', async () => {
     const { userRegistrationRepository } = createSupabaseUserRegistrationRepositories({
-      client: makeClient(makeRpcResult({ message: 'User already registered' })),
+      client: makeClient(makeAdminResult({ message: 'User already registered' })),
     });
     const result = await userRegistrationRepository.registerUser(registrationInput, registrationNow);
     expect(result.ok).toBe(false);
@@ -252,28 +279,48 @@ describe('createSupabaseUserRegistrationRepositories', () => {
 
   it('returns email_already_registered for case-insensitive match', async () => {
     const { userRegistrationRepository } = createSupabaseUserRegistrationRepositories({
-      client: makeClient(makeRpcResult({ message: 'USER ALREADY REGISTERED in auth' })),
+      client: makeClient(makeAdminResult({ message: 'USER ALREADY REGISTERED in auth' })),
     });
     const result = await userRegistrationRepository.registerUser(registrationInput, registrationNow);
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.reason).toBe('email_already_registered');
   });
 
-  it('throws SupabaseUserRegistrationRepositoryError on unknown RPC error', async () => {
+  it('throws SupabaseUserRegistrationRepositoryError on unknown admin API error', async () => {
     const { userRegistrationRepository } = createSupabaseUserRegistrationRepositories({
-      client: makeClient(makeRpcResult({ message: 'database connection failed' })),
+      client: makeClient(makeAdminResult({ message: 'internal server error' })),
     });
     await expect(
       userRegistrationRepository.registerUser(registrationInput, registrationNow),
     ).rejects.toThrow(SupabaseUserRegistrationRepositoryError);
   });
 
-  it('throws SupabaseUserRegistrationRepositoryError when message is undefined', async () => {
+  it('throws SupabaseUserRegistrationRepositoryError when auth user ID is missing', async () => {
+    const client: UserRegistrationSupabaseClientLike = {
+      auth: { admin: { createUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }) } },
+      rpc: vi.fn().mockResolvedValue(makeRpcResult()),
+    };
+    const { userRegistrationRepository } = createSupabaseUserRegistrationRepositories({ client });
+    await expect(
+      userRegistrationRepository.registerUser(registrationInput, registrationNow),
+    ).rejects.toThrow(SupabaseUserRegistrationRepositoryError);
+  });
+
+  it('throws SupabaseUserRegistrationRepositoryError when profile RPC fails', async () => {
     const { userRegistrationRepository } = createSupabaseUserRegistrationRepositories({
-      client: makeClient(makeRpcResult({})),
+      client: makeClient(makeAdminResult(), makeRpcResult({ message: 'foreign key violation' })),
     });
     await expect(
       userRegistrationRepository.registerUser(registrationInput, registrationNow),
     ).rejects.toThrow(SupabaseUserRegistrationRepositoryError);
+  });
+
+  it('does not call RPC when admin API fails', async () => {
+    const client = makeClient(makeAdminResult({ message: 'User already registered' }));
+    const { userRegistrationRepository } = createSupabaseUserRegistrationRepositories({ client });
+
+    await userRegistrationRepository.registerUser(registrationInput, registrationNow);
+
+    expect(client.rpc).not.toHaveBeenCalled();
   });
 });

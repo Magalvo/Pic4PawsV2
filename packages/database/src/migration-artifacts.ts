@@ -1,6 +1,6 @@
 import { rlsPolicies } from './rls-policies';
 import { renderRlsMigrationSql } from './rls-sql';
-import { processPaymentWebhookEventRpcSql, registerShelterRpcSql } from './rpc-functions';
+import { processPaymentWebhookEventRpcSql, registerShelterRpcSql, registerUserRpcSql } from './rpc-functions';
 
 export type MigrationArtifact = {
   id: string;
@@ -305,11 +305,21 @@ export const processPaymentWebhookEventMigration: MigrationArtifact = {
   sql: processPaymentWebhookEventRpcSql.trim(),
 };
 
+export const registerUserMigration: MigrationArtifact = {
+  id: '0005_register_user_rpc',
+  filename: '0005_register_user_rpc.sql',
+  description:
+    'Adds service-role-only register_user RPC: inserts public.users profile row after the Supabase auth user is created by the Worker via auth.admin.createUser(). Security definer, hardcoded role=adopter and status=active, REVOKE/GRANT execute.',
+  destructive: false,
+  sql: registerUserRpcSql.trim(),
+};
+
 export const migrationArtifacts = [
   initialDatabaseMigration,
   notificationsMigration,
   registerShelterMigration,
   processPaymentWebhookEventMigration,
+  registerUserMigration,
 ] as const;
 
 export const assertNonDestructiveMigration = (artifact: MigrationArtifact): void => {

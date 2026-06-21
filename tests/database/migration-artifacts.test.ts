@@ -6,6 +6,7 @@ import {
   notificationsMigration,
   processPaymentWebhookEventMigration,
   registerShelterMigration,
+  registerUserMigration,
   renderMigrationArtifact,
 } from '../../packages/database/src/index';
 
@@ -19,6 +20,7 @@ describe('database migration artifacts', () => {
       notificationsMigration,
       registerShelterMigration,
       processPaymentWebhookEventMigration,
+      registerUserMigration,
     ]);
   });
 
@@ -59,6 +61,24 @@ describe('database migration artifacts', () => {
     expect(sql).toContain('create or replace function public.register_shelter(');
     expect(sql).toContain('revoke execute on function public.register_shelter(');
     expect(sql).toContain('grant execute on function public.register_shelter(');
+  });
+
+  it('includes the register_user RPC as migration 0005', () => {
+    expect(registerUserMigration.id).toBe('0005_register_user_rpc');
+    expect(registerUserMigration.filename).toBe('0005_register_user_rpc.sql');
+    expect(registerUserMigration.destructive).toBe(false);
+    const sql = renderMigrationArtifact(registerUserMigration);
+    expect(sql).toContain('create or replace function public.register_user(');
+    expect(sql).toContain('set search_path = public');
+    expect(sql).toContain('security definer');
+    expect(sql).toContain("'adopter'");
+    expect(sql).toContain("'active'");
+    expect(sql).toContain('revoke execute');
+    expect(sql).toContain('to service_role');
+    // password must NOT appear in the profile-only RPC
+    expect(sql).not.toContain('p_password');
+    expect(sql).not.toContain('encrypted_password');
+    expect(sql).not.toContain('auth.users');
   });
 
   it('renders approved enum types and core tables', () => {
