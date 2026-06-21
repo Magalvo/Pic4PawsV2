@@ -16,6 +16,10 @@ type AdminCreateUserResult = {
   error: { message?: string } | null;
 };
 
+type AdminDeleteUserResult = {
+  error: { message?: string } | null;
+};
+
 // Narrower client type: only the capabilities this repository needs.
 // The real service-role Supabase SDK satisfies this at runtime — the cast
 // lives in dependencies.ts where the wiring happens.
@@ -23,6 +27,7 @@ export type UserRegistrationSupabaseClientLike = Pick<SupabaseClientLike, 'rpc'>
   auth: {
     admin: {
       createUser: (params: AdminCreateUserParams) => Promise<AdminCreateUserResult>;
+      deleteUser: (id: string) => Promise<AdminDeleteUserResult>;
     };
   };
 };
@@ -89,6 +94,10 @@ export const createSupabaseUserRegistrationRepositories = ({
       });
 
       if (profileResult.error) {
+        // Best-effort rollback: delete the auth user so the account is not
+        // permanently orphaned. If deleteUser itself fails, swallow that error
+        // and re-throw the original profile failure.
+        await client.auth.admin.deleteUser(authUserId).catch(() => {});
         const message = (profileResult.error as { message?: string }).message ?? '';
         throw new SupabaseUserRegistrationRepositoryError(
           `Failed to create user profile: ${message}`,

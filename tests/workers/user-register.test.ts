@@ -218,6 +218,7 @@ const makeClient = (
   auth: {
     admin: {
       createUser: vi.fn().mockResolvedValue(adminResult),
+      deleteUser: vi.fn().mockResolvedValue({ error: null }),
     },
   },
   rpc: vi.fn().mockResolvedValue(rpcResult),
@@ -297,7 +298,12 @@ describe('createSupabaseUserRegistrationRepositories', () => {
 
   it('throws SupabaseUserRegistrationRepositoryError when auth user ID is missing', async () => {
     const client: UserRegistrationSupabaseClientLike = {
-      auth: { admin: { createUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }) } },
+      auth: {
+        admin: {
+          createUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
+          deleteUser: vi.fn().mockResolvedValue({ error: null }),
+        },
+      },
       rpc: vi.fn().mockResolvedValue(makeRpcResult()),
     };
     const { userRegistrationRepository } = createSupabaseUserRegistrationRepositories({ client });
@@ -322,5 +328,53 @@ describe('createSupabaseUserRegistrationRepositories', () => {
     await userRegistrationRepository.registerUser(registrationInput, registrationNow);
 
     expect(client.rpc).not.toHaveBeenCalled();
+  });
+
+  it('calls deleteUser to roll back auth user when profile RPC fails', async () => {
+    const client = makeClient(makeAdminResult(), makeRpcResult({ message: 'foreign key violation' }));
+    const { userRegistrationRepository } = createSupabaseUserRegistrationRepositories({ client });
+
+    await expect(
+      userRegistrationRepository.registerUser(registrationInput, registrationNow),
+    ).rejects.toThrow(SupabaseUserRegistrationRepositoryError);
+
+    expect(client.auth.admin.deleteUser).toHaveBeenCalledWith(FAKE_AUTH_USER_ID);
+  });
+
+  it('throws SupabaseUserRegistrationRepositoryError even when rollback deleteUser also fails', async () => {
+    const client: UserRegistrationSupabaseClientLike = {
+      auth: {
+        admin: {
+          createUser: vi.fn().mockResolvedValue(makeAdminResult()),
+          deleteUser: vi.fn().mockRejectedValue(new Error('delete failed')),
+        },
+      },
+      rpc: vi.fn().mockResolvedValue(makeRpcResult({ message: 'foreign key violation' })),
+    };
+    const { userRegistrationRepository } = createSupabaseUserRegistrationRepositories({ client });
+
+    await expect(
+      userRegistrationRepository.registerUser(registrationInput, registrationNow),
+    ).rejects.toThrow(SupabaseUserRegistrationRepositoryError);
+  });
+
+  it('does not call deleteUser when auth user creation fails', async () => {
+    const client = makeClient(makeAdminResult({ message: 'internal server error' }));
+    const { userRegistrationRepository } = createSupabaseUserRegistrationRepositories({ client });
+
+    await expect(
+      userRegistrationRepository.registerUser(registrationInput, registrationNow),
+    ).rejects.toThrow(SupabaseUserRegistrationRepositoryError);
+
+    expect(client.auth.admin.deleteUser).not.toHaveBeenCalled();
+  });
+
+  it('does not call deleteUser on a successful registration', async () => {
+    const client = makeClient();
+    const { userRegistrationRepository } = createSupabaseUserRegistrationRepositories({ client });
+
+    await userRegistrationRepository.registerUser(registrationInput, registrationNow);
+
+    expect(client.auth.admin.deleteUser).not.toHaveBeenCalled();
   });
 });
