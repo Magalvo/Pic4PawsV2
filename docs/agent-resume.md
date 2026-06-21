@@ -61,9 +61,9 @@ Do not batch items that can be reviewed or merged independently.
 
 ## 4. Current State As Of 2026-06-21
 
-**Repository status**: 2040 tests passing (249 test files), all known work items `done` — foundation, screens, auth, navigation, Ifthenpay webhook verifier, mobile auth guard routing, password reset, shelter verification, and shelter verification navigation complete. PR #219 remediated the latest SDD docs-hygiene findings.
+**Repository status**: 2097 tests passing (254 test files), all known work items `done` — foundation, screens, auth, navigation, Ifthenpay webhook verifier, mobile auth guard routing, password reset, shelter verification, shelter verification navigation, and admin pending-shelters review queue complete.
 
-**Main branch HEAD**: PR #219 (SDD audit docs hygiene remediation) — `79ecb6d`
+**Main branch HEAD**: PR #225 (SDD audit docs for PRs #217–#224) — `e353b91`
 - `npm run typecheck` ✅
 - `npm run lint` ✅
 - `npm run test` ✅
@@ -71,20 +71,23 @@ Do not batch items that can be reviewed or merged independently.
 
 > **Note**: `packages/config/dist/` is gitignored. After pulling or switching branches, run `npm run build --workspace=packages/config` if typecheck fails on `EnvironmentConfig`.
 
-**Latest checkpoint**: [2026-06-21-shelter-verification-complete.md](docs/checkpoints/2026-06-21-shelter-verification-complete.md) — covers Tracks A–F, PRs #157–#212, 2031 tests (written before PRs #213–#217; see section 4 supplementary items for what followed)
+**Latest checkpoint**: [2026-06-21-admin-pending-shelters-complete.md](docs/checkpoints/2026-06-21-admin-pending-shelters-complete.md) — covers Tracks A–G, PRs #157–#224, 2097 tests
 
-**Latest audit**: [2026-06-21-sdd-audit-docs-hygiene-217.md](docs/audits/2026-06-21-sdd-audit-docs-hygiene-217.md) — score 8/10 at audited HEAD `4f2f4c8`; its P2 docs-hygiene findings were remediated in PR #219. `npm.cmd run check:sdd-work-items` passes at `79ecb6d`.
+**Latest audit**: [2026-06-21-sdd-audit-prs-217-224.md](docs/audits/2026-06-21-sdd-audit-prs-217-224.md) — score 9/10, no open P1/P2 findings
 
 **Track E complete**: `PASSWD-RESET-WEB-001` (PR #207) + `PASSWD-RESET-MOBILE-001` (PR #208). Web: `/recuperar-palavra-passe` + `/recuperar-palavra-passe/confirmar`; mobile: `(auth)/recuperar-palavra-passe` screen (confirm step on web). Mobile `redirectTo` uses `EXPO_PUBLIC_WEB_BASE_URL ?? 'https://pic4paws.pt'`.
 
 **Track F complete**: `SHELTER-VERIFY-001` (PR #211) + `SHELTER-VERIFY-WEB-001` + `SHELTER-VERIFY-MOBILE-001` (PR #212). Worker: `PATCH /shelters/:shelterId/verification` with `ShelterVerificationTargetStatus` (`pending_review | verified | rejected | suspended`), `canVerifyShelter` domain guard, Supabase repository, route registered before profile matcher. Client: `createShelterVerificationClient` in `@pic4paws/client`. Web: `/abrigos/:shelterId/verificar` page with dual-role panel (shelter owner submits; admin approves/rejects/suspends). Mobile: `abrigos/:shelterId/verificar` screen with same dual-role layout.
 
-**Supplementary items (PRs #213–#219, post-Track-F)**:
+**Track G complete**: `ADMIN-PENDING-SHELTERS-WORKER-001` (PR #220) + `ADMIN-PENDING-SHELTERS-CLIENT-001` (PR #221) + `ADMIN-PENDING-SHELTERS-WEB-001` (PR #222) + `ADMIN-PENDING-SHELTERS-MOBILE-001` (PR #223) + pages (PR #224). Worker: `GET /shelters/pending-verification` with `canVerifyShelter` guard, pagination, Supabase repository filtering `pending_review` + non-deleted, oldest-first ordering. Client: `createAdminPendingSheltersClient` in `@pic4paws/client`. Web boundary: `createWebAdminPendingSheltersUi` (idle/loaded/empty/forbidden/failed). Mobile boundary: `createMobileAdminPendingSheltersUi` (same states). Pages: `/admin/abrigos-pendentes` on web + mobile; each auto-loads and links to `/abrigos/:id/verificar`.
+
+**Supplementary items (PRs #213–#225, post-Track-F)**:
 - Audit `2026-06-21-sdd-audit-prs-209-212.md` (PR #213, score 9/10) — closed by PR #214: `sanitizeReasons` applied to all specific error branches in both shelter-verify boundaries; 4 per-branch credential-leak tests added per file; `matchWorkerShelterVerificationId` ordering assertion added to route-table test; `docs/agent-resume.md` updated; checkpoint doc created.
 - `SHELTER-VERIFY-NAV-001` (PR #215): "Verificar abrigo" link/button added to both web and mobile editar pages pointing to `/abrigos/:shelterId/verificar`; present in idle state only, absent from updated and failed states. No new test file — pure page wiring.
-- `SHELTER-EDITAR-SUPABASE-001` (PR #216): replaced inline `createClient` with `mobileSupabaseClient` singleton in `apps/mobile/app/abrigos/[shelterId]/editar.tsx`; fixes auth-state propagation bug; matches convention in `verificar.tsx`, `entrar.tsx`, `recuperar-palavra-passe.tsx`.
+- `SHELTER-EDITAR-SUPABASE-001` (PR #216): replaced inline `createClient` with `mobileSupabaseClient` singleton in `apps/mobile/app/abrigos/[shelterId]/editar.tsx`; fixes auth-state propagation bug.
 - Audit `2026-06-21-sdd-audit-prs-213-216.md` (PR #217, score 9/10) — no open P1/P2 findings.
 - PRs #218–#219: docs-hygiene remediation for PR #217 follow-up. Added `status: done` frontmatter and completion notes to the recent shelter verification navigation / mobile editar work items, closed `SHELTER-VERIFY-NAV-001` acceptance criteria, strengthened `scripts/check-work-items.mjs`, and added `tests/foundation/work-item-hygiene.test.ts`.
+- Audit `2026-06-21-sdd-audit-prs-217-224.md` (PR #225, score 9/10) — no open P1/P2 findings.
 
 ### Merged Work Items (up to 2026-06-13)
 
@@ -409,7 +412,7 @@ per deployment.
 
 ## 5. Recommended Next Work Item
 
-**Status as of 2026-06-21**: all known work items are `done`. Tracks A–F complete. No open backlog.
+**Status as of 2026-06-21**: all known work items are `done`. Tracks A–G complete. No open backlog.
 
 **Known deferred item** (documented in MOBILE-NAV-001 completion notes):
 - Mobile routing integration test (unauthenticated → redirect → sign-in → `returnTo`) requires React Native Testing Library. Not yet set up. When RNTI is available, add `tests/mobile/routing-integration.test.ts` proving the full auth-guard round-trip.
@@ -418,7 +421,12 @@ per deployment.
 
 **Track C complete**: `MOBILE-AUTH-GUARD-001` (PR #203) + `MOBILE-ABRIGOS-PUBLIC-001` (PR #205). Auth guard extracted to `computeAuthRedirect` pure function; `/abrigos` added as public route on mobile matching web middleware; 30 auth-guard tests total.
 
-**Selected next track**: admin pending-shelters listing. Start with a strict SDD/TDD work item for an admin-only read route, client wrapper, and product boundary wiring as separate reviewable work where possible.
+**Track G complete**: `ADMIN-PENDING-SHELTERS-WORKER-001` (PR #220) + `ADMIN-PENDING-SHELTERS-CLIENT-001` (PR #221) + `ADMIN-PENDING-SHELTERS-WEB-001` (PR #222) + `ADMIN-PENDING-SHELTERS-MOBILE-001` (PR #223) + pages (PR #224). Worker: `GET /shelters/pending-verification` admin-only, pagination, `pending_review` filter, oldest-first ordering. Client + boundaries + pages: `/admin/abrigos-pendentes` on web and mobile.
+
+**Suggested next tracks** (no firm commitment yet):
+- `ADMIN-NAV-001`: navigation entry point to `/admin/abrigos-pendentes` from the shelter listing page (same pattern as `SHELTER-VERIFY-NAV-001`, PR #215)
+- Eupago payment gateway integration
+- Mobile routing integration test (RNTI prerequisite — see deferred item above)
 
 ## 6. Handoff Prompt For New Agent Session
 
@@ -433,8 +441,7 @@ Continue Pic4Paws V2 development from main using strict SDD/TDD:
 - Validate: npm run typecheck, lint, test, build
 - After any env.ts change: npm run build --workspace=packages/config
 
-Current state (2026-06-21, PR #219): all known work items done, 2040 tests passing.
-Tracks A–F complete + supplementary: SHELTER-VERIFY-NAV-001 (PR #215), SHELTER-EDITAR-SUPABASE-001 (PR #216).
-Latest audit: docs-hygiene re-audit after PR #217, with P2 findings remediated in PR #219.
-Next selected track: admin pending-shelters listing.
+Current state (2026-06-21, PR #225): all known work items done, 2097 tests passing.
+Tracks A–G complete. Track G = admin pending shelters review queue (Worker → client → web/mobile boundaries → pages, PRs #220–#224). Latest audit: PRs #217–#224 (score 9/10, no P1/P2 findings). Latest checkpoint: docs/checkpoints/2026-06-21-admin-pending-shelters-complete.md.
+No selected next track — consult section 5 for candidates.
 ```
