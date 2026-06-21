@@ -63,7 +63,7 @@ Do not batch items that can be reviewed or merged independently.
 
 **Repository status**: 2097 tests passing (254 test files), all known work items `done` — foundation, screens, auth, navigation, Ifthenpay webhook verifier, mobile auth guard routing, password reset, shelter verification, shelter verification navigation, and admin pending-shelters review queue complete.
 
-**Main branch HEAD**: PR #225 (SDD audit docs for PRs #217–#224) — `e353b91`
+**Main branch HEAD**: PR #226 (audit #225 P3 remediation + ADMIN-NAV-001) — `1b408e8`
 - `npm run typecheck` ✅
 - `npm run lint` ✅
 - `npm run test` ✅
@@ -88,6 +88,7 @@ Do not batch items that can be reviewed or merged independently.
 - Audit `2026-06-21-sdd-audit-prs-213-216.md` (PR #217, score 9/10) — no open P1/P2 findings.
 - PRs #218–#219: docs-hygiene remediation for PR #217 follow-up. Added `status: done` frontmatter and completion notes to the recent shelter verification navigation / mobile editar work items, closed `SHELTER-VERIFY-NAV-001` acceptance criteria, strengthened `scripts/check-work-items.mjs`, and added `tests/foundation/work-item-hygiene.test.ts`.
 - Audit `2026-06-21-sdd-audit-prs-217-224.md` (PR #225, score 9/10) — no open P1/P2 findings.
+- PR #226 (audit #225 remediation): docs/agent-resume.md updated; checkpoint `2026-06-21-admin-pending-shelters-complete.md` written; mobile admin screen converted to `useRef` lazy-init; `ADMIN-NAV-001` implemented — "Fila de revisão" link added to shelter listing loaded state on web + mobile.
 
 ### Merged Work Items (up to 2026-06-13)
 
@@ -421,11 +422,9 @@ per deployment.
 
 **Track C complete**: `MOBILE-AUTH-GUARD-001` (PR #203) + `MOBILE-ABRIGOS-PUBLIC-001` (PR #205). Auth guard extracted to `computeAuthRedirect` pure function; `/abrigos` added as public route on mobile matching web middleware; 30 auth-guard tests total.
 
-**Track G complete**: `ADMIN-PENDING-SHELTERS-WORKER-001` (PR #220) + `ADMIN-PENDING-SHELTERS-CLIENT-001` (PR #221) + `ADMIN-PENDING-SHELTERS-WEB-001` (PR #222) + `ADMIN-PENDING-SHELTERS-MOBILE-001` (PR #223) + pages (PR #224). Worker: `GET /shelters/pending-verification` admin-only, pagination, `pending_review` filter, oldest-first ordering. Client + boundaries + pages: `/admin/abrigos-pendentes` on web and mobile.
+**Track G complete**: `ADMIN-PENDING-SHELTERS-WORKER-001` (PR #220) + `ADMIN-PENDING-SHELTERS-CLIENT-001` (PR #221) + `ADMIN-PENDING-SHELTERS-WEB-001` (PR #222) + `ADMIN-PENDING-SHELTERS-MOBILE-001` (PR #223) + pages (PR #224) + `ADMIN-NAV-001` (PR #226). Worker: `GET /shelters/pending-verification` admin-only, pagination, `pending_review` filter, oldest-first ordering. Client + boundaries + pages: `/admin/abrigos-pendentes` on web and mobile. Nav: "Fila de revisão" link wired from shelter listing loaded state on both platforms.
 
 **Suggested next tracks** (no firm commitment yet):
-- `ADMIN-NAV-001`: navigation entry point to `/admin/abrigos-pendentes` from the shelter listing page (same pattern as `SHELTER-VERIFY-NAV-001`, PR #215)
-- Eupago payment gateway integration
 - Mobile routing integration test (RNTI prerequisite — see deferred item above)
 
 ## 6. Handoff Prompt For New Agent Session
