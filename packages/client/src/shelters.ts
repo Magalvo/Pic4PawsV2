@@ -116,6 +116,67 @@ export type ShelterSearchClient = {
   searchShelters: (query: ShelterSearchClientQuery) => Promise<ShelterSearchClientResult>;
 };
 
+// ─── Admin Pending Shelters types ──────────────────────────────────────────────
+
+export type AdminPendingShelterClientSummary = {
+  id: string;
+  name: string;
+  slug: string;
+  kind: ShelterKind;
+  verificationStatus: 'pending_review';
+  city: string;
+  district: string | null;
+  countryCode: string;
+  publicEmail: string | null;
+  publicPhone: string | null;
+  logoMediaId: string | null;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export type AdminPendingSheltersClientQuery = {
+  limit?: number | null;
+  offset?: number | null;
+};
+
+export type AdminPendingSheltersClientSuccess = {
+  ok: true;
+  status: 'ok';
+  shelters: AdminPendingShelterClientSummary[];
+  total: number;
+};
+
+export type AdminPendingSheltersClientFailureStatus =
+  | 'unauthenticated'
+  | 'forbidden'
+  | 'auth_adapter_not_configured'
+  | 'admin_pending_shelters_repository_not_configured'
+  | 'worker_request_failed'
+  | 'worker_response_invalid';
+
+export type AdminPendingSheltersClientFailure = {
+  ok: false;
+  status: AdminPendingSheltersClientFailureStatus;
+  reasons: string[];
+};
+
+export type AdminPendingSheltersClientResult =
+  | AdminPendingSheltersClientSuccess
+  | AdminPendingSheltersClientFailure;
+
+export type CreateAdminPendingSheltersClientInput = {
+  workerBaseUrl: string;
+  shelterPath: `/${string}`;
+  getAccessToken: () => Promise<string | null>;
+  fetch: MediaUploadClientFetch;
+};
+
+export type AdminPendingSheltersClient = {
+  loadPendingShelters: (
+    query?: AdminPendingSheltersClientQuery,
+  ) => Promise<AdminPendingSheltersClientResult>;
+};
+
 // ─── Shelter Member types ─────────────────────────────────────────────────────
 
 export type ShelterMemberClientRole = 'shelter_owner' | 'shelter_member';
@@ -541,6 +602,63 @@ const parseShelterSearchSuccess = (
   };
 };
 
+const isAdminPendingShelter = (
+  value: unknown,
+): value is AdminPendingShelterClientSummary => {
+  if (!value || typeof value !== 'object') return false;
+
+  const shelter = value as Record<string, unknown>;
+
+  return (
+    typeof shelter.id === 'string' &&
+    typeof shelter.name === 'string' &&
+    typeof shelter.slug === 'string' &&
+    typeof shelter.kind === 'string' &&
+    shelter.verificationStatus === 'pending_review' &&
+    typeof shelter.city === 'string' &&
+    (typeof shelter.district === 'string' || shelter.district === null) &&
+    typeof shelter.countryCode === 'string' &&
+    (typeof shelter.publicEmail === 'string' || shelter.publicEmail === null) &&
+    (typeof shelter.publicPhone === 'string' || shelter.publicPhone === null) &&
+    (typeof shelter.logoMediaId === 'string' || shelter.logoMediaId === null) &&
+    typeof shelter.createdAt === 'string' &&
+    typeof shelter.updatedAt === 'string'
+  );
+};
+
+const parseAdminPendingSheltersSuccess = (
+  body: Record<string, unknown> | null,
+): AdminPendingSheltersClientSuccess | null => {
+  if (
+    !body ||
+    body.status !== 'ok' ||
+    !Array.isArray(body.shelters) ||
+    typeof body.total !== 'number' ||
+    !body.shelters.every(isAdminPendingShelter)
+  ) {
+    return null;
+  }
+
+  return {
+    ok: true,
+    status: 'ok',
+    shelters: body.shelters,
+    total: body.total,
+  };
+};
+
+const parseAdminPendingSheltersFailureStatus = (
+  body: Record<string, unknown> | null,
+): AdminPendingSheltersClientFailureStatus => {
+  const status = body?.status;
+  if (status === 'unauthenticated') return 'unauthenticated';
+  if (status === 'forbidden') return 'forbidden';
+  if (status === 'auth_adapter_not_configured') return 'auth_adapter_not_configured';
+  if (status === 'admin_pending_shelters_repository_not_configured')
+    return 'admin_pending_shelters_repository_not_configured';
+  return 'worker_request_failed';
+};
+
 const parseShelterMemberLoadSuccess = (
   body: Record<string, unknown> | null,
 ): ShelterMemberLoadSuccess | null => {
@@ -873,6 +991,54 @@ export const createShelterSearchClient = ({
         status: 'worker_response_invalid',
         reasons: ['invalid_worker_response'],
       };
+    }
+
+    return success;
+  },
+});
+
+export const createAdminPendingSheltersClient = ({
+  workerBaseUrl,
+  shelterPath,
+  getAccessToken,
+  fetch,
+}: CreateAdminPendingSheltersClientInput): AdminPendingSheltersClient => ({
+  loadPendingShelters: async (query = {}) => {
+    const accessToken = await getAccessToken();
+
+    if (!accessToken?.trim()) {
+      return { ok: false, status: 'unauthenticated', reasons: ['missing_access_token'] };
+    }
+
+    const base = createWorkerSubUrl(workerBaseUrl, shelterPath, 'pending-verification');
+    const url = new URL(base);
+
+    if (query.limit != null) url.searchParams.set('limit', String(query.limit));
+    if (query.offset != null) url.searchParams.set('offset', String(query.offset));
+
+    let response: Response;
+
+    try {
+      response = await fetch(url.toString(), {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+    } catch {
+      return { ok: false, status: 'worker_request_failed', reasons: ['network_error'] };
+    }
+
+    const body = await parseJsonResponse(response);
+
+    if (!response.ok) {
+      const status = parseAdminPendingSheltersFailureStatus(body);
+      const reasons = Array.isArray(body?.reasons) ? parseReasons(body) : [status];
+      return { ok: false, status, reasons: sanitizeReasons(reasons, status) };
+    }
+
+    const success = parseAdminPendingSheltersSuccess(body);
+
+    if (!success) {
+      return { ok: false, status: 'worker_response_invalid', reasons: ['invalid_worker_response'] };
     }
 
     return success;
