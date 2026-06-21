@@ -182,6 +182,7 @@ export default function EditarAbrigoPage({ params }: Props) {
           {submitting ? 'A guardar...' : 'Guardar alterações'}
         </button>
       </form>
+      <a href={`/abrigos/${shelterId}/verificar`}>Verificar abrigo</a>
     </main>
   );
 }

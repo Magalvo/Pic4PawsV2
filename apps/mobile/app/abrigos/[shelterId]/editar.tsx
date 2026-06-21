@@ -245,6 +245,12 @@ export default function EditarAbrigoScreen() {
               {submitting ? 'A guardar...' : 'Guardar alterações'}
             </Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.button, styles.buttonSecondary]}
+            onPress={() => router.push(`/abrigos/${shelterId}/verificar` as never)}
+          >
+            <Text style={styles.buttonText}>Verificar abrigo</Text>
+          </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>
