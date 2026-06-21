@@ -11,6 +11,7 @@ import { handle as handleAdoptions } from './routes/adoptions';
 import { handle as handleDonations } from './routes/donations';
 import { handle as handleSponsorships } from './routes/sponsorships';
 import { handle as handleNotifications } from './routes/notifications';
+import { handle as handleUsers } from './routes/users';
 import { jsonResponse } from './routes/shared';
 export {
   createSupabaseAuthAdapter,
@@ -571,6 +572,7 @@ const ROUTE_HANDLERS = [
   handleDonations,
   handleSponsorships,
   handleNotifications,
+  handleUsers,
 ] as const;
 
 const _dispatchWorkerRequest = async (
