@@ -61,19 +61,19 @@ Do not batch items that can be reviewed or merged independently.
 
 ## 4. Current State As Of 2026-06-21
 
-**Repository status**: 2097 tests passing (254 test files), all known work items `done` — foundation, screens, auth, navigation, Ifthenpay webhook verifier, mobile auth guard routing, password reset, shelter verification, shelter verification navigation, and admin pending-shelters review queue complete.
+**Repository status**: 2163 tests passing (258 test files), all known work items `done` — foundation, screens, auth, navigation, Ifthenpay webhook verifier, mobile auth guard routing, password reset, shelter verification, shelter verification navigation, admin pending-shelters review queue, and user registration complete.
 
-**Main branch HEAD**: PR #226 (audit #225 P3 remediation + ADMIN-NAV-001) — `1b408e8`
+**Main branch HEAD**: PR #237 (USER-REGISTER-ROLLBACK-001) — `ccc565a`
 - `npm run typecheck` ✅
 - `npm run lint` ✅
 - `npm run test` ✅
 - `npm run build` ✅
 
-> **Note**: `packages/config/dist/` is gitignored. After pulling or switching branches, run `npm run build --workspace=packages/config` if typecheck fails on `EnvironmentConfig`.
+> **Note**: `packages/config/dist/` and `packages/domain/dist/` are gitignored. After pulling or switching branches, run `npm run build -w packages/config` and/or `npm run build -w packages/domain` if typecheck fails on `EnvironmentConfig` or domain types.
 
-**Latest checkpoint**: [2026-06-21-admin-pending-shelters-complete.md](docs/checkpoints/2026-06-21-admin-pending-shelters-complete.md) — covers Tracks A–G, PRs #157–#224, 2097 tests
+**Latest checkpoint**: [2026-06-21-user-registration-complete.md](docs/checkpoints/2026-06-21-user-registration-complete.md) — covers Tracks A–H, PRs #157–#237, 2163 tests
 
-**Latest audit**: [2026-06-21-sdd-audit-prs-217-224.md](docs/audits/2026-06-21-sdd-audit-prs-217-224.md) — score 9/10, no open P1/P2 findings
+**Latest audit**: [2026-06-21-sdd-audit-prs-225-234.md](docs/audits/2026-06-21-sdd-audit-prs-225-234.md) — score 9/10, open P2: rollback (closed by PR #237), fragile email detection (deferred)
 
 **Track E complete**: `PASSWD-RESET-WEB-001` (PR #207) + `PASSWD-RESET-MOBILE-001` (PR #208). Web: `/recuperar-palavra-passe` + `/recuperar-palavra-passe/confirmar`; mobile: `(auth)/recuperar-palavra-passe` screen (confirm step on web). Mobile `redirectTo` uses `EXPO_PUBLIC_WEB_BASE_URL ?? 'https://pic4paws.pt'`.
 
@@ -90,7 +90,10 @@ Do not batch items that can be reviewed or merged independently.
 - Audit `2026-06-21-sdd-audit-prs-217-224.md` (PR #225, score 9/10) — no open P1/P2 findings.
 - PR #226 (audit #225 remediation): docs/agent-resume.md updated; checkpoint `2026-06-21-admin-pending-shelters-complete.md` written; mobile admin screen converted to `useRef` lazy-init; `ADMIN-NAV-001` implemented — "Fila de revisão" link added to shelter listing loaded state on web + mobile.
 
-### Merged Work Items (up to 2026-06-13)
+**Track H complete**: `USER-REGISTER-DB-001` + `USER-REGISTER-WORKER-001` (PR #229) + `USER-REGISTER-WEB-001` (PR #233) + `USER-REGISTER-MOBILE-001` (PR #234) + `WEB-LANDING-001` (PR #236) + `USER-REGISTER-ROLLBACK-001` (PR #237). Public `POST /users/register` (no auth token required) creates Supabase auth user via `auth.admin.createUser` then calls `register_user` RPC — password never touches the DB layer. Best-effort `auth.admin.deleteUser` rollback prevents orphaned auth accounts when the RPC fails. Web: `/registar` page with GDPR checkbox (`gdprConsentVersion: 'v1'`). Mobile: `(auth)/registar.tsx` screen with `Pressable` GDPR checkbox and `router.replace` on success. Landing page: dev dashboard replaced with real hero + CTAs + feature cards at `/`; `webFoundationContent.primaryAction.href` updated to `/registar`.
+- Audit `2026-06-21-sdd-audit-prs-225-234.md` (PR #235, score 9/10) — P2-1 (orphaned auth user) closed by PR #237; P2-2 (fragile email detection) deferred.
+
+### Merged Work Items (up to 2026-06-21)
 
 **All of these are merged to `main` and passing validation**:
 
@@ -356,6 +359,7 @@ The Worker now has (as of 2026-06-13, PR #136):
 - `PetFeedClient.loadFeed` updated — `location` filter added to `PetFeedClientQuery`
 - `ShelterRegistrationClient` (authenticated write — `registerShelter(input)`)
 - `ShelterUpdateClient` (authenticated write — `updateShelter(shelterId, input)`)
+- `UserRegistrationClient` (public write — `registerUser(input)`; no auth token required)
 
 Web/Mobile now have tested product boundaries for: media upload, pet media upload+attach,
 pet publish, pet draft, pet draft save flow, pet feed, pet profile, shelter profile,
@@ -378,7 +382,8 @@ pet status history (shelter-side audit log, 5 states: idle/loading/loaded/forbid
 shelter-side pet list (all statuses, 6 states: idle/loading/loaded/empty/forbidden/failed),
 pet draft pre-fill load (edit form, 4 states: loaded/not_found/forbidden/failed),
 shelter registration (4 states: idle/submitting/registered/failed),
-shelter profile update (4 states: idle/submitting/updated/failed, with forbidden/not_found/invalid_payload variants).
+shelter profile update (4 states: idle/submitting/updated/failed, with forbidden/not_found/invalid_payload variants),
+user account registration (4 states: idle/submitting/registered/failed, public — no auth required, GDPR checkbox).
 
 The adopter end-to-end flow is fully wired at the boundary layer:
 **feed → pet profile → shelter profile → submit adoption application → view adoption status**.
@@ -413,33 +418,21 @@ per deployment.
 
 ## 5. Recommended Next Work Item
 
-**Status as of 2026-06-21**: all known work items are `done`. Tracks A–G complete. No open backlog.
-
-**Known deferred item** (documented in MOBILE-NAV-001 completion notes):
-- Mobile routing integration test (unauthenticated → redirect → sign-in → `returnTo`) requires React Native Testing Library. Not yet set up. When RNTI is available, add `tests/mobile/routing-integration.test.ts` proving the full auth-guard round-trip.
-
-**Track B complete**: `IFTHENPAY-WEBHOOK-001` — Ifthenpay payment webhook verifier (PRs #201 + #202). Official GET callback protocol, anti-phishing key, Zod schema, MB WAY + Multibanco support, end-to-end Worker composition test.
-
-**Track C complete**: `MOBILE-AUTH-GUARD-001` (PR #203) + `MOBILE-ABRIGOS-PUBLIC-001` (PR #205). Auth guard extracted to `computeAuthRedirect` pure function; `/abrigos` added as public route on mobile matching web middleware; 30 auth-guard tests total.
-
-**Track G complete**: `ADMIN-PENDING-SHELTERS-WORKER-001` (PR #220) + `ADMIN-PENDING-SHELTERS-CLIENT-001` (PR #221) + `ADMIN-PENDING-SHELTERS-WEB-001` (PR #222) + `ADMIN-PENDING-SHELTERS-MOBILE-001` (PR #223) + pages (PR #224) + `ADMIN-NAV-001` (PR #226). Worker: `GET /shelters/pending-verification` admin-only, pagination, `pending_review` filter, oldest-first ordering. Client + boundaries + pages: `/admin/abrigos-pendentes` on web and mobile. Nav: "Fila de revisão" link wired from shelter listing loaded state on both platforms.
+**Status as of 2026-06-21**: all known work items are `done`. Tracks A–H complete. No open backlog.
 
 **Production-readiness gaps (confirmed, no work items yet):**
 
-1. **User sign-up / account registration** — No `/registar` page on web, no sign-up screen on mobile. Users cannot create accounts without a direct Supabase invite. Requires: worker profile-creation route, `@pic4paws/client` factory, GDPR consent collection, web page + mobile screen. Highest priority blocking gap.
+1. **GDPR legal pages** — `/registar` links to Terms and Privacy pages (`/termos` and `/privacidade`) that do not exist. Required before go-live. GDPR consent checkbox already wired (`gdprConsentVersion: 'v1'`); only the destination pages are missing.
 
-2. **Real home/landing page** — `apps/web/app/page.tsx` currently renders `webFoundationContent`, a developer readiness status dashboard. Not suitable for production users. Needs a real landing page (pet feed preview or marketing copy).
+2. **Payment provider env wiring** — `paymentWebhookVerifier` is `null` by factory default; Ifthenpay anti-phishing key, callback credentials and webhook secret must be configured in production `.env`. Not a work item — a deployment configuration step. Blocks donations/sponsorships in production.
 
-3. **GDPR consent on registration** — SDD `User` type requires `gdprConsentVersion` + `gdprConsentAcceptedAt`. No consent collection exists. Must be part of the sign-up flow or a separate gating step before first use.
+3. **Push notification delivery** — Notification system stores in-DB and dispatches preference-gated in-app alerts. No APNs/FCM push to device. Users only see notifications if they open the app.
 
-4. **Payment provider env wiring** — `paymentWebhookVerifier` is `null` by factory default; Ifthenpay anti-phishing key, callback credentials and webhook secret must be configured in production `.env`. Not a work item — a deployment configuration step. Blocks donations/sponsorships in production.
+4. **Mobile app store artifacts** — EAS build configuration, app icons, splash screens, bundle identifiers not yet set up. Required before App Store / Play Store submission.
 
-5. **Push notification delivery** — Notification system stores in-DB and dispatches preference-gated in-app alerts. No APNs/FCM push to device. Users only see notifications if they open the app.
-
-6. **Mobile app store artifacts** — EAS build configuration, app icons, splash screens, bundle identifiers not yet set up. Required before App Store / Play Store submission.
-
-**Known deferred item** (documented in MOBILE-NAV-001 completion notes):
+**Known deferred items:**
 - Mobile routing integration test (unauthenticated → redirect → sign-in → `returnTo`) requires React Native Testing Library setup.
+- P2-2 (fragile `isEmailAlreadyRegistered` string matching in `apps/workers/src/user-register-supabase.ts`) — deferred until Supabase SDK upgrade provides a stable error code.
 
 ## 6. Handoff Prompt For New Agent Session
 
@@ -454,8 +447,8 @@ Continue Pic4Paws V2 development from main using strict SDD/TDD:
 - Validate: npm run typecheck, lint, test, build
 - After any env.ts change: npm run build --workspace=packages/config
 
-Current state (2026-06-21, PR #227): all known work items done, 2097 tests passing.
-Tracks A–G complete (remake-foundation + all UI pages/screens + shelter verification + admin review queue + nav entry points).
-No open backlog. Production-readiness gaps documented in section 5: user sign-up, real home page, GDPR consent, payment env wiring, push notifications, mobile store artifacts.
+Current state (2026-06-21, PR #237): all known work items done, 2163 tests passing.
+Tracks A–H complete (remake-foundation + all UI pages/screens + shelter verification + admin review queue + nav entry points + user registration + real landing page + auth rollback).
+No open backlog. Production-readiness gaps documented in section 5: GDPR legal pages, payment env wiring, push notifications, mobile store artifacts.
 Consult section 5 for the full gap list before choosing the next work item.
 ```

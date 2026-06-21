@@ -1,6 +1,6 @@
 ---
 id: USER-REGISTER-WORKER-001
-status: in-progress
+status: done
 ---
 
 # USER-REGISTER-WORKER-001 — User Registration Worker Route
@@ -63,10 +63,10 @@ boundary states will be defined in `USER-REGISTER-CLIENT-001` and subsequent wor
 
 ## Acceptance criteria
 
-- [ ] `POST /users/register` with valid payload returns 201 `{ status: 'created' }`
-- [ ] Non-POST method returns 405
-- [ ] Missing or malformed payload fields return 400 with specific `reasons`
-- [ ] Email already registered returns 409 `{ status: 'email_already_registered' }`
-- [ ] Repository not wired returns 501
-- [ ] No bearer token is checked or required
-- [ ] `npm run typecheck`, `npm run lint`, `npm run test`, `npm run build` all pass
+- [x] `POST /users/register` with valid payload returns 201 `{ status: 'created' }`
+- [x] Non-POST method returns 405
+- [x] Missing or malformed payload fields return 400 with specific `reasons`
+- [x] Email already registered returns 409 `{ status: 'email_already_registered' }`
+- [x] Repository not wired returns 501
+- [x] No bearer token is checked or required
+- [x] `npm run typecheck`, `npm run lint`, `npm run test`, `npm run build` all pass
