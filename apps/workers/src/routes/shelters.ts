@@ -15,6 +15,10 @@ import {
   handleWorkerShelterVerifyRequest,
   matchWorkerShelterVerificationId,
 } from '../shelter-verify';
+import {
+  handleWorkerAdminPendingSheltersRequest,
+  matchWorkerAdminPendingSheltersPath,
+} from '../admin-pending-shelters';
 import { handleWorkerAdoptionListRequest, matchWorkerAdoptionListShelterId } from '../adoption-list';
 import { handleWorkerDonationListRequest, matchWorkerDonationListShelterId } from '../donation-list';
 import { handleWorkerSponsorshipListRequest, matchWorkerSponsorshipListShelterId } from '../sponsorship-list';
@@ -41,6 +45,14 @@ export const handle = async (
     return handleWorkerShelterSearchRequest({
       request,
       shelterSearchRepository: dependencies.shelterSearchRepository,
+    });
+  }
+
+  if (matchWorkerAdminPendingSheltersPath(url.pathname, config.workers.shelterPath)) {
+    return handleWorkerAdminPendingSheltersRequest({
+      request,
+      adminPendingSheltersRepository: dependencies.adminPendingSheltersRepository,
+      authenticator: dependencies.petDraftAuthenticator,
     });
   }
 

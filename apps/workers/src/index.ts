@@ -122,6 +122,25 @@ export type {
   CreateSupabaseShelterVerifyRepositoriesInput,
   CreateSupabaseShelterVerifyRepositoriesResult,
 } from './shelter-verify-supabase';
+export {
+  handleWorkerAdminPendingSheltersRequest,
+  matchWorkerAdminPendingSheltersPath,
+} from './admin-pending-shelters';
+export type {
+  AdminPendingShelterSummary,
+  AdminPendingSheltersQuery,
+  AdminPendingSheltersRepository,
+  AdminPendingSheltersResult,
+  HandleWorkerAdminPendingSheltersRequestInput,
+} from './admin-pending-shelters';
+export {
+  createSupabaseAdminPendingSheltersRepositories,
+  SupabaseAdminPendingSheltersRepositoryError,
+} from './admin-pending-shelters-supabase';
+export type {
+  CreateSupabaseAdminPendingSheltersRepositoriesInput,
+  CreateSupabaseAdminPendingSheltersRepositoriesResult,
+} from './admin-pending-shelters-supabase';
 export type {
   CreateSupabaseShelterRepositoriesInput,
   CreateSupabaseShelterRepositoriesResult,

@@ -8,6 +8,7 @@ import { handle as handleDonations } from '../../apps/workers/src/routes/donatio
 import { handle as handleSponsorships } from '../../apps/workers/src/routes/sponsorships';
 import { handle as handleNotifications } from '../../apps/workers/src/routes/notifications';
 import { matchWorkerShelterVerificationId } from '../../apps/workers/src/shelter-verify';
+import { matchWorkerAdminPendingSheltersPath } from '../../apps/workers/src/admin-pending-shelters';
 import { matchWorkerShelterProfileId } from '../../apps/workers/src/shelter-profile';
 import type { WorkerParsedConfig } from '../../apps/workers/src/routes/shared';
 
@@ -121,5 +122,11 @@ describe('route-table: ROUTE_HANDLERS ordering contract', () => {
     const verificationPath = `${PATHS.shelter}/abc123/verification`;
     expect(matchWorkerShelterVerificationId(verificationPath, PATHS.shelter)).toBe('abc123');
     expect(matchWorkerShelterProfileId(verificationPath, PATHS.shelter)).toBeNull();
+  });
+
+  it('admin pending shelters route is reserved before public shelter profile matching', () => {
+    const pendingPath = `${PATHS.shelter}/pending-verification`;
+    expect(matchWorkerAdminPendingSheltersPath(pendingPath, PATHS.shelter)).toBe(true);
+    expect(matchWorkerShelterProfileId(pendingPath, PATHS.shelter)).toBe('pending-verification');
   });
 });
