@@ -1235,6 +1235,7 @@ const parseUpdateVerificationSuccess = (
   };
 };
 
+
 export const createShelterVerificationClient = ({
   workerBaseUrl,
   shelterPath,
