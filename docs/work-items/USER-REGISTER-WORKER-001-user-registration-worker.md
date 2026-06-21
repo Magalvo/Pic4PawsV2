@@ -24,7 +24,7 @@ boundary states will be defined in `USER-REGISTER-CLIENT-001` and subsequent wor
 ```json
 {
   "email": "utilizador@exemplo.pt",
-  "password": "minimo8chars",
+  "password": "<senha-minimo-8-caracteres>",
   "displayName": "Maria Silva",
   "gdprConsentVersion": "v1"
 }

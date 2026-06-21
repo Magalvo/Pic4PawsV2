@@ -16,7 +16,7 @@ const makeRequest = (method = 'POST'): Request =>
 
 const validPayload = {
   email: 'maria@exemplo.pt',
-  password: 'palavra123',
+  password: 'senha-de-teste-valida',
   displayName: 'Maria Silva',
   gdprConsentVersion: 'v1',
 };
@@ -211,7 +211,7 @@ const makeClient = (rpcResult = makeRpcResult()): SupabaseClientLike => ({
 
 const registrationInput = {
   email: 'test@teste.pt',
-  password: 'password123',
+  password: 'senha-de-teste-valida',
   displayName: 'Teste',
   gdprConsentVersion: 'v1',
 };
@@ -226,7 +226,7 @@ describe('createSupabaseUserRegistrationRepositories', () => {
 
     expect(client.rpc).toHaveBeenCalledWith('register_user', {
       p_email: 'test@teste.pt',
-      p_password: 'password123',
+      p_password: 'senha-de-teste-valida',
       p_display_name: 'Teste',
       p_gdpr_consent_version: 'v1',
       p_gdpr_consent_accepted_at: registrationNow,
