@@ -8,3 +8,4 @@ export * from './adoptions';
 export * from './donations';
 export * from './sponsorships';
 export * from './notifications';
+export * from './users';
