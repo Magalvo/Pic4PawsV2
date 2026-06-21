@@ -424,8 +424,22 @@ per deployment.
 
 **Track G complete**: `ADMIN-PENDING-SHELTERS-WORKER-001` (PR #220) + `ADMIN-PENDING-SHELTERS-CLIENT-001` (PR #221) + `ADMIN-PENDING-SHELTERS-WEB-001` (PR #222) + `ADMIN-PENDING-SHELTERS-MOBILE-001` (PR #223) + pages (PR #224) + `ADMIN-NAV-001` (PR #226). Worker: `GET /shelters/pending-verification` admin-only, pagination, `pending_review` filter, oldest-first ordering. Client + boundaries + pages: `/admin/abrigos-pendentes` on web and mobile. Nav: "Fila de revisão" link wired from shelter listing loaded state on both platforms.
 
-**Suggested next tracks** (no firm commitment yet):
-- Mobile routing integration test (RNTI prerequisite — see deferred item above)
+**Production-readiness gaps (confirmed, no work items yet):**
+
+1. **User sign-up / account registration** — No `/registar` page on web, no sign-up screen on mobile. Users cannot create accounts without a direct Supabase invite. Requires: worker profile-creation route, `@pic4paws/client` factory, GDPR consent collection, web page + mobile screen. Highest priority blocking gap.
+
+2. **Real home/landing page** — `apps/web/app/page.tsx` currently renders `webFoundationContent`, a developer readiness status dashboard. Not suitable for production users. Needs a real landing page (pet feed preview or marketing copy).
+
+3. **GDPR consent on registration** — SDD `User` type requires `gdprConsentVersion` + `gdprConsentAcceptedAt`. No consent collection exists. Must be part of the sign-up flow or a separate gating step before first use.
+
+4. **Payment provider env wiring** — `paymentWebhookVerifier` is `null` by factory default; Ifthenpay anti-phishing key, callback credentials and webhook secret must be configured in production `.env`. Not a work item — a deployment configuration step. Blocks donations/sponsorships in production.
+
+5. **Push notification delivery** — Notification system stores in-DB and dispatches preference-gated in-app alerts. No APNs/FCM push to device. Users only see notifications if they open the app.
+
+6. **Mobile app store artifacts** — EAS build configuration, app icons, splash screens, bundle identifiers not yet set up. Required before App Store / Play Store submission.
+
+**Known deferred item** (documented in MOBILE-NAV-001 completion notes):
+- Mobile routing integration test (unauthenticated → redirect → sign-in → `returnTo`) requires React Native Testing Library setup.
 
 ## 6. Handoff Prompt For New Agent Session
 
@@ -440,7 +454,8 @@ Continue Pic4Paws V2 development from main using strict SDD/TDD:
 - Validate: npm run typecheck, lint, test, build
 - After any env.ts change: npm run build --workspace=packages/config
 
-Current state (2026-06-21, PR #225): all known work items done, 2097 tests passing.
-Tracks A–G complete. Track G = admin pending shelters review queue (Worker → client → web/mobile boundaries → pages, PRs #220–#224). Latest audit: PRs #217–#224 (score 9/10, no P1/P2 findings). Latest checkpoint: docs/checkpoints/2026-06-21-admin-pending-shelters-complete.md.
-No selected next track — consult section 5 for candidates.
+Current state (2026-06-21, PR #227): all known work items done, 2097 tests passing.
+Tracks A–G complete (remake-foundation + all UI pages/screens + shelter verification + admin review queue + nav entry points).
+No open backlog. Production-readiness gaps documented in section 5: user sign-up, real home page, GDPR consent, payment env wiring, push notifications, mobile store artifacts.
+Consult section 5 for the full gap list before choosing the next work item.
 ```

@@ -111,14 +111,15 @@ Dispatcher + client modularization (PR #147):
 
 ## Current Focus
 
-**This work track is complete as of PR #156.**
+**This work track is complete.**
 
-Main branch HEAD: PR #156 (PAYMENT-WEBHOOK-VERIFIER-001).
-Tests: 1580 / 176 files. All validation gates pass.
+Main branch HEAD: PR #227 (docs cleanup post-PR #226). Tests: 2097 / 254 files.
+All validation gates pass. Tracks A–G are done (shelter verification + admin review
+queue + all supplementary items through PR #227).
 
-There are no remaining open work items in this track. The next step is to agree on
-the next feature track by reviewing `docs/canonical/architecture-proposal.md` and
-opening a new work track document with enriched work items.
+There are no remaining open work items in this track. See `docs/work-tracks/track-a-real-ui.md`
+for the UI wiring track (also complete) and `docs/agent-resume.md` section 5 for
+the next candidate tracks (production readiness gaps).
 
 ## Branching Convention
 

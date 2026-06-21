@@ -59,6 +59,31 @@ Each page follows the same structure:
    - `useState` on `getInitialState()`, `useEffect` triggers `load*`
    - Renders each state branch
 
-## Current Focus
+## Current State
 
-`WEB-PET-FEED-PAGE-001` — first real page, establishes the env + client + boundary pattern for all subsequent pages.
+**This work track is complete.** All phases (1–5) have been implemented. Every boundary
+from `remake-foundation` is wired to a real page/screen.
+
+**Completed web pages** (38 total):
+`/`, `/entrar`, `/recuperar-palavra-passe`, `/recuperar-palavra-passe/confirmar`,
+`/animais`, `/animais/[petId]`, `/animais/[petId]/adotar`, `/animais/[petId]/arquivar`,
+`/animais/[petId]/historico`, `/animais/[petId]/media`, `/animais/[petId]/publicar`,
+`/animais/rascunhos/novo`, `/animais/rascunhos/[petId]/editar`, `/animais/rascunhos/[petId]/guardar`,
+`/abrigos`, `/abrigos/registar`, `/abrigos/[shelterId]`, `/abrigos/[shelterId]/animais`,
+`/abrigos/[shelterId]/apadrinhar`, `/abrigos/[shelterId]/candidaturas`,
+`/abrigos/[shelterId]/candidaturas/[applicationId]`, `/abrigos/[shelterId]/doacoes`,
+`/abrigos/[shelterId]/doar`, `/abrigos/[shelterId]/editar`, `/abrigos/[shelterId]/eliminar`,
+`/abrigos/[shelterId]/financeiro`, `/abrigos/[shelterId]/membros`,
+`/abrigos/[shelterId]/patrocinios`, `/abrigos/[shelterId]/verificar`,
+`/adocoes`, `/adocoes/[applicationId]`, `/doacoes/[donationId]`,
+`/notificacoes`, `/notificacoes/preferencias`,
+`/patrocinios`, `/patrocinios/[sponsorshipId]`,
+`/admin/abrigos-pendentes`.
+
+**Completed mobile screens** (matched coverage): 5 tabs (abrigos, animais, adoções,
+patrocínios, notificações) + all deep screens mirroring web routes above.
+
+**Known gaps (not in this track's scope — see production-readiness track):**
+- `/` is a developer readiness dashboard, not a real landing page
+- No user account creation / sign-up flow (web or mobile)
+- No GDPR consent collection on registration
