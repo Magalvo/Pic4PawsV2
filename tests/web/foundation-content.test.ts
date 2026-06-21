@@ -6,7 +6,7 @@ const mojibakePatterns = ['Ã', 'Â', '�'];
 describe('web foundation content', () => {
   it('uses clean PT-PT copy for the public foundation screen', () => {
     expect(webFoundationContent.locale).toBe('pt-PT');
-    expect(webFoundationContent.hero.eyebrow).toBe('Fundação Pic4Paws V2');
+    expect(webFoundationContent.hero.eyebrow).toBe('Plataforma de adopção animal');
     expect(webFoundationContent.hero.title).toBe('Pic4Paws');
     expect(webFoundationContent.hero.body).toContain('associações');
     expect(webFoundationContent.hero.body).toContain('adoções');
@@ -18,9 +18,9 @@ describe('web foundation content', () => {
     }
   });
 
-  it('does not link to unimplemented product routes', () => {
-    expect(webFoundationContent.primaryAction.href).toBeNull();
-    expect(webFoundationContent.primaryAction.label).toBe('Fundação técnica em curso');
+  it('links primary action to the user registration page', () => {
+    expect(webFoundationContent.primaryAction.href).toBe('/registar');
+    expect(webFoundationContent.primaryAction.label).toBeTruthy();
   });
 
   it('surfaces the completed foundation contracts', () => {

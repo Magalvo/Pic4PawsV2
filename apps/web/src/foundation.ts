@@ -133,14 +133,14 @@ export type WebFoundationContent = {
 export const webFoundationContent: WebFoundationContent = {
   locale: 'pt-PT',
   hero: {
-    eyebrow: 'Fundação Pic4Paws V2',
+    eyebrow: 'Plataforma de adopção animal',
     title: 'Pic4Paws',
     body:
-      'Plataforma portuguesa para ligar associações, adotantes e padrinhos através de perfis de animais, adoções, donativos e operações de abrigo com privacidade desde o início.',
+      'Liga associações, adotantes e padrinhos através de perfis de animais, adoções, donativos e operações de abrigo — com privacidade desde o início.',
   },
   primaryAction: {
-    label: 'Fundação técnica em curso',
-    href: null,
+    label: 'Criar conta grátis',
+    href: '/registar',
   },
   mediaUpload: {
     title: webMediaUploadContent.title,
