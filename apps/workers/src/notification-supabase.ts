@@ -7,6 +7,7 @@ import type {
   NotificationType,
 } from './notification';
 import type { NotificationPreferencesRepository } from './notification-preferences';
+import type { PushNotificationProvider } from './push-token';
 
 export class SupabaseNotificationRepositoryError extends Error {
   constructor(message: string) {
@@ -18,6 +19,7 @@ export class SupabaseNotificationRepositoryError extends Error {
 export type CreateSupabaseNotificationRepositoriesInput = {
   client: SupabaseClientLike;
   notificationPreferencesRepository?: NotificationPreferencesRepository;
+  pushNotificationProvider?: PushNotificationProvider;
 };
 
 export type CreateSupabaseNotificationRepositoriesResult = {
@@ -44,7 +46,17 @@ type DonationTransactionRow = {
 export const createSupabaseNotificationRepositories = ({
   client,
   notificationPreferencesRepository,
+  pushNotificationProvider,
 }: CreateSupabaseNotificationRepositoriesInput): CreateSupabaseNotificationRepositoriesResult => {
+  const dispatchPush = (
+    userId: string,
+    type: NotificationType,
+    payload: Record<string, unknown>,
+  ): void => {
+    pushNotificationProvider
+      ?.sendPushNotification({ userId, type, payload })
+      .catch(() => { /* intentional no-op: push errors must never affect DB result */ });
+  };
   const isOptedOut = async (userId: string, type: NotificationType): Promise<boolean> => {
     if (!notificationPreferencesRepository) return false;
     const result = await notificationPreferencesRepository.getPreferences(userId);
@@ -145,6 +157,8 @@ export const createSupabaseNotificationRepositories = ({
           `Failed to notify adoption status changed: ${result.error.message ?? 'unknown error'}`,
         );
       }
+
+      dispatchPush(applicantUserId, 'adoption_status_changed', { applicationId, newStatus });
     },
 
     notifyNewAdoptionApplication: async ({
@@ -194,6 +208,11 @@ export const createSupabaseNotificationRepositories = ({
           `Failed to notify new adoption application: ${insertResult.error.message ?? 'unknown error'}`,
         );
       }
+
+      const fanOutPayload = { shelterId, applicationId, petId, applicantName };
+      members.forEach((m) =>
+        dispatchPush(m.user_id, 'new_adoption_application', fanOutPayload),
+      );
     },
 
     notifyDonationPaid: async ({
@@ -225,6 +244,8 @@ export const createSupabaseNotificationRepositories = ({
           `Failed to notify donation paid: ${result.error.message ?? 'unknown error'}`,
         );
       }
+
+      dispatchPush(donationResult.data.user_id, 'donation_paid', { providerPaymentId, provider });
     },
 
     notifySponsorshipStatusChanged: async ({
@@ -249,6 +270,8 @@ export const createSupabaseNotificationRepositories = ({
           `Failed to notify sponsorship status changed: ${result.error.message ?? 'unknown error'}`,
         );
       }
+
+      dispatchPush(donorUserId, 'sponsorship_status_changed', { sponsorshipId, newStatus });
     },
   };
 
