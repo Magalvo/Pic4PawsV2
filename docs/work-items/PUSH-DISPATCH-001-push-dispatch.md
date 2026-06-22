@@ -16,6 +16,18 @@ This follows the same pattern as `paymentWebhookVerifier` (optional, not set by 
 injected by production handler or tests). The actual APNs/FCM/Expo adapter is outside scope;
 MOBILE-PUSH-001 wires the mobile client side.
 
+## States
+
+| Trigger | Dispatch behaviour |
+|---|---|
+| `notifyAdoptionStatusChanged` DB insert succeeds | `sendPushNotification({ userId: applicantUserId, type: 'adoption_status_changed', payload: { applicationId, newStatus } })` — fire-and-forget |
+| `notifyNewAdoptionApplication` DB insert succeeds | Fan-out: one `sendPushNotification` per opted-in shelter member |
+| `notifyDonationPaid` DB insert succeeds | `sendPushNotification({ userId: donorUserId, type: 'donation_paid', payload })` — fire-and-forget |
+| `notifySponsorshipStatusChanged` DB insert succeeds | `sendPushNotification({ userId: donorUserId, type: 'sponsorship_status_changed', payload })` — fire-and-forget |
+| `pushNotificationProvider` not provided | Dispatch silently skipped; DB insert still authoritative |
+| Notification gated by user preference (skipped) | Push also skipped — dispatch call never reached |
+| `sendPushNotification` rejects | Silently caught via `.catch(() => {})` — DB result unaffected |
+
 ## Contract
 
 ```ts
