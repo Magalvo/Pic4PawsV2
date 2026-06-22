@@ -5,6 +5,7 @@ import {
   migrationArtifacts,
   notificationsMigration,
   processPaymentWebhookEventMigration,
+  pushTokensMigration,
   registerShelterMigration,
   registerUserMigration,
   renderMigrationArtifact,
@@ -21,6 +22,7 @@ describe('database migration artifacts', () => {
       registerShelterMigration,
       processPaymentWebhookEventMigration,
       registerUserMigration,
+      pushTokensMigration,
     ]);
   });
 

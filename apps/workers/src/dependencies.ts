@@ -75,6 +75,8 @@ import {
   createSupabaseUserRegistrationRepositories,
   type UserRegistrationSupabaseClientLike,
 } from './user-register-supabase';
+import type { PushTokenRepository } from './push-token';
+import { createSupabasePushTokenRepositories } from './push-token-supabase';
 
 export type WorkerSupabaseTableQueryLike = SupabaseAuthTableQueryLike & SupabaseTableQueryLike;
 
@@ -129,6 +131,7 @@ export type WorkerRequestDependencies = {
   shelterVerificationRepository?: ShelterVerificationRepository;
   adminPendingSheltersRepository?: AdminPendingSheltersRepository;
   userRegistrationRepository?: UserRegistrationRepository;
+  pushTokenRepository?: PushTokenRepository;
   supabaseClientFactory?: WorkerSupabaseClientFactory;
   now?: () => string;
 };
@@ -196,6 +199,7 @@ export const createWorkerSupabaseDependencies = ({
     const userRegistrationRepositories = createSupabaseUserRegistrationRepositories({
       client: client as unknown as UserRegistrationSupabaseClientLike,
     });
+    const pushTokenRepositories = createSupabasePushTokenRepositories({ client });
     const notificationRepositories = createSupabaseNotificationRepositories({
       client,
       notificationPreferencesRepository: notificationPreferencesRepositories.notificationPreferencesRepository,
@@ -238,6 +242,7 @@ export const createWorkerSupabaseDependencies = ({
       adminPendingSheltersRepository:
         adminPendingSheltersRepositories.adminPendingSheltersRepository,
       userRegistrationRepository: userRegistrationRepositories.userRegistrationRepository,
+      pushTokenRepository: pushTokenRepositories.pushTokenRepository,
       // paymentWebhookVerifier is intentionally NOT set here — it is provider-SDK-specific
       // and must be injected by the production fetch handler or tests
       now,
@@ -344,5 +349,7 @@ export const resolveWorkerRequestDependencies = ({
       supabaseDependencies.adminPendingSheltersRepository,
     userRegistrationRepository:
       dependencies.userRegistrationRepository ?? supabaseDependencies.userRegistrationRepository,
+    pushTokenRepository:
+      dependencies.pushTokenRepository ?? supabaseDependencies.pushTokenRepository,
   };
 };

@@ -10,6 +10,8 @@ import { handle as handleNotifications } from '../../apps/workers/src/routes/not
 import { matchWorkerShelterVerificationId } from '../../apps/workers/src/shelter-verify';
 import { matchWorkerAdminPendingSheltersPath } from '../../apps/workers/src/admin-pending-shelters';
 import { matchWorkerShelterProfileId } from '../../apps/workers/src/shelter-profile';
+import { matchWorkerPushTokenPath } from '../../apps/workers/src/push-token';
+import { matchWorkerNotificationsPath } from '../../apps/workers/src/notification';
 import type { WorkerParsedConfig } from '../../apps/workers/src/routes/shared';
 
 const PATHS = {
@@ -128,5 +130,11 @@ describe('route-table: ROUTE_HANDLERS ordering contract', () => {
     const pendingPath = `${PATHS.shelter}/pending-verification`;
     expect(matchWorkerAdminPendingSheltersPath(pendingPath, PATHS.shelter)).toBe(true);
     expect(matchWorkerShelterProfileId(pendingPath, PATHS.shelter)).toBe('pending-verification');
+  });
+
+  it('matchWorkerPushTokenPath claims push-token sub-path; matchWorkerNotificationsPath does not', () => {
+    const pushTokenPath = `${PATHS.notification}/push-token`;
+    expect(matchWorkerPushTokenPath(pushTokenPath, PATHS.notification)).toBe(true);
+    expect(matchWorkerNotificationsPath(pushTokenPath, PATHS.notification)).toBe(false);
   });
 });

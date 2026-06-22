@@ -9,7 +9,7 @@ import {
 
 type Operation = {
   table: string;
-  action: 'select' | 'insert' | 'update';
+  action: 'select' | 'insert' | 'update' | 'delete';
   columns?: string;
   filters: Array<{ kind: 'eq' | 'in' | 'is'; column: string; value: unknown }>;
   result: 'single' | 'maybeSingle' | 'many';
@@ -37,6 +37,7 @@ class FakeSupabaseQuery implements SupabaseTableQueryLike {
   insert(): SupabaseTableQueryLike { return this; }
   update(): SupabaseTableQueryLike { return this; }
   upsert(): SupabaseTableQueryLike { return this; }
+  delete(): SupabaseTableQueryLike { return this; }
   neq(): SupabaseTableQueryLike { return this; }
   order(): SupabaseTableQueryLike { return this; }
   range(): SupabaseTableQueryLike { return this; }

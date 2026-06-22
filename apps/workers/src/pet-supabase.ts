@@ -37,6 +37,7 @@ export type SupabaseTableQueryLike = PromiseLike<SupabaseQueryResult<unknown>> &
   insert: (payload: unknown) => SupabaseTableQueryLike;
   upsert: (payload: unknown, options?: { onConflict?: string }) => SupabaseTableQueryLike;
   update: (payload: unknown) => SupabaseTableQueryLike;
+  delete: () => SupabaseTableQueryLike;
   eq: (column: string, value: unknown) => SupabaseTableQueryLike;
   neq: (column: string, value: unknown) => SupabaseTableQueryLike;
   in: (column: string, value: unknown[]) => SupabaseTableQueryLike;

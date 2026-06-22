@@ -15,7 +15,7 @@ import type { AuthenticatedActor } from '@pic4paws/domain';
 
 type Operation = {
   table: string;
-  action: 'select' | 'insert' | 'update';
+  action: 'select' | 'insert' | 'update' | 'delete';
   payload?: unknown;
   columns?: string;
   filters: Array<{ kind: 'eq' | 'in' | 'is'; column: string; value: unknown }>;
@@ -61,6 +61,11 @@ class FakeSupabaseQuery implements SupabaseTableQueryLike {
     this.action = 'update';
     this.payload = payload;
 
+    return this;
+  }
+
+  delete(): SupabaseTableQueryLike {
+    this.action = 'delete';
     return this;
   }
 
