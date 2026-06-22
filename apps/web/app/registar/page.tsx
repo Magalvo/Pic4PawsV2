@@ -126,7 +126,14 @@ export default function RegistarPage() {
             required
             disabled={submitting}
           />
-          Aceito os Termos de Utilização e a Política de Privacidade
+          Aceito os{' '}
+          <a href="/termos" target="_blank" rel="noopener noreferrer">
+            Termos de Utilização
+          </a>{' '}
+          e a{' '}
+          <a href="/privacidade" target="_blank" rel="noopener noreferrer">
+            Política de Privacidade
+          </a>
         </label>
         <button type="submit" disabled={submitting || !gdprAccepted}>
           {submitting ? 'A criar conta...' : 'Criar conta'}

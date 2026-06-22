@@ -10,6 +10,9 @@ function isPublicRoute(pathname: string): boolean {
   if (/^\/abrigos\/[^/]+$/.test(pathname)) return true;
   if (pathname === '/recuperar-palavra-passe') return true;
   if (pathname === '/recuperar-palavra-passe/confirmar') return true;
+  if (pathname === '/registar') return true;
+  if (pathname === '/termos') return true;
+  if (pathname === '/privacidade') return true;
   return false;
 }
 
