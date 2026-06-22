@@ -59,11 +59,11 @@ Do not batch items that can be reviewed or merged independently.
 - `npm run test`
 - `npm run build`
 
-## 4. Current State As Of 2026-06-21
+## 4. Current State As Of 2026-06-22
 
-**Repository status**: 2163 tests passing (258 test files), all known work items `done` — foundation, screens, auth, navigation, Ifthenpay webhook verifier, mobile auth guard routing, password reset, shelter verification, shelter verification navigation, admin pending-shelters review queue, and user registration complete.
+**Repository status**: 2216 tests passing (261 test files). Tracks A–H complete + GDPR legal pages + push token Worker route done.
 
-**Main branch HEAD**: PR #237 (USER-REGISTER-ROLLBACK-001) — `ccc565a`
+**Main branch HEAD**: PR #239 (GDPR-LEGAL-001) — `b289ae1`. Branch `agent/PUSH-TOKEN-WORKER-001` ready to PR.
 - `npm run typecheck` ✅
 - `npm run lint` ✅
 - `npm run test` ✅
@@ -71,7 +71,7 @@ Do not batch items that can be reviewed or merged independently.
 
 > **Note**: `packages/config/dist/` and `packages/domain/dist/` are gitignored. After pulling or switching branches, run `npm run build -w packages/config` and/or `npm run build -w packages/domain` if typecheck fails on `EnvironmentConfig` or domain types.
 
-**Latest checkpoint**: [2026-06-21-user-registration-complete.md](docs/checkpoints/2026-06-21-user-registration-complete.md) — covers Tracks A–H, PRs #157–#237, 2163 tests
+**Latest checkpoint**: [2026-06-21-user-registration-complete.md](docs/checkpoints/2026-06-21-user-registration-complete.md) — covers Tracks A–H, PRs #157–#237, 2163 tests (pre-GDPR/push-token)
 
 **Latest audit**: [2026-06-21-sdd-audit-prs-225-234.md](docs/audits/2026-06-21-sdd-audit-prs-225-234.md) — score 9/10, open P2: rollback (closed by PR #237), fragile email detection (deferred)
 
@@ -418,15 +418,18 @@ per deployment.
 
 ## 5. Recommended Next Work Item
 
-**Status as of 2026-06-21**: all known work items are `done`. Tracks A–H complete. No open backlog.
+**Status as of 2026-06-22**: Tracks A–H complete. GDPR-LEGAL-001 merged (PR #239). PUSH-TOKEN-WORKER-001 done (PR pending on branch `agent/PUSH-TOKEN-WORKER-001`).
 
 **Production-readiness gaps (confirmed):**
 
-1. ~~**GDPR legal pages**~~ — **Done** (`GDPR-LEGAL-001`, pending PR). `/termos` and `/privacidade` static server components created with PT-PT GDPR-compliant copy; middleware wired as public routes; `/registar` GDPR checkbox now links to both pages; `/registar` also added as a public route (was missing).
+1. ~~**GDPR legal pages**~~ — **Done** (`GDPR-LEGAL-001`, PR #239). `/termos` and `/privacidade` static server components; middleware public routes; `/registar` GDPR checkbox links to both pages.
 
-2. **Payment provider env wiring** — `paymentWebhookVerifier` is `null` by factory default; Ifthenpay anti-phishing key, callback credentials and webhook secret must be configured in production `.env`. Not a work item — a deployment configuration step. Blocks donations/sponsorships in production.
+2. **Payment provider env wiring** — `paymentWebhookVerifier` is `null` by factory default; Ifthenpay credentials must be configured in production `.env`. Not a work item — deployment config. Blocks donations/sponsorships in production.
 
-3. **Push notification delivery** — Notification system stores in-DB and dispatches preference-gated in-app alerts. No APNs/FCM push to device. Users only see notifications if they open the app.
+3. **Push notification delivery (partial)** — `push_tokens` table exists (migration 0006), Worker routes for `POST/DELETE /notifications/push-token` done (`PUSH-TOKEN-WORKER-001`). Remaining:
+   - `PUSH-TOKEN-CLIENT-001` — `createPushTokenClient` in `@pic4paws/client` with `registerToken` / `unregisterToken`
+   - `PUSH-DISPATCH-001` — `PushNotificationProvider` interface wired into `createSupabaseNotificationRepositories` (optional, fire-and-forget, similar to `paymentWebhookVerifier`)
+   - `MOBILE-PUSH-001` — `expo-notifications` permission + token registration on app start, unregister on sign-out
 
 4. **Mobile app store artifacts** — EAS build configuration, app icons, splash screens, bundle identifiers not yet set up. Required before App Store / Play Store submission.
 
@@ -447,7 +450,8 @@ Continue Pic4Paws V2 development from main using strict SDD/TDD:
 - Validate: npm run typecheck, lint, test, build
 - After any env.ts change: npm run build --workspace=packages/config
 
-Current state (2026-06-22, PR #237 + GDPR-LEGAL-001 pending PR): 2185 tests passing (259 files).
-Tracks A–H complete + GDPR legal pages done. Production-readiness gaps documented in section 5: payment env wiring, push notifications, mobile store artifacts.
+Current state (2026-06-22, PR #239 + PUSH-TOKEN-WORKER-001 pending PR): 2216 tests passing (261 files).
+Tracks A–H complete + GDPR legal pages (PR #239) + push token Worker route done.
+Next: PUSH-TOKEN-CLIENT-001 → PUSH-DISPATCH-001 → MOBILE-PUSH-001 for end-to-end push notification delivery.
 Consult section 5 for the full gap list before choosing the next work item.
 ```

@@ -8,6 +8,10 @@ import {
   handleWorkerNotificationPreferencesRequest,
   matchWorkerNotificationPreferencesPath,
 } from '../notification-preferences';
+import {
+  handleWorkerPushTokenRequest,
+  matchWorkerPushTokenPath,
+} from '../push-token';
 import type { WorkerRequestDependencies } from '../dependencies';
 import type { WorkerParsedConfig } from './shared';
 
@@ -36,6 +40,14 @@ export const handle = async (
     return handleWorkerNotificationPreferencesRequest({
       request,
       notificationPreferencesRepository: dependencies.notificationPreferencesRepository,
+      authenticator: dependencies.petDraftAuthenticator,
+    });
+  }
+
+  if (matchWorkerPushTokenPath(url.pathname, config.workers.notificationsPath)) {
+    return handleWorkerPushTokenRequest({
+      request,
+      pushTokenRepository: dependencies.pushTokenRepository,
       authenticator: dependencies.petDraftAuthenticator,
     });
   }

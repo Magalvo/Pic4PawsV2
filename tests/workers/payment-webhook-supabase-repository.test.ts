@@ -16,6 +16,7 @@ const makeQueryChain = (
     insert: vi.fn().mockReturnThis(),
     update: vi.fn().mockReturnThis(),
     upsert: vi.fn().mockReturnThis(),
+    delete: vi.fn().mockReturnThis(),
     neq: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
     in: vi.fn().mockReturnThis(),
