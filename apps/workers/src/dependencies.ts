@@ -75,7 +75,7 @@ import {
   createSupabaseUserRegistrationRepositories,
   type UserRegistrationSupabaseClientLike,
 } from './user-register-supabase';
-import type { PushTokenRepository } from './push-token';
+import type { PushNotificationProvider, PushTokenRepository } from './push-token';
 import { createSupabasePushTokenRepositories } from './push-token-supabase';
 
 export type WorkerSupabaseTableQueryLike = SupabaseAuthTableQueryLike & SupabaseTableQueryLike;
@@ -132,6 +132,7 @@ export type WorkerRequestDependencies = {
   adminPendingSheltersRepository?: AdminPendingSheltersRepository;
   userRegistrationRepository?: UserRegistrationRepository;
   pushTokenRepository?: PushTokenRepository;
+  pushNotificationProvider?: PushNotificationProvider;
   supabaseClientFactory?: WorkerSupabaseClientFactory;
   now?: () => string;
 };
@@ -141,6 +142,7 @@ export type CreateWorkerSupabaseDependenciesInput = {
   supabaseClientFactory: WorkerSupabaseClientFactory;
   mediaUploadSigner?: MediaUploadSigner;
   mediaAssetRepository?: MediaAssetRepository;
+  pushNotificationProvider?: PushNotificationProvider;
   now?: () => string;
 };
 
@@ -163,6 +165,7 @@ export const createWorkerSupabaseDependencies = ({
   supabaseClientFactory,
   mediaUploadSigner,
   mediaAssetRepository,
+  pushNotificationProvider,
   now,
 }: CreateWorkerSupabaseDependenciesInput): WorkerRequestDependencies => {
   try {
@@ -203,6 +206,7 @@ export const createWorkerSupabaseDependencies = ({
     const notificationRepositories = createSupabaseNotificationRepositories({
       client,
       notificationPreferencesRepository: notificationPreferencesRepositories.notificationPreferencesRepository,
+      pushNotificationProvider,
     });
 
     return {
@@ -274,6 +278,7 @@ export const resolveWorkerRequestDependencies = ({
     supabaseClientFactory: dependencies.supabaseClientFactory,
     mediaUploadSigner: dependencies.mediaUploadSigner,
     mediaAssetRepository: dependencies.mediaAssetRepository,
+    pushNotificationProvider: dependencies.pushNotificationProvider,
     now: dependencies.now,
   });
 
@@ -303,6 +308,7 @@ export const resolveWorkerRequestDependencies = ({
     donationListRepository:
       dependencies.donationListRepository ?? supabaseDependencies.donationListRepository,
     paymentWebhookVerifier: dependencies.paymentWebhookVerifier,
+    pushNotificationProvider: dependencies.pushNotificationProvider,
     paymentWebhookRepository:
       dependencies.paymentWebhookRepository ?? supabaseDependencies.paymentWebhookRepository,
     donationStatusRepository:

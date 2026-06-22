@@ -1,4 +1,5 @@
 import type { WorkerPetDraftAuthenticator } from './pet-drafts';
+import type { NotificationType } from './notification';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -9,6 +10,14 @@ export const PUSH_TOKEN_PLATFORMS: readonly PushTokenPlatform[] = ['ios', 'andro
 export type PushTokenRepository = {
   upsertPushToken: (userId: string, token: string, platform: PushTokenPlatform) => Promise<void>;
   deletePushToken: (userId: string, token: string) => Promise<boolean>;
+};
+
+export type PushNotificationProvider = {
+  sendPushNotification: (params: {
+    userId: string;
+    type: NotificationType;
+    payload: Record<string, unknown>;
+  }) => Promise<void>;
 };
 
 // ─── Path matcher ─────────────────────────────────────────────────────────────
