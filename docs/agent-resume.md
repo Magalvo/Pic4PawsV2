@@ -420,9 +420,9 @@ per deployment.
 
 **Status as of 2026-06-21**: all known work items are `done`. Tracks A–H complete. No open backlog.
 
-**Production-readiness gaps (confirmed, no work items yet):**
+**Production-readiness gaps (confirmed):**
 
-1. **GDPR legal pages** — `/registar` links to Terms and Privacy pages (`/termos` and `/privacidade`) that do not exist. Required before go-live. GDPR consent checkbox already wired (`gdprConsentVersion: 'v1'`); only the destination pages are missing.
+1. ~~**GDPR legal pages**~~ — **Done** (`GDPR-LEGAL-001`, pending PR). `/termos` and `/privacidade` static server components created with PT-PT GDPR-compliant copy; middleware wired as public routes; `/registar` GDPR checkbox now links to both pages; `/registar` also added as a public route (was missing).
 
 2. **Payment provider env wiring** — `paymentWebhookVerifier` is `null` by factory default; Ifthenpay anti-phishing key, callback credentials and webhook secret must be configured in production `.env`. Not a work item — a deployment configuration step. Blocks donations/sponsorships in production.
 
@@ -447,8 +447,7 @@ Continue Pic4Paws V2 development from main using strict SDD/TDD:
 - Validate: npm run typecheck, lint, test, build
 - After any env.ts change: npm run build --workspace=packages/config
 
-Current state (2026-06-21, PR #237): all known work items done, 2163 tests passing.
-Tracks A–H complete (remake-foundation + all UI pages/screens + shelter verification + admin review queue + nav entry points + user registration + real landing page + auth rollback).
-No open backlog. Production-readiness gaps documented in section 5: GDPR legal pages, payment env wiring, push notifications, mobile store artifacts.
+Current state (2026-06-22, PR #237 + GDPR-LEGAL-001 pending PR): 2185 tests passing (259 files).
+Tracks A–H complete + GDPR legal pages done. Production-readiness gaps documented in section 5: payment env wiring, push notifications, mobile store artifacts.
 Consult section 5 for the full gap list before choosing the next work item.
 ```

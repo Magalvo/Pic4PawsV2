@@ -126,4 +126,22 @@ describe('middleware — auth guard', () => {
     const res = await middleware(makeRequest('/recuperar-palavra-passe/confirmar'));
     expect(res.status).not.toBe(307);
   });
+
+  it('unauthenticated request to /registar passes through', async () => {
+    const { middleware } = await import('../../apps/web/middleware');
+    const res = await middleware(makeRequest('/registar'));
+    expect(res.status).not.toBe(307);
+  });
+
+  it('unauthenticated request to /termos passes through', async () => {
+    const { middleware } = await import('../../apps/web/middleware');
+    const res = await middleware(makeRequest('/termos'));
+    expect(res.status).not.toBe(307);
+  });
+
+  it('unauthenticated request to /privacidade passes through', async () => {
+    const { middleware } = await import('../../apps/web/middleware');
+    const res = await middleware(makeRequest('/privacidade'));
+    expect(res.status).not.toBe(307);
+  });
 });
