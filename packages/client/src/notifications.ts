@@ -258,6 +258,100 @@ const parseUpdatePreferencesFailureStatus = (
   return 'worker_request_failed';
 };
 
+// ─── Push Token Client types ──────────────────────────────────────────────────
+
+export type PushTokenClientPlatform = 'ios' | 'android' | 'expo';
+
+export type RegisterPushTokenClientSuccess = {
+  ok: true;
+  status: 'push_token_registered';
+};
+
+export type RegisterPushTokenClientFailureStatus =
+  | 'unauthenticated'
+  | 'invalid_payload'
+  | 'push_token_repository_not_configured'
+  | 'auth_adapter_not_configured'
+  | 'worker_request_failed'
+  | 'worker_response_invalid';
+
+export type RegisterPushTokenClientFailure = {
+  ok: false;
+  status: RegisterPushTokenClientFailureStatus;
+  reasons: string[];
+};
+
+export type RegisterPushTokenClientResult =
+  | RegisterPushTokenClientSuccess
+  | RegisterPushTokenClientFailure;
+
+export type UnregisterPushTokenClientSuccess = {
+  ok: true;
+  status: 'push_token_removed';
+};
+
+export type UnregisterPushTokenClientFailureStatus =
+  | 'unauthenticated'
+  | 'push_token_not_found'
+  | 'push_token_repository_not_configured'
+  | 'auth_adapter_not_configured'
+  | 'worker_request_failed'
+  | 'worker_response_invalid';
+
+export type UnregisterPushTokenClientFailure = {
+  ok: false;
+  status: UnregisterPushTokenClientFailureStatus;
+  reasons: string[];
+};
+
+export type UnregisterPushTokenClientResult =
+  | UnregisterPushTokenClientSuccess
+  | UnregisterPushTokenClientFailure;
+
+export type CreatePushTokenClientInput = {
+  workerBaseUrl: string;
+  notificationsPath: `/${string}`;
+  getAccessToken: () => Promise<string | null>;
+  fetch: MediaUploadClientFetch;
+};
+
+export type PushTokenClient = {
+  registerToken: (
+    token: string,
+    platform: PushTokenClientPlatform,
+  ) => Promise<RegisterPushTokenClientResult>;
+  unregisterToken: (token: string) => Promise<UnregisterPushTokenClientResult>;
+};
+
+// ─── Private helpers (push token) ────────────────────────────────────────────
+
+const parseRegisterPushTokenFailureStatus = (
+  body: Record<string, unknown> | null,
+): RegisterPushTokenClientFailureStatus => {
+  const status = body?.status;
+
+  if (status === 'invalid_payload') return 'invalid_payload';
+  if (status === 'push_token_repository_not_configured') return 'push_token_repository_not_configured';
+  if (status === 'auth_adapter_not_configured') return 'auth_adapter_not_configured';
+  if (status === 'unauthenticated') return 'unauthenticated';
+
+  return 'worker_request_failed';
+};
+
+const parseUnregisterPushTokenFailureStatus = (
+  body: Record<string, unknown> | null,
+  responseStatus: number,
+): UnregisterPushTokenClientFailureStatus => {
+  const status = body?.status;
+
+  if (responseStatus === 404 || status === 'push_token_not_found') return 'push_token_not_found';
+  if (status === 'push_token_repository_not_configured') return 'push_token_repository_not_configured';
+  if (status === 'auth_adapter_not_configured') return 'auth_adapter_not_configured';
+  if (status === 'unauthenticated') return 'unauthenticated';
+
+  return 'worker_request_failed';
+};
+
 // ─── Factory functions ────────────────────────────────────────────────────────
 
 export const createNotificationClient = ({
@@ -347,6 +441,89 @@ export const createNotificationClient = ({
     }
 
     return { ok: true, status: 'notification_marked_read', notificationId: body.notificationId };
+  },
+});
+
+export const createPushTokenClient = ({
+  workerBaseUrl,
+  notificationsPath,
+  getAccessToken,
+  fetch,
+}: CreatePushTokenClientInput): PushTokenClient => ({
+  registerToken: async (token: string, platform: PushTokenClientPlatform) => {
+    const accessToken = await getAccessToken();
+
+    if (!accessToken?.trim()) {
+      return { ok: false, status: 'unauthenticated', reasons: ['missing_access_token'] };
+    }
+
+    const url = createWorkerSubUrl(workerBaseUrl, notificationsPath, 'push-token');
+    let response: Response;
+
+    try {
+      response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token, platform }),
+      });
+    } catch {
+      return { ok: false, status: 'worker_request_failed', reasons: ['network_error'] };
+    }
+
+    const body = await parseJsonResponse(response);
+
+    if (!response.ok) {
+      const failureStatus = parseRegisterPushTokenFailureStatus(body);
+      const reasons = Array.isArray(body?.reasons) ? parseReasons(body) : [failureStatus];
+      return { ok: false, status: failureStatus, reasons: sanitizeReasons(reasons, failureStatus) };
+    }
+
+    if (!body || body.status !== 'push_token_registered') {
+      return { ok: false, status: 'worker_response_invalid', reasons: ['invalid_worker_response'] };
+    }
+
+    return { ok: true, status: 'push_token_registered' };
+  },
+
+  unregisterToken: async (token: string) => {
+    const accessToken = await getAccessToken();
+
+    if (!accessToken?.trim()) {
+      return { ok: false, status: 'unauthenticated', reasons: ['missing_access_token'] };
+    }
+
+    const url = createWorkerSubUrl(workerBaseUrl, notificationsPath, 'push-token');
+    let response: Response;
+
+    try {
+      response = await fetch(url, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token }),
+      });
+    } catch {
+      return { ok: false, status: 'worker_request_failed', reasons: ['network_error'] };
+    }
+
+    const body = await parseJsonResponse(response);
+
+    if (!response.ok) {
+      const failureStatus = parseUnregisterPushTokenFailureStatus(body, response.status);
+      const reasons = Array.isArray(body?.reasons) ? parseReasons(body) : [failureStatus];
+      return { ok: false, status: failureStatus, reasons: sanitizeReasons(reasons, failureStatus) };
+    }
+
+    if (!body || body.status !== 'push_token_removed') {
+      return { ok: false, status: 'worker_response_invalid', reasons: ['invalid_worker_response'] };
+    }
+
+    return { ok: true, status: 'push_token_removed' };
   },
 });
 
