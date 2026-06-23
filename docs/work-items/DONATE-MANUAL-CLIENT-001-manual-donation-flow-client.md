@@ -1,6 +1,6 @@
 # Work-Item: DONATE-MANUAL-CLIENT-001 — Manual Donation Flow Client
 
-status: open
+status: done
 
 ## 1. Context & Problem
 
@@ -36,7 +36,7 @@ Extend `packages/client/src/donations.ts` with two new client factory functions:
 
 ## Acceptance Criteria
 
-- [ ] Add to `packages/client/src/donations.ts`:
+- [x] Add to `packages/client/src/donations.ts`:
   - `SubmitReceiptClientInput` — `{ receiptMediaId: string }`.
   - `SubmitReceiptClientSuccess` — `{ ok: true; status: 'receipt_submitted'; donationId: string }`.
   - `SubmitReceiptClientFailure` and `SubmitReceiptClientResult` types.
@@ -47,11 +47,11 @@ Extend `packages/client/src/donations.ts` with two new client factory functions:
   - `ReviewDonationClientFailure` and `ReviewDonationClientResult` types.
   - `ReviewDonationClient` — `{ reviewDonation(donationId, input): Promise<ReviewDonationClientResult> }`.
   - `createReviewDonationClient({ workerBaseUrl, donationsPath, getAccessToken, fetch })`.
-- [ ] Export all new types and factories from `packages/client/src/index.ts`.
-- [ ] Tests in `tests/client/donation-manual-client.test.ts`:
+- [x] Export all new types and factories from `packages/client/src/index.ts`.
+- [x] Tests in `tests/client/donation-manual-client.test.ts`:
   - Submit receipt: unauthenticated, donation not found, wrong state, missing media, success.
   - Review: unauthenticated, forbidden, wrong state, approve success, reject success.
-- [ ] Final validation: `npm run typecheck`, `npm run lint`, `npm run test`, `npm run build`.
+- [x] Final validation: `npm run typecheck`, `npm run lint`, `npm run test`, `npm run build`.
 
 ## 3. Non-Goals
 
@@ -66,4 +66,4 @@ Extend `packages/client/src/donations.ts` with two new client factory functions:
 
 ## Completion Notes
 
-Pending implementation.
+Added `createSubmitReceiptClient` (PATCH `/donations/:id/receipt`) and `createReviewDonationClient` (PATCH `/donations/:id/review`) to `packages/client/src/donations.ts`. Both factories follow the established client pattern: unauthenticated guard, PATCH with Bearer + JSON body, typed success/failure parsing. `SubmitReceiptClientSuccess` holds `{ status: 'receipt_submitted', donationId }`. `ReviewDonationClientSuccess` holds `{ status: 'donation_approved' | 'donation_rejected', donationId }`. All new types auto-exported via existing `index.ts` barrel. 16 new tests, 2335 total, full pipeline green.
