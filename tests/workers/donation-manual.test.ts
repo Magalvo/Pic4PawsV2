@@ -288,7 +288,7 @@ describe('handleReviewDonationRequest', () => {
       payload: { decision: 'approved' },
       repository: makeReviewRepo(),
       authenticator: makeAuth(makeShelterMember()),
-      now: '2026-06-23T10:00:00.000Z',
+      now: () => '2026-06-23T10:00:00.000Z',
     });
     expect(res.status).toBe(405);
   });
@@ -300,7 +300,7 @@ describe('handleReviewDonationRequest', () => {
       payload: { decision: 'approved' },
       repository: makeReviewRepo(),
       authenticator: makeAuth(makeShelterMember()),
-      now: '2026-06-23T10:00:00.000Z',
+      now: () => '2026-06-23T10:00:00.000Z',
     });
     expect(res.status).toBe(401);
   });
@@ -312,7 +312,7 @@ describe('handleReviewDonationRequest', () => {
       payload: { decision: 'approved' },
       repository: makeReviewRepo(),
       authenticator: makeAuth(makeDonor()),
-      now: '2026-06-23T10:00:00.000Z',
+      now: () => '2026-06-23T10:00:00.000Z',
     });
     expect(res.status).toBe(403);
     const body = await res.json() as { status: string };
@@ -328,7 +328,7 @@ describe('handleReviewDonationRequest', () => {
       payload: { decision: 'approved' },
       repository: repo,
       authenticator: makeAuth(makeShelterMember()),
-      now: '2026-06-23T10:00:00.000Z',
+      now: () => '2026-06-23T10:00:00.000Z',
     });
     expect(res.status).toBe(404);
   });
@@ -341,7 +341,7 @@ describe('handleReviewDonationRequest', () => {
       payload: { decision: 'approved' },
       repository: repo,
       authenticator: makeAuth(makeShelterMember()),
-      now: '2026-06-23T10:00:00.000Z',
+      now: () => '2026-06-23T10:00:00.000Z',
     });
     expect(res.status).toBe(409);
     const body = await res.json() as { status: string };
@@ -355,7 +355,7 @@ describe('handleReviewDonationRequest', () => {
       payload: { decision: 'maybe' },
       repository: makeReviewRepo(),
       authenticator: makeAuth(makeShelterMember()),
-      now: '2026-06-23T10:00:00.000Z',
+      now: () => '2026-06-23T10:00:00.000Z',
     });
     expect(res.status).toBe(400);
   });
@@ -369,7 +369,7 @@ describe('handleReviewDonationRequest', () => {
       payload: { decision: 'approved' },
       repository: repo,
       authenticator: makeAuth(makeShelterMember()),
-      now,
+      now: () => now,
     });
     expect(res.status).toBe(200);
     const body = await res.json() as { status: string; donationId: string };
@@ -393,7 +393,7 @@ describe('handleReviewDonationRequest', () => {
       repository: repo,
       authenticator: makeAuth(makeShelterMember()),
       notificationRepository: notificationRepo,
-      now: '2026-06-23T10:00:00.000Z',
+      now: () => '2026-06-23T10:00:00.000Z',
     });
     // fire-and-forget — called but not awaited
     expect(notificationRepo.notifyDonationPaid).toHaveBeenCalled();
@@ -408,7 +408,7 @@ describe('handleReviewDonationRequest', () => {
       payload: { decision: 'rejected' },
       repository: repo,
       authenticator: makeAuth(makeShelterMember()),
-      now,
+      now: () => now,
     });
     expect(res.status).toBe(200);
     const body = await res.json() as { status: string; donationId: string };
@@ -430,7 +430,7 @@ describe('handleReviewDonationRequest', () => {
       repository: repo,
       authenticator: makeAuth(makeShelterMember()),
       notificationRepository: notificationRepo,
-      now: '2026-06-23T10:00:00.000Z',
+      now: () => '2026-06-23T10:00:00.000Z',
     });
     expect(notificationRepo.notifyDonationPaid).not.toHaveBeenCalled();
   });

@@ -152,7 +152,7 @@ export type HandleReviewDonationRequestInput = {
   repository?: DonationManualRepository;
   authenticator?: WorkerPetDraftAuthenticator;
   notificationRepository?: NotificationRepository;
-  now: string;
+  now: () => string;
 };
 
 export const handleReviewDonationRequest = async ({
@@ -203,11 +203,13 @@ export const handleReviewDonationRequest = async ({
     return jsonResponse({ status: 'invalid_review', reasons: validation.reasons }, { status: 400 });
   }
 
+  const timestamp = now();
+
   if (validation.decision === 'approved') {
     await repository.approveDonation(donationId, {
       reviewedByUserId: actor.id,
-      reviewedAt: now,
-      paidAt: now,
+      reviewedAt: timestamp,
+      paidAt: timestamp,
     });
 
     // Fire-and-forget — failure must not roll back the review transition
@@ -225,7 +227,7 @@ export const handleReviewDonationRequest = async ({
 
   await repository.rejectDonation(donationId, {
     reviewedByUserId: actor.id,
-    reviewedAt: now,
+    reviewedAt: timestamp,
   });
 
   return jsonResponse({ status: 'donation_rejected', donationId }, { status: 200 });
