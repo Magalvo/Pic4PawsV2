@@ -74,6 +74,10 @@ import {
   type WebShelterUpdateUiContent,
 } from './shelter-update';
 import {
+  webShelterPaymentConfigUiContent,
+  type WebShelterPaymentConfigUiContent,
+} from './shelter-payment-config';
+import {
   webUserRegistrationUiContent,
   type WebUserRegistrationUiContent,
 } from './user-register';
@@ -121,6 +125,7 @@ export type WebFoundationContent = {
   shelterPetList: Pick<WebShelterPetListUiContent, 'title' | 'description' | 'status'>;
   shelterRegistration: Pick<WebShelterRegistrationUiContent, 'title' | 'description' | 'status'>;
   shelterUpdate: Pick<WebShelterUpdateUiContent, 'title' | 'description' | 'status'>;
+  shelterPaymentConfig: Pick<WebShelterPaymentConfigUiContent, 'title' | 'description' | 'status'>;
   userRegistration: Pick<WebUserRegistrationUiContent, 'title' | 'description' | 'status'>;
   readiness: Array<{
     id: 'database' | 'auth' | 'pets' | 'payments' | 'media' | 'workers';
@@ -291,6 +296,11 @@ export const webFoundationContent: WebFoundationContent = {
     title: webShelterUpdateUiContent.title,
     description: webShelterUpdateUiContent.description,
     status: webShelterUpdateUiContent.status,
+  },
+  shelterPaymentConfig: {
+    title: webShelterPaymentConfigUiContent.title,
+    description: webShelterPaymentConfigUiContent.description,
+    status: webShelterPaymentConfigUiContent.status,
   },
   userRegistration: {
     title: webUserRegistrationUiContent.title,
