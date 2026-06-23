@@ -107,6 +107,10 @@ import {
   type MobileDonationReceiptUiContent,
 } from './donation-receipt';
 import {
+  mobileDonationReviewUiContent,
+  type MobileDonationReviewUiContent,
+} from './donation-review';
+import {
   mobileUserRegistrationUiContent,
   type MobileUserRegistrationUiContent,
 } from './user-register';
@@ -156,6 +160,7 @@ export type MobileFoundationContent = {
   shelterUpdate: Pick<MobileShelterUpdateUiContent, 'title' | 'description' | 'status'>;
   shelterPaymentConfig: Pick<MobileShelterPaymentConfigUiContent, 'title' | 'description' | 'status'>;
   donationReceipt: Pick<MobileDonationReceiptUiContent, 'title' | 'description' | 'status'>;
+  donationReview: Pick<MobileDonationReviewUiContent, 'title' | 'description' | 'status'>;
   userRegistration: Pick<MobileUserRegistrationUiContent, 'title' | 'description' | 'status'>;
   readiness: Array<{
     id: 'database' | 'auth' | 'pets' | 'payments' | 'media' | 'workers';
@@ -336,6 +341,11 @@ export const mobileFoundationContent: MobileFoundationContent = {
     title: mobileDonationReceiptUiContent.title,
     description: mobileDonationReceiptUiContent.description,
     status: mobileDonationReceiptUiContent.status,
+  },
+  donationReview: {
+    title: mobileDonationReviewUiContent.title,
+    description: mobileDonationReviewUiContent.description,
+    status: mobileDonationReviewUiContent.status,
   },
   userRegistration: {
     title: mobileUserRegistrationUiContent.title,

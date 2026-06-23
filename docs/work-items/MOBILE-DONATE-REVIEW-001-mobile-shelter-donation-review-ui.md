@@ -1,6 +1,6 @@
 # Work-Item: MOBILE-DONATE-REVIEW-001 — Mobile Shelter Donation Review UI
 
-status: open
+status: done
 
 ## Goal
 
@@ -47,4 +47,4 @@ Tests in `tests/mobile/donation-review-ui.test.ts`. Final validation must pass.
 
 ## Completion Notes
 
-Pending implementation.
+Implemented `createMobileDonationReviewUi` in `apps/mobile/src/donation-review.ts` with `loadDonation`, `approve`, and `reject` methods. All methods map client failure statuses to typed discriminated-union states (idle/approving/rejecting/approved/rejected/wrong_state/forbidden/failed). Screen created at `apps/mobile/app/abrigos/[shelterId]/doacoes/[donationId].tsx` (coexists with `doacoes.tsx` following the same pattern as `candidaturas.tsx` + `candidaturas/[applicationId].tsx`). Both action buttons show `Alert.alert` confirmation dialogs before calling the UI method. Foundation updated with `donationReview` entry. 19 unit tests pass; full 2435-test suite, typecheck, lint, and build all green.
