@@ -102,6 +102,9 @@ export const paymentMethodEnum = pgEnum('payment_method', [
 
 export const donationStatusEnum = pgEnum('donation_status', [
   'created',
+  'pending_receipt',
+  'pending_review',
+  'rejected',
   'pending_payment',
   'paid',
   'failed',
@@ -109,6 +112,8 @@ export const donationStatusEnum = pgEnum('donation_status', [
   'refunded',
   'partially_refunded',
 ]);
+
+export const shelterPaymentTierEnum = pgEnum('shelter_payment_tier', ['manual', 'automated']);
 
 export const sponsorshipStatusEnum = pgEnum('sponsorship_status', [
   'active',
@@ -194,6 +199,24 @@ export const shelterMemberships = pgTable(
     ...auditColumns,
   },
   (table) => [uniqueIndex('shelter_memberships_user_shelter_unique').on(table.userId, table.shelterId)],
+);
+
+export const shelterPaymentConfigs = pgTable(
+  'shelter_payment_configs',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    shelterId: uuid('shelter_id').notNull().references(() => shelters.id),
+    tier: shelterPaymentTierEnum('tier').notNull().default('manual'),
+    iban: text('iban'),
+    mbWayPhone: text('mb_way_phone'),
+    provider: paymentProviderEnum('provider'),
+    apiKeyEncrypted: text('api_key_encrypted'),
+    webhookSecretEncrypted: text('webhook_secret_encrypted'),
+    webhookUrlPath: text('webhook_url_path'),
+    status: paymentAccountStatusEnum('status').notNull().default('not_configured'),
+    ...auditColumns,
+  },
+  (table) => [uniqueIndex('shelter_payment_configs_shelter_id_unique').on(table.shelterId)],
 );
 
 export const mediaAssets = pgTable('media_assets', {
@@ -323,6 +346,9 @@ export const donationTransactions = pgTable(
       .default(sql`'[]'::jsonb`),
     publicMessage: text('public_message'),
     anonymous: boolean('anonymous').notNull().default(false),
+    receiptMediaId: uuid('receipt_media_id').references(() => mediaAssets.id),
+    reviewedByUserId: uuid('reviewed_by_user_id').references(() => users.id),
+    reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
     ...auditColumns,
   },
   (table) => [

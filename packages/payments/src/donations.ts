@@ -6,6 +6,9 @@ export type PaymentMethod = 'mb_way' | 'multibanco' | 'card' | 'bank_transfer' |
 
 export type DonationStatus =
   | 'created'
+  | 'pending_receipt'
+  | 'pending_review'
+  | 'rejected'
   | 'pending_payment'
   | 'paid'
   | 'failed'

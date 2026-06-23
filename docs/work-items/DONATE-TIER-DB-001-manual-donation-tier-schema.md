@@ -1,6 +1,6 @@
 # Work-Item: DONATE-TIER-DB-001 — Manual Donation Tier Schema
 
-status: open
+status: done
 
 ## 1. Context & Problem
 
@@ -32,9 +32,9 @@ columns on `donation_transactions`, and a Drizzle-compatible migration artifact 
 
 ## Acceptance Criteria
 
-- [ ] Add `shelterPaymentTierEnum` = `pgEnum('shelter_payment_tier', ['manual', 'automated'])`
+- [x] Add `shelterPaymentTierEnum` = `pgEnum('shelter_payment_tier', ['manual', 'automated'])`
   to `packages/database/src/schema.ts`.
-- [ ] Add `shelterPaymentConfigs` table to `packages/database/src/schema.ts` with:
+- [x] Add `shelterPaymentConfigs` table to `packages/database/src/schema.ts` with:
   - `id` (uuid PK), `shelterId` (FK → shelters.id), `tier` (shelterPaymentTierEnum, not null, default `'manual'`).
   - Manual tier: `iban text`, `mbWayPhone text` (both nullable).
   - Phase 2 placeholder (nullable, not used in Phase 1): `provider paymentProviderEnum`,
@@ -42,13 +42,13 @@ columns on `donation_transactions`, and a Drizzle-compatible migration artifact 
   - `status paymentAccountStatusEnum` (not null, default `'not_configured'`).
   - Standard `auditColumns` (`createdAt`, `updatedAt`, `deletedAt`).
   - Unique index on `shelter_id`.
-- [ ] Extend `donationStatusEnum` in `schema.ts` to include `'pending_receipt'`,
+- [x] Extend `donationStatusEnum` in `schema.ts` to include `'pending_receipt'`,
   `'pending_review'`, `'rejected'` (order: after `'created'`, before `'pending_payment'`).
-- [ ] Add nullable columns to `donationTransactions` in `schema.ts`:
+- [x] Add nullable columns to `donationTransactions` in `schema.ts`:
   `receiptMediaId uuid` (FK → `mediaAssets.id`), `reviewedByUserId uuid` (FK → `users.id`),
   `reviewedAt timestamptz`.
-- [ ] Update `DonationStatus` in `packages/payments/src/donations.ts` to include the three new values.
-- [ ] Add migration artifact `0007_manual_donation_tier` to
+- [x] Update `DonationStatus` in `packages/payments/src/donations.ts` to include the three new values.
+- [x] Add migration artifact `0007_manual_donation_tier` to
   `packages/database/src/migration-artifacts.ts`:
   - `ALTER TYPE public.donation_status ADD VALUE 'pending_receipt' BEFORE 'pending_payment'`
   - `ALTER TYPE public.donation_status ADD VALUE 'pending_review' AFTER 'pending_receipt'`
@@ -59,9 +59,9 @@ columns on `donation_transactions`, and a Drizzle-compatible migration artifact 
   - `ALTER TABLE public.donation_transactions ADD COLUMN receipt_media_id uuid REFERENCES public.media_assets(id)`
   - `ALTER TABLE public.donation_transactions ADD COLUMN reviewed_by_user_id uuid REFERENCES public.users(id)`
   - `ALTER TABLE public.donation_transactions ADD COLUMN reviewed_at timestamptz`
-- [ ] `assertNonDestructiveMigration` passes for migration 0007 (no DROP/TRUNCATE/DELETE).
-- [ ] No existing test breaks (additive schema only).
-- [ ] Final validation: `npm run typecheck`, `npm run lint`, `npm run test`, `npm run build`.
+- [x] `assertNonDestructiveMigration` passes for migration 0007 (no DROP/TRUNCATE/DELETE).
+- [x] No existing test breaks (additive schema only).
+- [x] Final validation: `npm run typecheck`, `npm run lint`, `npm run test`, `npm run build`.
 
 ## 3. Implementation Note — PostgreSQL Enum Caveat
 
@@ -84,4 +84,8 @@ this constraint.
 
 ## Completion Notes
 
-Pending implementation.
+- `shelterPaymentTierEnum` and `shelterPaymentConfigs` added to `schema.ts`; Phase 2 provider columns present as nullable placeholders.
+- `donationStatusEnum` extended with `pending_receipt`, `pending_review`, `rejected` — ordered before `pending_payment` to match the manual tier lifecycle.
+- `DonationStatus` type union in `packages/payments/src/donations.ts` updated to match.
+- Migration 0007 SQL uses bare `ALTER TYPE ... ADD VALUE` statements (no `BEGIN`/`COMMIT`) to satisfy the PostgreSQL constraint on enum mutations outside explicit transactions.
+- All 2252 tests pass; no existing behaviour changed.

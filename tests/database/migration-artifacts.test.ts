@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   assertNonDestructiveMigration,
   initialDatabaseMigration,
+  manualDonationTierMigration,
   migrationArtifacts,
   notificationsMigration,
   processPaymentWebhookEventMigration,
@@ -23,6 +24,7 @@ describe('database migration artifacts', () => {
       processPaymentWebhookEventMigration,
       registerUserMigration,
       pushTokensMigration,
+      manualDonationTierMigration,
     ]);
   });
 
@@ -115,6 +117,41 @@ describe('database migration artifacts', () => {
     expect(sql).toContain('alter table public.pets enable row level security;');
     expect(sql).toContain('create policy pets_public_can_read_published_verified_shelter_pets');
     expect(sql).toContain('admin_can_manage_all_core_tables_on_users');
+  });
+
+  it('includes the manual donation tier schema as migration 0007', () => {
+    expect(manualDonationTierMigration.id).toBe('0007_manual_donation_tier');
+    expect(manualDonationTierMigration.filename).toBe('0007_manual_donation_tier.sql');
+    expect(manualDonationTierMigration.destructive).toBe(false);
+
+    const sql = renderMigrationArtifact(manualDonationTierMigration);
+
+    // New donation_status values via ALTER TYPE (no transaction)
+    expect(sql).toContain("alter type public.donation_status add value 'pending_receipt'");
+    expect(sql).toContain("alter type public.donation_status add value 'pending_review'");
+    expect(sql).toContain("alter type public.donation_status add value 'rejected'");
+    // ALTER TYPE ... ADD VALUE cannot run inside an explicit transaction
+    expect(sql).not.toMatch(/\bbegin\b/i);
+    expect(sql).not.toMatch(/\bcommit\b/i);
+
+    // New shelter_payment_tier enum and config table
+    expect(sql).toContain("create type public.shelter_payment_tier as enum");
+    expect(sql).toContain('create table public.shelter_payment_configs');
+    expect(sql).toContain('shelter_id uuid not null references public.shelters(id)');
+    expect(sql).toContain("constraint shelter_payment_configs_shelter_id_unique unique (shelter_id)");
+
+    // New nullable columns on donation_transactions
+    expect(sql).toContain(
+      'alter table public.donation_transactions add column receipt_media_id uuid references public.media_assets(id)',
+    );
+    expect(sql).toContain(
+      'alter table public.donation_transactions add column reviewed_by_user_id uuid references public.users(id)',
+    );
+    expect(sql).toContain(
+      'alter table public.donation_transactions add column reviewed_at timestamptz',
+    );
+
+    expect(() => assertNonDestructiveMigration(manualDonationTierMigration)).not.toThrow();
   });
 
   it('guards migration artifacts against destructive SQL', () => {
