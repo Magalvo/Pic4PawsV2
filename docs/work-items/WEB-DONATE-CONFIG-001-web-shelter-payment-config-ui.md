@@ -1,6 +1,6 @@
 # Work-Item: WEB-DONATE-CONFIG-001 — Web Shelter Payment Config UI
 
-status: open
+status: done
 
 ## Goal
 
@@ -42,4 +42,4 @@ Tests in `tests/web/shelter-payment-config-ui.test.ts`. Final validation must pa
 
 ## Completion Notes
 
-Pending implementation.
+Created `apps/web/src/shelter-payment-config.ts` with `webShelterPaymentConfigUiContent` (pt-PT, product-flow-ready, 5 states: idle/saving/saved/failed/forbidden), `WebShelterPaymentConfigState` union, and `createWebShelterPaymentConfigUi({ saveConfigClient, loadConfigClient })`. `loadConfig` maps configured → `idle` (with iban/mbWayPhone pre-filled), unconfigured → `idle` (empty strings), `forbidden` → `forbidden` state, other failures → `failed` with sanitized reasons. `saveConfig` maps success → `saved`, `forbidden` → `forbidden`, `invalid_config`/`unauthenticated`/network errors → `failed`. Added `shelterPaymentConfig` entry to `foundation.ts`. Page at `/abrigos/[shelterId]/pagamento` uses `useEffect` to call `loadConfig` and pre-populate IBAN/phone fields; form submit calls `saveConfig`. 15 new tests, 2350 total, full pipeline green.
