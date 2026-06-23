@@ -17,8 +17,8 @@ import {
   createMobileDonationReviewUi,
   type MobileDonationReviewViewModel,
 } from '../../../../src/donation-review';
-import { workerUrl, supabaseUrl, supabaseAnonKey } from '../../../../src/env';
-import { createClient } from '@supabase/supabase-js';
+import { workerUrl } from '../../../../src/env';
+import { mobileSupabaseClient } from '../../../../src/supabase';
 
 export default function DoacaoReviewScreen() {
   const { shelterId, donationId } = useLocalSearchParams<{ shelterId: string; donationId: string }>();
@@ -28,7 +28,7 @@ export default function DoacaoReviewScreen() {
 
   useEffect(() => {
     setViewModel(null);
-    const supabase = createClient(supabaseUrl(), supabaseAnonKey());
+    const supabase = mobileSupabaseClient;
     const getAccessToken = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       return session?.access_token ?? null;
@@ -60,8 +60,9 @@ export default function DoacaoReviewScreen() {
         {
           text: 'Aprovar',
           onPress: async () => {
+            if (!uiRef.current) return;
             setViewModel({ state: 'approving', title: 'A aprovar...' });
-            const result = await uiRef.current!.approve(donationId);
+            const result = await uiRef.current.approve(donationId);
             setViewModel(result);
           },
         },
@@ -80,8 +81,9 @@ export default function DoacaoReviewScreen() {
           text: 'Rejeitar',
           style: 'destructive',
           onPress: async () => {
+            if (!uiRef.current) return;
             setViewModel({ state: 'rejecting', title: 'A rejeitar...' });
-            const result = await uiRef.current!.reject(donationId);
+            const result = await uiRef.current.reject(donationId);
             setViewModel(result);
           },
         },
