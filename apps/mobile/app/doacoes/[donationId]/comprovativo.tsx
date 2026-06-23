@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import {
-  Alert,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -9,6 +8,7 @@ import {
   View,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import * as ImagePicker from 'expo-image-picker';
 import {
   createDonationStatusClient,
   createSubmitReceiptClient,
@@ -69,48 +69,37 @@ export default function ComprovativoScreen() {
 
   const [isUploading, setIsUploading] = useState(false);
 
-  const handleSelectAndUpload = () => {
+  const handleSelectAndUpload = async () => {
     if (!uiRef.current) return;
-
-    Alert.alert(
-      'Selecionar comprovativo',
-      'Escolhe como pretendes adicionar o comprovativo.',
-      [
-        {
-          text: 'Cancelar',
-          style: 'cancel',
-        },
-        {
-          text: 'Galeria / Ficheiro',
-          onPress: async () => {
-            if (!uiRef.current) return;
-            setIsUploading(true);
-            try {
-              const mockFile: MobileDonationReceiptFileInput = {
-                uri: 'file:///data/placeholder/receipt.jpg',
-                type: 'image/jpeg',
-                name: 'receipt.jpg',
-                size: 0,
-              };
-              setViewModel({ state: 'uploading', title: 'A carregar ficheiro...' });
-              const result = await uiRef.current.uploadAndSubmit(donationId, mockFile);
-              setViewModel(result);
-            } catch {
-              setViewModel({
-                state: 'failed',
-                title: 'Erro inesperado',
-                message: 'Ocorreu um erro inesperado. Tenta de novo.',
-                status: 'media_upload_failed',
-                reasons: [],
-                canRetry: true,
-              });
-            } finally {
-              setIsUploading(false);
-            }
-          },
-        },
-      ],
-    );
+    setIsUploading(true);
+    try {
+      const pickerResult = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        quality: 0.8,
+      });
+      if (pickerResult.canceled || !pickerResult.assets[0]) return;
+      const asset = pickerResult.assets[0];
+      const file: MobileDonationReceiptFileInput = {
+        uri: asset.uri,
+        type: asset.mimeType ?? 'image/jpeg',
+        name: asset.fileName ?? 'receipt.jpg',
+        size: asset.fileSize ?? 0,
+      };
+      setViewModel({ state: 'uploading', title: 'A carregar ficheiro...' });
+      const result = await uiRef.current.uploadAndSubmit(donationId, file);
+      setViewModel(result);
+    } catch {
+      setViewModel({
+        state: 'failed',
+        title: 'Erro inesperado',
+        message: 'Ocorreu um erro inesperado. Tenta de novo.',
+        status: 'media_upload_failed',
+        reasons: [],
+        canRetry: true,
+      });
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   if (viewModel === null) {
