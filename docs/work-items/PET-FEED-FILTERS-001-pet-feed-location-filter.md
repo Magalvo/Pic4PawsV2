@@ -1,5 +1,7 @@
 # PET-FEED-FILTERS-001 — Pet feed location filter
 
+status: done
+
 ## Goal
 
 Add `location` query param to `GET /pets` so adopters can narrow the feed to pets
@@ -59,3 +61,7 @@ and `empty` states.
   add to URL param building in `createPetFeedClient`
 - `tests/workers/pet-feed.test.ts` (modify) — add location filter tests
 - `tests/client/pet-feed-client.test.ts` (modify) — add location URL param test
+
+## Completion Notes
+
+All layers implemented: `location` added to `PetFeedQuery` and `PetFeedClientQuery`, `parseLocation` in worker, `.eq('location_label', query.location)` filter in Supabase adapter, `url.searchParams.set('location', ...)` in `createPetFeedClient`. Tests cover passing location, omitting null, combining with species, and omitting params when empty. 12 client tests and worker location tests all pass.
