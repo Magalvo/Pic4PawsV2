@@ -47,4 +47,4 @@ Tests in `tests/web/donation-review-ui.test.ts`. Final validation must pass.
 
 ## Completion Notes
 
-Pending implementation.
+Implemented `createWebDonationReviewUi` in `apps/web/src/donation-review.ts` with `loadDonation`, `approveDonation`, and `rejectDonation` methods. All three map client failure statuses to typed discriminated-union states (idle/approving/rejecting/approved/rejected/wrong_state/forbidden/failed). Review page created at `apps/web/app/abrigos/[shelterId]/doacoes/[donationId]/page.tsx` with `window.confirm` guards before each action and receipt media ID display. Foundation updated with `donationReview` entry. `receiptMediaId: string | null` added to `DonationStatusClientItem` and parser. 19 unit tests pass; full 2416-test suite, typecheck, lint, and build all green.
