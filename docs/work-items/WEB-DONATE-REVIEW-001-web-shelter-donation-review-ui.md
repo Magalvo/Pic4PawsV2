@@ -1,6 +1,6 @@
 # Work-Item: WEB-DONATE-REVIEW-001 — Web Shelter Donation Review UI
 
-status: open
+status: done
 
 ## Goal
 

@@ -23,6 +23,7 @@ const successResult: DonationStatusClientResult = {
     paymentMethod: 'mb_way',
     shelterId: 'shelter-001',
     petId: null,
+    receiptMediaId: null,
     createdAt: '2026-06-18T00:00:00.000Z',
   },
 };
