@@ -77,6 +77,8 @@ export type DonationClient = {
 export type DonationClientStatus =
   | 'created'
   | 'pending_payment'
+  | 'pending_receipt'
+  | 'pending_review'
   | 'paid'
   | 'failed'
   | 'cancelled'
