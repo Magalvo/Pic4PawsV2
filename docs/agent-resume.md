@@ -59,11 +59,11 @@ Do not batch items that can be reviewed or merged independently.
 - `npm run test`
 - `npm run build`
 
-## 4. Current State As Of 2026-06-22
+## 4. Current State As Of 2026-06-23
 
-**Repository status**: 2216 tests passing (261 test files). Tracks A–H complete + GDPR legal pages + push token Worker route done.
+**Repository status**: 2437 tests passing (274 test files). Push notifications complete. Full manual-donation slice complete + audit-remediated.
 
-**Main branch HEAD**: PR #239 (GDPR-LEGAL-001) — `b289ae1`. Branch `agent/PUSH-TOKEN-WORKER-001` ready to PR.
+**Main branch HEAD**: PR #266 (DONATE-PKGS-001) — `af65636`.
 - `npm run typecheck` ✅
 - `npm run lint` ✅
 - `npm run test` ✅
@@ -71,9 +71,9 @@ Do not batch items that can be reviewed or merged independently.
 
 > **Note**: `packages/config/dist/` and `packages/domain/dist/` are gitignored. After pulling or switching branches, run `npm run build -w packages/config` and/or `npm run build -w packages/domain` if typecheck fails on `EnvironmentConfig` or domain types.
 
-**Latest checkpoint**: [2026-06-21-user-registration-complete.md](docs/checkpoints/2026-06-21-user-registration-complete.md) — covers Tracks A–H, PRs #157–#237, 2163 tests (pre-GDPR/push-token)
+**Latest checkpoint**: [2026-06-23-donation-manual-complete.md](docs/checkpoints/2026-06-23-donation-manual-complete.md) — covers PRs #240–#267, 2437 tests
 
-**Latest audit**: [2026-06-21-sdd-audit-prs-225-234.md](docs/audits/2026-06-21-sdd-audit-prs-225-234.md) — score 9/10, open P2: rollback (closed by PR #237), fragile email detection (deferred)
+**Latest audit**: [2026-06-23-sdd-audit-prs-235-258.md](docs/audits/2026-06-23-sdd-audit-prs-235-258.md) — score 7/10, all findings F-01–F-14 + N-01/N-02 remediated by PRs #261–#267
 
 **Track E complete**: `PASSWD-RESET-WEB-001` (PR #207) + `PASSWD-RESET-MOBILE-001` (PR #208). Web: `/recuperar-palavra-passe` + `/recuperar-palavra-passe/confirmar`; mobile: `(auth)/recuperar-palavra-passe` screen (confirm step on web). Mobile `redirectTo` uses `EXPO_PUBLIC_WEB_BASE_URL ?? 'https://pic4paws.pt'`.
 
@@ -93,7 +93,7 @@ Do not batch items that can be reviewed or merged independently.
 **Track H complete**: `USER-REGISTER-DB-001` + `USER-REGISTER-WORKER-001` (PR #229) + `USER-REGISTER-WEB-001` (PR #233) + `USER-REGISTER-MOBILE-001` (PR #234) + `WEB-LANDING-001` (PR #236) + `USER-REGISTER-ROLLBACK-001` (PR #237). Public `POST /users/register` (no auth token required) creates Supabase auth user via `auth.admin.createUser` then calls `register_user` RPC — password never touches the DB layer. Best-effort `auth.admin.deleteUser` rollback prevents orphaned auth accounts when the RPC fails. Web: `/registar` page with GDPR checkbox (`gdprConsentVersion: 'v1'`). Mobile: `(auth)/registar.tsx` screen with `Pressable` GDPR checkbox and `router.replace` on success. Landing page: dev dashboard replaced with real hero + CTAs + feature cards at `/`; `webFoundationContent.primaryAction.href` updated to `/registar`.
 - Audit `2026-06-21-sdd-audit-prs-225-234.md` (PR #235, score 9/10) — P2-1 (orphaned auth user) closed by PR #237; P2-2 (fragile email detection) deferred.
 
-### Merged Work Items (up to 2026-06-21)
+### Merged Work Items (up to 2026-06-23)
 
 **All of these are merged to `main` and passing validation**:
 
@@ -234,6 +234,22 @@ Do not batch items that can be reviewed or merged independently.
 - `SHELTER-REGISTER-RPC-HARDEN-001` — `register_shelter` RPC hardened: `set search_path = public`, schema-qualified table names, `p_verification_status`/`p_role` removed from signature (hardcoded to `draft`/`shelter_owner`), `REVOKE EXECUTE` from public/anon/authenticated, `GRANT EXECUTE` to service_role; `p_kind` typed as `public.shelter_kind`; old 14-arg unsafe overload dropped; RPC added to `migrationArtifacts` as `0003_register_shelter_rpc`.
 - `SHELTER-PROFILE-VISIBILITY-001` — public `GET /shelters/:shelterId` now filters `verification_status = 'verified'`; draft and rejected shelters return 404. Decision: Option A (public-only). No authenticated preview route added.
 - `WORKER-DISPATCH-MODULAR-001` — Worker dispatcher split into 8 per-domain route modules under `apps/workers/src/routes/` (pets, shelters, adoptions, donations, sponsorships, notifications, media, webhooks); `@pic4paws/client` split into per-domain modules with `index.ts` re-exporting everything. Route ordering enforced by `tests/workers/route-table.test.ts`.
+- `PUSH-TOKEN-WORKER-001` (PR #240) — `POST/DELETE /notifications/push-token` Worker routes; `PushTokenRepository` interface; `upsertPushToken` + `deletePushToken`; `PUSH_TOKEN_PLATFORMS`; `matchWorkerPushTokenPath`
+- `PUSH-TOKEN-CLIENT-001` (PR #242) — `createPushTokenClient` in `@pic4paws/client` with `registerToken(token, platform)` + `unregisterToken(token)`
+- `PUSH-DISPATCH-001` (PR #243) — `PushNotificationProvider` interface wired (optional, fire-and-forget) into `createSupabaseNotificationRepositories`; `sendPushNotification` dispatched from each `notifyXxx` method
+- `MOBILE-PUSH-001` (PR #244) — `expo-notifications` permission prompt + token registration on app start; unregister on sign-out; wired into root `_layout.tsx`
+- `DONATE-TIER-DB-001` (PR #245) — DB migration for manual donation tier: `payment_config` table; `tier` column (`manual | automated`)
+- `DONATE-CONFIG-WORKER-001` (PR #246) — `GET/PATCH /shelters/:shelterId/payment-config`; `PaymentConfigRepository`; IBAN + MB WAY phone validation
+- `DONATE-CONFIG-CLIENT-001` (PR #247) — `createSavePaymentConfigClient` + `createLoadPaymentConfigClient` in `@pic4paws/client`
+- `DONATE-TIER-WORKER-001` (PR #248) — donation tier routing: `manual` tier sets `initialStatus: pending_receipt` instead of `pending_payment`
+- `DONATE-MANUAL-WORKER-001` (PR #249) — `PATCH /donations/:id/receipt` (submit receipt) + `PATCH /donations/:id/review` (approve/reject); `DonationManualRepository`; `verifyMediaOwnership`
+- `DONATE-MANUAL-CLIENT-001` (PR #250) — `createSubmitReceiptClient` + `createReviewDonationClient` + `createMediaUploadFlowClient` in `@pic4paws/client`
+- `WEB-DONATE-CONFIG-001` (PR #251) — `createWebShelterPaymentConfigUi`; idle/saving/saved/failed states; PT-PT
+- `MOBILE-DONATE-CONFIG-001` (PR #252) — `pagamento.tsx` screen; `createMobileShelterPaymentConfigUi`; `useRef` lazy-init
+- `WEB-DONATE-RECEIPT-001` (PR #253) — `createWebDonationReceiptUi`; idle/uploading/submitting/submitted/wrong_state/forbidden/failed states
+- `MOBILE-DONATE-RECEIPT-001` (PR #254) — `comprovativo.tsx` screen; `expo-image-picker`; `isUploading` disabled-button guard; try/catch
+- `WEB-DONATE-REVIEW-001` (PR #255) — `createWebDonationReviewUi`; idle/loading/loaded/approved/rejected/forbidden/failed states; shelter-side review panel
+- `MOBILE-DONATE-REVIEW-001` (PR #256) — `doacoes/[donationId].tsx` screen; `createMobileDonationReviewUi`; `mobileSupabaseClient` singleton; `uiRef` null-guards
 
 Real UI screens, auth, and navigation (PRs #157–#199):
 
@@ -418,20 +434,19 @@ per deployment.
 
 ## 5. Recommended Next Work Item
 
-**Status as of 2026-06-22**: Tracks A–H complete. GDPR-LEGAL-001 merged (PR #239). PUSH-TOKEN-WORKER-001 done (PR pending on branch `agent/PUSH-TOKEN-WORKER-001`).
+**Status as of 2026-06-23**: Tracks A–H complete. GDPR-LEGAL-001 merged (PR #239). Push notification delivery complete (PRs #240–#244). Full manual donation slice complete (PRs #245–#256) + audit-remediated (PRs #261–#267, all F-01–F-14 + N-01/N-02 resolved). 2437 tests passing.
 
 **Production-readiness gaps (confirmed):**
 
-1. ~~**GDPR legal pages**~~ — **Done** (`GDPR-LEGAL-001`, PR #239). `/termos` and `/privacidade` static server components; middleware public routes; `/registar` GDPR checkbox links to both pages.
+1. ~~**GDPR legal pages**~~ — **Done** (`GDPR-LEGAL-001`, PR #239).
 
-2. **Payment provider env wiring** — `paymentWebhookVerifier` is `null` by factory default; Ifthenpay credentials must be configured in production `.env`. Not a work item — deployment config. Blocks donations/sponsorships in production.
+2. **Payment provider env wiring** — `paymentWebhookVerifier` is `null` by factory default; Ifthenpay credentials must be configured in production `.env`. Not a code work item — deployment config. Blocks donations/sponsorships in production.
 
-3. **Push notification delivery (partial)** — `push_tokens` table exists (migration 0006), Worker routes for `POST/DELETE /notifications/push-token` done (`PUSH-TOKEN-WORKER-001`). Remaining:
-   - `PUSH-TOKEN-CLIENT-001` — `createPushTokenClient` in `@pic4paws/client` with `registerToken` / `unregisterToken`
-   - `PUSH-DISPATCH-001` — `PushNotificationProvider` interface wired into `createSupabaseNotificationRepositories` (optional, fire-and-forget, similar to `paymentWebhookVerifier`)
-   - `MOBILE-PUSH-001` — `expo-notifications` permission + token registration on app start, unregister on sign-out
+3. ~~**Push notification delivery**~~ — **Done** (PRs #240–#244). `PUSH-TOKEN-WORKER-001` → `PUSH-TOKEN-CLIENT-001` → `PUSH-DISPATCH-001` → `MOBILE-PUSH-001` all merged. `expo-notifications` installed in `apps/mobile`.
 
 4. **Mobile app store artifacts** — EAS build configuration, app icons, splash screens, bundle identifiers not yet set up. Required before App Store / Play Store submission.
+
+**Recommended next**: consult `docs/work-tracks/remake-foundation.md` for the next planned track. Consider running a fresh SDD audit (`/sdd-audit`) to establish the new baseline before the next feature track begins.
 
 **Known deferred items:**
 - Mobile routing integration test (unauthenticated → redirect → sign-in → `returnTo`) requires React Native Testing Library setup.
@@ -450,8 +465,10 @@ Continue Pic4Paws V2 development from main using strict SDD/TDD:
 - Validate: npm run typecheck, lint, test, build
 - After any env.ts change: npm run build --workspace=packages/config
 
-Current state (2026-06-22, PR #239 + PUSH-TOKEN-WORKER-001 pending PR): 2216 tests passing (261 files).
-Tracks A–H complete + GDPR legal pages (PR #239) + push token Worker route done.
-Next: PUSH-TOKEN-CLIENT-001 → PUSH-DISPATCH-001 → MOBILE-PUSH-001 for end-to-end push notification delivery.
-Consult section 5 for the full gap list before choosing the next work item.
+Current state (2026-06-23, HEAD af65636 / PR #266): 2437 tests passing (274 files).
+Tracks A–H complete. GDPR legal pages done (PR #239). Push notifications done (PRs #240–#244).
+Full manual donation slice done + audit-remediated (PRs #245–#256, #261–#267).
+Next: consult docs/work-tracks/remake-foundation.md for the next planned track, or run a
+fresh SDD audit (/sdd-audit) to establish the new baseline before the next feature track.
+Consult section 5 for the full production-readiness gap list.
 ```
