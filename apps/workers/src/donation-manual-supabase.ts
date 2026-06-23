@@ -70,6 +70,7 @@ export const createSupabaseDonationManualRepositories = ({
         .select('id')
         .eq('id', mediaId)
         .eq('created_by_user_id', ownerUserId)
+        .eq('purpose', 'donation_receipt')
         .is('deleted_at', null)
         .maybeSingle()) as SupabaseQueryResult<MediaAssetOwnerRow>;
 
