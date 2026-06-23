@@ -22,6 +22,7 @@ const sampleDonation = {
   paymentMethod: 'mb_way' as const,
   shelterId: 'shelter-001',
   petId: null,
+  receiptMediaId: null,
   createdAt: '2026-06-08T12:00:00.000Z',
 };
 

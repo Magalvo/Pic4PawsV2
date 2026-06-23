@@ -82,6 +82,10 @@ import {
   type WebDonationReceiptUiContent,
 } from './donation-receipt';
 import {
+  webDonationReviewUiContent,
+  type WebDonationReviewUiContent,
+} from './donation-review';
+import {
   webUserRegistrationUiContent,
   type WebUserRegistrationUiContent,
 } from './user-register';
@@ -131,6 +135,7 @@ export type WebFoundationContent = {
   shelterUpdate: Pick<WebShelterUpdateUiContent, 'title' | 'description' | 'status'>;
   shelterPaymentConfig: Pick<WebShelterPaymentConfigUiContent, 'title' | 'description' | 'status'>;
   donationReceipt: Pick<WebDonationReceiptUiContent, 'title' | 'description' | 'status'>;
+  donationReview: Pick<WebDonationReviewUiContent, 'title' | 'description' | 'status'>;
   userRegistration: Pick<WebUserRegistrationUiContent, 'title' | 'description' | 'status'>;
   readiness: Array<{
     id: 'database' | 'auth' | 'pets' | 'payments' | 'media' | 'workers';
@@ -311,6 +316,11 @@ export const webFoundationContent: WebFoundationContent = {
     title: webDonationReceiptUiContent.title,
     description: webDonationReceiptUiContent.description,
     status: webDonationReceiptUiContent.status,
+  },
+  donationReview: {
+    title: webDonationReviewUiContent.title,
+    description: webDonationReviewUiContent.description,
+    status: webDonationReviewUiContent.status,
   },
   userRegistration: {
     title: webUserRegistrationUiContent.title,

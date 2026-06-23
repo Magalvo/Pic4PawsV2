@@ -29,6 +29,7 @@ const makeDonation = (donationStatus: DonationClientStatus = 'pending_receipt'):
   paymentMethod: 'bank_transfer',
   shelterId: 'shelter-001',
   petId: null,
+  receiptMediaId: null,
   createdAt: '2026-01-01T00:00:00.000Z',
 });
 
