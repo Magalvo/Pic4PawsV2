@@ -65,6 +65,7 @@ export const createSupabaseDonationManualRepositories = ({
     },
 
     verifyMediaOwnership: async (mediaId: string, ownerUserId: string): Promise<boolean> => {
+      if (!mediaId) return false;
       const result = (await client
         .from('media_assets')
         .select('id')
