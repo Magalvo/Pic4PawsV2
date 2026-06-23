@@ -11,6 +11,7 @@ const donationStub: DonationStatusClientItem = {
   paymentMethod: 'mb_way',
   shelterId: 'shelter-001',
   petId: null,
+  receiptMediaId: null,
   createdAt: '2026-06-14T00:00:00.000Z',
 };
 

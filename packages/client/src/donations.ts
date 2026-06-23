@@ -151,6 +151,7 @@ export type DonationStatusClientItem = {
   paymentMethod: DonationClientPaymentMethod;
   shelterId: string;
   petId: string | null;
+  receiptMediaId: string | null;
   createdAt: string;
 };
 
@@ -331,6 +332,7 @@ const parseDonationStatusSuccess = (
       paymentMethod: d.paymentMethod as DonationClientPaymentMethod,
       shelterId: d.shelterId,
       petId: typeof d.petId === 'string' ? d.petId : null,
+      receiptMediaId: typeof d.receiptMediaId === 'string' ? d.receiptMediaId : null,
       createdAt: d.createdAt,
     },
   };
