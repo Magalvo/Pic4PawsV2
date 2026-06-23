@@ -1,6 +1,6 @@
 # Work-Item: MOBILE-DONATE-CONFIG-001 — Mobile Shelter Payment Config UI
 
-status: open
+status: done
 
 ## Goal
 
@@ -46,4 +46,4 @@ Tests in `tests/mobile/shelter-payment-config-ui.test.ts`. Final validation must
 
 ## Completion Notes
 
-Pending implementation.
+Created `apps/mobile/src/shelter-payment-config.ts` with `mobileShelterPaymentConfigUiContent` (pt-PT, product-flow-ready, 5 states: idle/saving/saved/failed/forbidden), `MobileShelterPaymentConfigViewModel` union, and `createMobileShelterPaymentConfigUi({ saveConfigClient, loadConfigClient })`. `loadConfig` maps configured → `idle` (iban/mbWayPhone from response, both nullable), unconfigured → `idle` (nulls), `forbidden` → `forbidden` state, other failures → `failed` with sanitized reasons. `saveConfig` maps success → `saved`, `forbidden` → `forbidden`, `invalid_config`/`unauthenticated`/network → `failed`. Added `shelterPaymentConfig` to `apps/mobile/src/foundation.ts`. Screen at `pagamento.tsx` uses `useEffect` + `useLocalSearchParams`; `null` viewModel renders loading state; IBAN + optional MB WAY phone form fields; submit calls `saveConfig`. 15 new tests, 2365 total, full pipeline green.
