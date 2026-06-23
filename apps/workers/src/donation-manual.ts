@@ -1,6 +1,7 @@
 import { canManageShelter } from '@pic4paws/domain';
 import type { WorkerPetDraftAuthenticator } from './pet-drafts';
 import type { NotificationRepository } from './notification';
+import { jsonResponse, extractBearerToken } from './http';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -65,18 +66,6 @@ export const validateReviewPayload = (body: unknown): ReviewValidationResult => 
     return { valid: false, reasons: ['decision_invalid'] };
   }
   return { valid: true, decision: b.decision };
-};
-
-// ─── Shared helpers ───────────────────────────────────────────────────────────
-
-const jsonResponse = (body: unknown, init?: ResponseInit): Response =>
-  Response.json(body, init);
-
-const extractBearerToken = (request: Request): string | null => {
-  const auth = request.headers.get('Authorization');
-  if (!auth?.startsWith('Bearer ')) return null;
-  const token = auth.slice('Bearer '.length).trim();
-  return token.length > 0 ? token : null;
 };
 
 // ─── PATCH /donations/:id/receipt ─────────────────────────────────────────────

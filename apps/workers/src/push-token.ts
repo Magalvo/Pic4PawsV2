@@ -1,5 +1,6 @@
 import type { WorkerPetDraftAuthenticator } from './pet-drafts';
 import type { NotificationType } from './notification';
+import { jsonResponse, extractBearerToken } from './http';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -28,16 +29,6 @@ export const matchWorkerPushTokenPath = (
 ): boolean => pathname === `${notificationsPath}/push-token`;
 
 // ─── Handler ──────────────────────────────────────────────────────────────────
-
-const jsonResponse = (body: unknown, init?: ResponseInit): Response =>
-  Response.json(body, init);
-
-const extractBearerToken = (request: Request): string | null => {
-  const auth = request.headers.get('Authorization');
-  if (!auth?.startsWith('Bearer ')) return null;
-  const token = auth.slice('Bearer '.length).trim();
-  return token.length > 0 ? token : null;
-};
 
 export type HandleWorkerPushTokenRequestInput = {
   request: Request;
