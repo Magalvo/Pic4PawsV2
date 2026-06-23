@@ -1,6 +1,6 @@
 # Work-Item: DONATE-MANUAL-WORKER-001 — Manual Donation Review Worker
 
-status: open
+status: done
 
 ## 1. Context & Problem
 
@@ -39,7 +39,7 @@ member cannot forge a `paid` transition without going through the review endpoin
 
 ### PATCH /donations/:id/receipt
 
-- [ ] Create `apps/workers/src/donation-manual.ts` with:
+- [x] Create `apps/workers/src/donation-manual.ts` with:
   - `SubmitReceiptInput`, `ReviewDonationInput` types.
   - `validateReceiptPayload(payload)` — requires non-empty `receiptMediaId` string.
   - `validateReviewPayload(payload)` — requires `decision: 'approved' | 'rejected'`.
@@ -64,19 +64,19 @@ member cannot forge a `paid` transition without going through the review endpoin
     - If `decision = 'rejected'`: sets `status = 'rejected'`, `reviewed_by_user_id`, `reviewed_at`.
     - Fires `notifyDonationPaid` fire-and-forget for approved donations.
     - Returns 200 `{ status: 'donation_approved' | 'donation_rejected', donationId }`.
-- [ ] Create `apps/workers/src/donation-manual-supabase.ts` with
+- [x] Create `apps/workers/src/donation-manual-supabase.ts` with
   `createSupabaseDonationManualRepositories`.
-- [ ] Add `donationManualRepository?: DonationManualRepository` to `WorkerRequestDependencies`
+- [x] Add `donationManualRepository?: DonationManualRepository` to `WorkerRequestDependencies`
   in `apps/workers/src/dependencies.ts`; wire in factory functions.
-- [ ] Add path-matching and dispatch for the two new PATCH sub-paths in
+- [x] Add path-matching and dispatch for the two new PATCH sub-paths in
   `apps/workers/src/routes/donations.ts`.
   - Pattern: `/donations/:id/receipt` and `/donations/:id/review`.
   - Use a path matcher helper consistent with the existing `matchWorkerDonationStatusId`.
-- [ ] Tests in `tests/workers/donation-manual.test.ts` use injected fakes. Cover:
+- [x] Tests in `tests/workers/donation-manual.test.ts` use injected fakes. Cover:
   - Receipt: unauthenticated, wrong actor (not donor), wrong state, missing media, success.
   - Review (approve): unauthenticated, non-member, wrong state, success → paid + notification.
   - Review (reject): success → rejected, no notification fired.
-- [ ] Final validation: `npm run typecheck`, `npm run lint`, `npm run test`, `npm run build`.
+- [x] Final validation: `npm run typecheck`, `npm run lint`, `npm run test`, `npm run build`.
 
 ## 3. Security Notes
 
@@ -106,4 +106,4 @@ member cannot forge a `paid` transition without going through the review endpoin
 
 ## Completion Notes
 
-Pending implementation.
+Implemented `handleSubmitReceiptRequest` (PATCH /donations/:id/receipt) and `handleReviewDonationRequest` (PATCH /donations/:id/review) with injected `DonationManualRepository`. Donor identity check uses `actor.id === donation.donorUserId`; shelter membership check uses `canManageShelter`. `paid_at`/`reviewed_at` are always server-clock (`now`). `notifyDonationPaid` is fire-and-forget on approval — failure cannot roll back the transition. Sub-path matchers registered before `matchWorkerDonationStatusId` in the donations router. 28 tests, 2319 total, full pipeline green.

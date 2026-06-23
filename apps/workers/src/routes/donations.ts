@@ -3,6 +3,12 @@ import {
   handleWorkerDonationStatusRequest,
   matchWorkerDonationStatusId,
 } from '../donation-status';
+import {
+  handleSubmitReceiptRequest,
+  handleReviewDonationRequest,
+  matchWorkerDonationReceiptId,
+  matchWorkerDonationReviewId,
+} from '../donation-manual';
 import type { WorkerRequestDependencies } from '../dependencies';
 import { jsonResponse, parseJsonBody } from './shared';
 import type { WorkerParsedConfig } from './shared';
@@ -13,6 +19,32 @@ export const handle = async (
   dependencies: WorkerRequestDependencies,
 ): Promise<Response | null> => {
   const url = new URL(request.url);
+
+  const receiptDonationId = matchWorkerDonationReceiptId(url.pathname, config.workers.donationsPath);
+  if (receiptDonationId !== null) {
+    const payload = await parseJsonBody(request);
+    return handleSubmitReceiptRequest({
+      request,
+      donationId: receiptDonationId,
+      payload,
+      repository: dependencies.donationManualRepository,
+      authenticator: dependencies.petDraftAuthenticator,
+    });
+  }
+
+  const reviewDonationId = matchWorkerDonationReviewId(url.pathname, config.workers.donationsPath);
+  if (reviewDonationId !== null) {
+    const payload = await parseJsonBody(request);
+    return handleReviewDonationRequest({
+      request,
+      donationId: reviewDonationId,
+      payload,
+      repository: dependencies.donationManualRepository,
+      authenticator: dependencies.petDraftAuthenticator,
+      notificationRepository: dependencies.notificationRepository,
+      now: dependencies.now?.() ?? new Date().toISOString(),
+    });
+  }
 
   const donationStatusId = matchWorkerDonationStatusId(
     url.pathname,
