@@ -82,21 +82,24 @@ export const createSupabaseDonationManualRepositories = ({
       return result.data !== null;
     },
 
-    submitReceipt: async (donationId: string, receiptMediaId: string): Promise<void> => {
+    submitReceipt: async (donationId: string, receiptMediaId: string): Promise<boolean> => {
       const result = (await client
         .from('donation_transactions')
         .update({ receipt_media_id: receiptMediaId, status: 'pending_review' })
         .eq('id', donationId)
-        .eq('status', 'pending_receipt')) as SupabaseQueryResult<unknown>;
+        .eq('status', 'pending_receipt')
+        .select('id')) as SupabaseQueryResult<Array<{ id: string }>>;
 
       if (result.error) {
         throw new SupabaseDonationManualRepositoryError(
           `Failed to submit receipt: ${result.error.message ?? 'unknown error'}`,
         );
       }
+
+      return (result.data?.length ?? 0) > 0;
     },
 
-    approveDonation: async (donationId: string, input: ApproveInput): Promise<void> => {
+    approveDonation: async (donationId: string, input: ApproveInput): Promise<boolean> => {
       const result = (await client
         .from('donation_transactions')
         .update({
@@ -106,16 +109,19 @@ export const createSupabaseDonationManualRepositories = ({
           paid_at: input.paidAt,
         })
         .eq('id', donationId)
-        .eq('status', 'pending_review')) as SupabaseQueryResult<unknown>;
+        .eq('status', 'pending_review')
+        .select('id')) as SupabaseQueryResult<Array<{ id: string }>>;
 
       if (result.error) {
         throw new SupabaseDonationManualRepositoryError(
           `Failed to approve donation: ${result.error.message ?? 'unknown error'}`,
         );
       }
+
+      return (result.data?.length ?? 0) > 0;
     },
 
-    rejectDonation: async (donationId: string, input: RejectInput): Promise<void> => {
+    rejectDonation: async (donationId: string, input: RejectInput): Promise<boolean> => {
       const result = (await client
         .from('donation_transactions')
         .update({
@@ -124,13 +130,16 @@ export const createSupabaseDonationManualRepositories = ({
           reviewed_at: input.reviewedAt,
         })
         .eq('id', donationId)
-        .eq('status', 'pending_review')) as SupabaseQueryResult<unknown>;
+        .eq('status', 'pending_review')
+        .select('id')) as SupabaseQueryResult<Array<{ id: string }>>;
 
       if (result.error) {
         throw new SupabaseDonationManualRepositoryError(
           `Failed to reject donation: ${result.error.message ?? 'unknown error'}`,
         );
       }
+
+      return (result.data?.length ?? 0) > 0;
     },
   };
 

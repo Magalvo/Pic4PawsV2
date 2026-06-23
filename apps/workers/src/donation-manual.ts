@@ -27,9 +27,9 @@ export type RejectInput = {
 export type DonationManualRepository = {
   getDonationForAction: (donationId: string) => Promise<DonationForAction | null>;
   verifyMediaOwnership: (mediaId: string, ownerUserId: string) => Promise<boolean>;
-  submitReceipt: (donationId: string, receiptMediaId: string) => Promise<void>;
-  approveDonation: (donationId: string, input: ApproveInput) => Promise<void>;
-  rejectDonation: (donationId: string, input: RejectInput) => Promise<void>;
+  submitReceipt: (donationId: string, receiptMediaId: string) => Promise<boolean>;
+  approveDonation: (donationId: string, input: ApproveInput) => Promise<boolean>;
+  rejectDonation: (donationId: string, input: RejectInput) => Promise<boolean>;
 };
 
 // ─── Validation ───────────────────────────────────────────────────────────────
@@ -138,7 +138,8 @@ export const handleSubmitReceiptRequest = async ({
   const mediaOk = await repository.verifyMediaOwnership(validation.receiptMediaId, actor.id);
   if (!mediaOk) return jsonResponse({ status: 'receipt_media_not_found' }, { status: 404 });
 
-  await repository.submitReceipt(donationId, validation.receiptMediaId);
+  const submitted = await repository.submitReceipt(donationId, validation.receiptMediaId);
+  if (!submitted) return jsonResponse({ status: 'donation_wrong_state' }, { status: 409 });
 
   return jsonResponse({ status: 'receipt_submitted', donationId }, { status: 200 });
 };
@@ -204,11 +205,12 @@ export const handleReviewDonationRequest = async ({
   }
 
   if (validation.decision === 'approved') {
-    await repository.approveDonation(donationId, {
+    const approved = await repository.approveDonation(donationId, {
       reviewedByUserId: actor.id,
       reviewedAt: now,
       paidAt: now,
     });
+    if (!approved) return jsonResponse({ status: 'donation_wrong_state' }, { status: 409 });
 
     // Fire-and-forget — failure must not roll back the review transition
     if (notificationRepository) {
@@ -223,10 +225,11 @@ export const handleReviewDonationRequest = async ({
     return jsonResponse({ status: 'donation_approved', donationId }, { status: 200 });
   }
 
-  await repository.rejectDonation(donationId, {
+  const rejected = await repository.rejectDonation(donationId, {
     reviewedByUserId: actor.id,
     reviewedAt: now,
   });
+  if (!rejected) return jsonResponse({ status: 'donation_wrong_state' }, { status: 409 });
 
   return jsonResponse({ status: 'donation_rejected', donationId }, { status: 200 });
 };

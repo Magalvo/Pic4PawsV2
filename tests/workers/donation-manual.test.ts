@@ -62,9 +62,9 @@ const makeReceiptRepo = (
 ): DonationManualRepository => ({
   getDonationForAction: vi.fn().mockResolvedValue(donation),
   verifyMediaOwnership: vi.fn().mockResolvedValue(mediaOk),
-  submitReceipt: vi.fn().mockResolvedValue(undefined),
-  approveDonation: vi.fn().mockResolvedValue(undefined),
-  rejectDonation: vi.fn().mockResolvedValue(undefined),
+  submitReceipt: vi.fn().mockResolvedValue(true),
+  approveDonation: vi.fn().mockResolvedValue(true),
+  rejectDonation: vi.fn().mockResolvedValue(true),
 });
 
 const makeReviewRepo = (
@@ -72,9 +72,9 @@ const makeReviewRepo = (
 ): DonationManualRepository => ({
   getDonationForAction: vi.fn().mockResolvedValue(donation),
   verifyMediaOwnership: vi.fn().mockResolvedValue(true),
-  submitReceipt: vi.fn().mockResolvedValue(undefined),
-  approveDonation: vi.fn().mockResolvedValue(undefined),
-  rejectDonation: vi.fn().mockResolvedValue(undefined),
+  submitReceipt: vi.fn().mockResolvedValue(true),
+  approveDonation: vi.fn().mockResolvedValue(true),
+  rejectDonation: vi.fn().mockResolvedValue(true),
 });
 
 const makeNotificationRepo = (): NotificationRepository => ({
@@ -276,6 +276,21 @@ describe('handleSubmitReceiptRequest', () => {
     expect(body.donationId).toBe(DONATION_ID);
     expect(repo.submitReceipt).toHaveBeenCalledWith(DONATION_ID, MEDIA_ID);
   });
+
+  it('returns 409 donation_wrong_state when submitReceipt reports 0 rows updated (concurrent state change)', async () => {
+    const repo = makeReceiptRepo();
+    (repo.submitReceipt as ReturnType<typeof vi.fn>).mockResolvedValue(false);
+    const res = await handleSubmitReceiptRequest({
+      request: patchReceiptRequest(),
+      donationId: DONATION_ID,
+      payload: { receiptMediaId: MEDIA_ID },
+      repository: repo,
+      authenticator: makeAuth(makeDonor()),
+    });
+    expect(res.status).toBe(409);
+    const body = await res.json() as { status: string };
+    expect(body.status).toBe('donation_wrong_state');
+  });
 });
 
 // ─── handleReviewDonationRequest ─────────────────────────────────────────────
@@ -433,5 +448,37 @@ describe('handleReviewDonationRequest', () => {
       now: '2026-06-23T10:00:00.000Z',
     });
     expect(notificationRepo.notifyDonationPaid).not.toHaveBeenCalled();
+  });
+
+  it('returns 409 donation_wrong_state when approveDonation reports 0 rows updated (concurrent state change)', async () => {
+    const repo = makeReviewRepo();
+    (repo.approveDonation as ReturnType<typeof vi.fn>).mockResolvedValue(false);
+    const res = await handleReviewDonationRequest({
+      request: patchReviewRequest(),
+      donationId: DONATION_ID,
+      payload: { decision: 'approved' },
+      repository: repo,
+      authenticator: makeAuth(makeShelterMember()),
+      now: '2026-06-23T10:00:00.000Z',
+    });
+    expect(res.status).toBe(409);
+    const body = await res.json() as { status: string };
+    expect(body.status).toBe('donation_wrong_state');
+  });
+
+  it('returns 409 donation_wrong_state when rejectDonation reports 0 rows updated (concurrent state change)', async () => {
+    const repo = makeReviewRepo();
+    (repo.rejectDonation as ReturnType<typeof vi.fn>).mockResolvedValue(false);
+    const res = await handleReviewDonationRequest({
+      request: patchReviewRequest(),
+      donationId: DONATION_ID,
+      payload: { decision: 'rejected' },
+      repository: repo,
+      authenticator: makeAuth(makeShelterMember()),
+      now: '2026-06-23T10:00:00.000Z',
+    });
+    expect(res.status).toBe(409);
+    const body = await res.json() as { status: string };
+    expect(body.status).toBe('donation_wrong_state');
   });
 });
