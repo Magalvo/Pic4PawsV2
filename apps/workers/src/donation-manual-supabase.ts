@@ -88,7 +88,8 @@ export const createSupabaseDonationManualRepositories = ({
         .from('donation_transactions')
         .update({ receipt_media_id: receiptMediaId, status: 'pending_review' })
         .eq('id', donationId)
-        .eq('status', 'pending_receipt')) as SupabaseQueryResult<unknown>;
+        .eq('status', 'pending_receipt')
+        .is('deleted_at', null)) as SupabaseQueryResult<unknown>;
 
       if (result.error) {
         throw new SupabaseDonationManualRepositoryError(
@@ -107,7 +108,8 @@ export const createSupabaseDonationManualRepositories = ({
           paid_at: input.paidAt,
         })
         .eq('id', donationId)
-        .eq('status', 'pending_review')) as SupabaseQueryResult<unknown>;
+        .eq('status', 'pending_review')
+        .is('deleted_at', null)) as SupabaseQueryResult<unknown>;
 
       if (result.error) {
         throw new SupabaseDonationManualRepositoryError(
@@ -125,7 +127,8 @@ export const createSupabaseDonationManualRepositories = ({
           reviewed_at: input.reviewedAt,
         })
         .eq('id', donationId)
-        .eq('status', 'pending_review')) as SupabaseQueryResult<unknown>;
+        .eq('status', 'pending_review')
+        .is('deleted_at', null)) as SupabaseQueryResult<unknown>;
 
       if (result.error) {
         throw new SupabaseDonationManualRepositoryError(

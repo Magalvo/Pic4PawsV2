@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -26,6 +26,7 @@ export default function PagamentoAbrigoScreen() {
   const [submitting, setSubmitting] = useState(false);
   const [iban, setIban] = useState('');
   const [mbWayPhone, setMbWayPhone] = useState('');
+  const uiRef = useRef<ReturnType<typeof createMobileShelterPaymentConfigUi> | null>(null);
 
   useEffect(() => {
     const getAccessToken = async () => {
@@ -50,6 +51,7 @@ export default function PagamentoAbrigoScreen() {
     });
 
     const ui = createMobileShelterPaymentConfigUi({ saveConfigClient, loadConfigClient });
+    uiRef.current = ui;
 
     ui.loadConfig(shelterId).then((result) => {
       if (result.state === 'idle') {
@@ -61,33 +63,10 @@ export default function PagamentoAbrigoScreen() {
   }, [shelterId]);
 
   const handleSubmit = async () => {
-    if (submitting || !viewModel) return;
+    if (submitting || !viewModel || viewModel.state !== 'idle') return;
+    if (!uiRef.current) return;
     setSubmitting(true);
-
-    const getAccessToken = async () => {
-      const {
-        data: { session },
-      } = await mobileSupabaseClient.auth.getSession();
-      return session?.access_token ?? null;
-    };
-
-    const saveConfigClient = createSavePaymentConfigClient({
-      workerBaseUrl: workerUrl(),
-      shelterPath: '/shelters',
-      getAccessToken,
-      fetch: globalThis.fetch,
-    });
-
-    const loadConfigClient = createLoadPaymentConfigClient({
-      workerBaseUrl: workerUrl(),
-      shelterPath: '/shelters',
-      getAccessToken,
-      fetch: globalThis.fetch,
-    });
-
-    const ui = createMobileShelterPaymentConfigUi({ saveConfigClient, loadConfigClient });
-
-    const result = await ui.saveConfig(shelterId, {
+    const result = await uiRef.current.saveConfig(shelterId, {
       iban,
       mbWayPhone: mbWayPhone.trim() || null,
     });

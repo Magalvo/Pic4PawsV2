@@ -67,7 +67,9 @@ export default function ComprovativoScreen() {
     ui.loadDonation(donationId).then(setViewModel);
   }, [donationId]);
 
-  const handleSelectAndUpload = async () => {
+  const [isUploading, setIsUploading] = useState(false);
+
+  const handleSelectAndUpload = () => {
     if (!uiRef.current) return;
 
     Alert.alert(
@@ -81,15 +83,30 @@ export default function ComprovativoScreen() {
         {
           text: 'Galeria / Ficheiro',
           onPress: async () => {
-            const mockFile: MobileDonationReceiptFileInput = {
-              uri: 'file:///data/placeholder/receipt.jpg',
-              type: 'image/jpeg',
-              name: 'receipt.jpg',
-              size: 0,
-            };
-            setViewModel({ state: 'uploading', title: 'A carregar ficheiro...' });
-            const result = await uiRef.current!.uploadAndSubmit(donationId, mockFile);
-            setViewModel(result);
+            if (!uiRef.current) return;
+            setIsUploading(true);
+            try {
+              const mockFile: MobileDonationReceiptFileInput = {
+                uri: 'file:///data/placeholder/receipt.jpg',
+                type: 'image/jpeg',
+                name: 'receipt.jpg',
+                size: 0,
+              };
+              setViewModel({ state: 'uploading', title: 'A carregar ficheiro...' });
+              const result = await uiRef.current.uploadAndSubmit(donationId, mockFile);
+              setViewModel(result);
+            } catch {
+              setViewModel({
+                state: 'failed',
+                title: 'Erro inesperado',
+                message: 'Ocorreu um erro inesperado. Tenta de novo.',
+                status: 'media_upload_failed',
+                reasons: [],
+                canRetry: true,
+              });
+            } finally {
+              setIsUploading(false);
+            }
           },
         },
       ],
@@ -208,7 +225,11 @@ export default function ComprovativoScreen() {
           Seleciona ou fotografa o comprovativo da tua transferência para o associar a este donativo.
         </Text>
 
-        <TouchableOpacity style={styles.button} onPress={handleSelectAndUpload}>
+        <TouchableOpacity
+          style={[styles.button, isUploading && styles.buttonDisabled]}
+          onPress={handleSelectAndUpload}
+          disabled={isUploading}
+        >
           <Text style={styles.buttonText}>Selecionar comprovativo</Text>
         </TouchableOpacity>
 
@@ -238,5 +259,6 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   buttonSecondary: { backgroundColor: '#64748b' },
+  buttonDisabled: { opacity: 0.5 },
   buttonText: { color: '#ffffff', fontSize: 16, fontWeight: '700' },
 });
