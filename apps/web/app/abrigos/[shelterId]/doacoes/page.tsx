@@ -20,6 +20,8 @@ const KIND_LABELS: Record<DonationClientKind, string> = {
 const STATUS_LABELS: Record<DonationClientStatus, string> = {
   created: 'Criado',
   pending_payment: 'Aguarda pagamento',
+  pending_receipt: 'Aguarda comprovativo',
+  pending_review: 'Em revisão',
   paid: 'Pago',
   failed: 'Falhado',
   cancelled: 'Cancelado',

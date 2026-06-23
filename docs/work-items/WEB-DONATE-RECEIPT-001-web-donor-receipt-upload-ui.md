@@ -1,6 +1,6 @@
 # Work-Item: WEB-DONATE-RECEIPT-001 — Web Donor Receipt Upload UI
 
-status: open
+status: done
 
 ## Goal
 
@@ -45,4 +45,4 @@ Tests in `tests/web/donation-receipt-ui.test.ts`. Final validation must pass.
 
 ## Completion Notes
 
-Pending implementation.
+Created `apps/web/src/donation-receipt.ts` with `webDonationReceiptUiContent` (pt-PT, product-flow-ready, 7 states: idle/uploading/submitting/submitted/failed/wrong_state/forbidden) and `createWebDonationReceiptUi({ donationStatusClient, mediaUploadClient, submitReceiptClient })`. `loadDonationStatus` checks `pending_receipt` status — returns `idle` (with donation), `wrong_state` (any other status), `forbidden`, or `failed`. `uploadAndSubmit` uploads via `identity_document` purpose (private) then calls `submitReceipt` — returns `submitted`, `wrong_state` (donation_wrong_state), `forbidden`, or `failed` (media_upload_failed / worker error). Added `donationReceipt` to `apps/web/src/foundation.ts`. Created page at `apps/web/app/doacoes/[donationId]/comprovativo/page.tsx` using `use(params)`, `useRef` for ui instance, file input with `accept="image/*"`, and `handleSubmit` that sets uploading state before calling `uploadAndSubmit`. Also added `pending_receipt` and `pending_review` to `DonationClientStatus` (client package) and updated 3 status label maps (web doacoes list, mobile doacoes list, mobile donation status). 16 new tests, 2381 total, full pipeline green.
