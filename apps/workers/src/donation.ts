@@ -19,6 +19,7 @@ export type CreateDonationInput = {
   amountCents: number;
   paymentMethod: DonationPaymentMethod;
   provider: DonationProvider;
+  initialStatus: 'pending_receipt' | 'pending_payment';
   anonymous: boolean;
   donorDisplayName: string | null;
   donorEmail: string | null;
@@ -36,12 +37,19 @@ export type DonationEligibilityQuery = {
   petId: string | null;
 };
 
+export type DonationPaymentConfig = {
+  tier: 'manual' | 'automated';
+  iban: string | null;
+  mbWayPhone: string | null;
+};
+
 export type DonationEligibilityContext = {
   shelter: {
     id: string;
     verificationStatus: 'draft' | 'pending_review' | 'verified' | 'rejected' | 'suspended';
     paymentAccountStatus: 'not_configured' | 'pending' | 'active' | 'disabled';
   } | null;
+  paymentConfig: DonationPaymentConfig | null;
   pet: {
     id: string;
     shelterId: string;
@@ -52,6 +60,7 @@ export type DonationEligibilityRejectionReason =
   | 'shelter_not_found'
   | 'shelter_not_verified'
   | 'payment_account_not_active'
+  | 'payment_config_not_found'
   | 'pet_not_found'
   | 'pet_not_in_shelter'
   | 'payment_method_not_supported';
@@ -175,6 +184,9 @@ export const validateDonationEligibility = (
 
     if (context.shelter.paymentAccountStatus !== 'active') {
       reasons.push('payment_account_not_active');
+    } else if (!context.paymentConfig) {
+      // Shelter is active but has no payment config row — data inconsistency guard
+      reasons.push('payment_config_not_found');
     }
   }
 
@@ -292,7 +304,21 @@ export const handleWorkerDonationRequest = async ({
     );
   }
 
-  // 8. Create donation
+  // 8. Derive tier and initial status
+  // paymentConfig is guaranteed non-null here (payment_config_not_found would have rejected)
+  const paymentConfig = eligibilityContext.paymentConfig!;
+
+  // Automated tier is reserved for Phase 2 — must not silently succeed in Phase 1
+  if (paymentConfig.tier === 'automated') {
+    return jsonResponse(
+      { status: 'not_implemented', reason: 'automated_tier_not_supported' },
+      { status: 501 },
+    );
+  }
+
+  const initialStatus = 'pending_receipt';
+
+  // 9. Create donation
   const result = await donationRepository.createDonation({
     donorUserId: actor.id,
     shelterId: validation.data.shelterId,
@@ -301,6 +327,7 @@ export const handleWorkerDonationRequest = async ({
     amountCents: validation.data.amountCents,
     paymentMethod: validation.data.paymentMethod,
     provider,
+    initialStatus,
     anonymous: validation.data.anonymous,
     donorDisplayName: validation.data.donorDisplayName,
     donorEmail: validation.data.donorEmail,
@@ -317,6 +344,9 @@ export const handleWorkerDonationRequest = async ({
       kind: validation.data.kind,
       shelterId: validation.data.shelterId,
       createdAt: result.createdAt,
+      tier: paymentConfig.tier,
+      iban: paymentConfig.iban,
+      mbWayPhone: paymentConfig.mbWayPhone,
     },
     { status: 201 },
   );

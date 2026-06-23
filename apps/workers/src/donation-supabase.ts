@@ -32,6 +32,12 @@ type DonationEligibilityShelterRow = {
   payment_account_status: 'not_configured' | 'pending' | 'active' | 'disabled';
 };
 
+type DonationEligibilityPaymentConfigRow = {
+  tier: 'manual' | 'automated';
+  iban: string | null;
+  mb_way_phone: string | null;
+};
+
 type DonationEligibilityPetRow = {
   id: string;
   shelter_id: string;
@@ -64,6 +70,20 @@ export const createSupabaseDonationRepositories = ({
         'Failed to load donation shelter eligibility',
       );
 
+      let configRow: DonationEligibilityPaymentConfigRow | null = null;
+      if (shelterRow) {
+        const configResult = await client
+          .from('shelter_payment_configs')
+          .select('tier,iban,mb_way_phone')
+          .eq('shelter_id', shelterId)
+          .is('deleted_at', null)
+          .maybeSingle();
+        configRow = assertSupabaseResult<DonationEligibilityPaymentConfigRow | null>(
+          configResult,
+          'Failed to load donation payment config eligibility',
+        );
+      }
+
       let petRow: DonationEligibilityPetRow | null = null;
       if (petId) {
         const petResult = await client
@@ -85,6 +105,9 @@ export const createSupabaseDonationRepositories = ({
               paymentAccountStatus: shelterRow.payment_account_status,
             }
           : null,
+        paymentConfig: configRow
+          ? { tier: configRow.tier, iban: configRow.iban, mbWayPhone: configRow.mb_way_phone }
+          : null,
         pet: petRow ? { id: petRow.id, shelterId: petRow.shelter_id } : null,
       };
     },
@@ -94,7 +117,7 @@ export const createSupabaseDonationRepositories = ({
         shelter_id: input.shelterId,
         pet_id: input.petId,
         kind: input.kind,
-        status: 'created' as const,
+        status: input.initialStatus,
         provider: input.provider,
         provider_payment_id: generateId(),
         idempotency_key: generateId(),

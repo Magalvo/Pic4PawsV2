@@ -44,6 +44,9 @@ const successBody = {
   kind: 'one_time_donation',
   shelterId: 'shelter-a',
   createdAt: '2026-06-08T10:00:00.000Z',
+  tier: 'manual',
+  iban: 'PT50000201231234567890154',
+  mbWayPhone: null,
 };
 
 describe('DonationClient contract', () => {

@@ -52,6 +52,8 @@ const validPayload = {
   dataProcessingAccepted: true,
 };
 
+const VALID_IBAN = 'PT50000201231234567890154';
+
 const makeDonationRepo = (
   result: CreateDonationResult = donationResult,
 ): DonationRepository => ({
@@ -61,6 +63,7 @@ const makeDonationRepo = (
       verificationStatus: 'verified',
       paymentAccountStatus: 'active',
     },
+    paymentConfig: { tier: 'manual', iban: VALID_IBAN, mbWayPhone: null },
     pet: null,
   }),
   createDonation: vi.fn().mockResolvedValue(result),
@@ -216,6 +219,7 @@ describe('POST /donations — donation initiation', () => {
           verificationStatus: 'pending_review',
           paymentAccountStatus: 'active',
         },
+        paymentConfig: { tier: 'manual', iban: VALID_IBAN, mbWayPhone: null },
         pet: null,
       }),
       createDonation: vi.fn(),
@@ -243,6 +247,7 @@ describe('POST /donations — donation initiation', () => {
           verificationStatus: 'verified',
           paymentAccountStatus: 'active',
         },
+        paymentConfig: { tier: 'manual', iban: VALID_IBAN, mbWayPhone: null },
         pet: { id: 'pet-1', shelterId: 'shelter-b' },
       }),
       createDonation: vi.fn(),
@@ -329,5 +334,85 @@ describe('POST /donations — donation initiation', () => {
 
     expect(serialized).not.toContain('service-role-secret');
     expect(serialized).not.toContain('r2-access-key');
+  });
+
+  it('201 response includes tier, iban, and mbWayPhone for manual-tier shelter', async () => {
+    const phone = '+351912345678';
+    const donationRepository: DonationRepository = {
+      getDonationEligibilityContext: vi.fn().mockResolvedValue({
+        shelter: { id: 'shelter-a', verificationStatus: 'verified', paymentAccountStatus: 'active' },
+        paymentConfig: { tier: 'manual', iban: VALID_IBAN, mbWayPhone: phone },
+        pet: null,
+      }),
+      createDonation: vi.fn().mockResolvedValue(donationResult),
+    };
+
+    const response = await handleWorkerRequest(makeDonationRequest(), validEnv, {
+      petDraftAuthenticator: fakeAuth,
+      donationRepository,
+      now: () => '2026-06-08T10:00:00.000Z',
+    });
+    const body = (await response.json()) as Record<string, unknown>;
+
+    expect(response.status).toBe(201);
+    expect(body.tier).toBe('manual');
+    expect(body.iban).toBe(VALID_IBAN);
+    expect(body.mbWayPhone).toBe(phone);
+  });
+
+  it('createDonation is called with initialStatus pending_receipt for manual tier', async () => {
+    const donationRepository = makeDonationRepo();
+
+    await handleWorkerRequest(makeDonationRequest(), validEnv, {
+      petDraftAuthenticator: fakeAuth,
+      donationRepository,
+      now: () => '2026-06-08T10:00:00.000Z',
+    });
+
+    expect(donationRepository.createDonation).toHaveBeenCalledWith(
+      expect.objectContaining({ initialStatus: 'pending_receipt' }),
+    );
+  });
+
+  it('returns 409 with payment_config_not_found when shelter is active but has no config', async () => {
+    const donationRepository: DonationRepository = {
+      getDonationEligibilityContext: vi.fn().mockResolvedValue({
+        shelter: { id: 'shelter-a', verificationStatus: 'verified', paymentAccountStatus: 'active' },
+        paymentConfig: null,
+        pet: null,
+      }),
+      createDonation: vi.fn(),
+    };
+
+    const response = await handleWorkerRequest(makeDonationRequest(), validEnv, {
+      petDraftAuthenticator: fakeAuth,
+      donationRepository,
+    });
+    const body = (await response.json()) as { status: string; reasons: string[] };
+
+    expect(response.status).toBe(409);
+    expect(body.reasons).toContain('payment_config_not_found');
+    expect(donationRepository.createDonation).not.toHaveBeenCalled();
+  });
+
+  it('returns 501 not_implemented for automated-tier shelter (Phase 1 stub)', async () => {
+    const donationRepository: DonationRepository = {
+      getDonationEligibilityContext: vi.fn().mockResolvedValue({
+        shelter: { id: 'shelter-a', verificationStatus: 'verified', paymentAccountStatus: 'active' },
+        paymentConfig: { tier: 'automated', iban: null, mbWayPhone: null },
+        pet: null,
+      }),
+      createDonation: vi.fn(),
+    };
+
+    const response = await handleWorkerRequest(makeDonationRequest(), validEnv, {
+      petDraftAuthenticator: fakeAuth,
+      donationRepository,
+    });
+    const body = (await response.json()) as { status: string };
+
+    expect(response.status).toBe(501);
+    expect(body.status).toBe('not_implemented');
+    expect(donationRepository.createDonation).not.toHaveBeenCalled();
   });
 });
