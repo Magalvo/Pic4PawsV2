@@ -1,6 +1,6 @@
 # Work-Item: DONATE-TIER-WORKER-001 — Tier-Aware Donation Creation
 
-status: open
+status: done
 
 ## 1. Context & Problem
 
@@ -30,7 +30,7 @@ Unchanged from `DONATION-WORKER-001`; only the `donation_created` response body 
 
 ## Acceptance Criteria
 
-- [ ] Extend `DonationEligibilityContext` in `apps/workers/src/donation.ts` with:
+- [x] Extend `DonationEligibilityContext` in `apps/workers/src/donation.ts` with:
   ```ts
   paymentConfig: {
     tier: 'manual' | 'automated';
@@ -38,27 +38,27 @@ Unchanged from `DONATION-WORKER-001`; only the `donation_created` response body 
     mbWayPhone: string | null;
   } | null;
   ```
-- [ ] Extend `validateDonationEligibility` to reject with `payment_config_not_found` when
+- [x] Extend `validateDonationEligibility` to reject with `payment_config_not_found` when
   `context.paymentConfig` is null (i.e. shelter is `active` but has no config row — data
   inconsistency guard).
-- [ ] Extend `getDonationEligibilityContext` in `apps/workers/src/donation-supabase.ts` to
+- [x] Extend `getDonationEligibilityContext` in `apps/workers/src/donation-supabase.ts` to
   JOIN or secondary-SELECT `shelter_payment_configs` by `shelter_id`.
-- [ ] Extend `CreateDonationInput` and `createDonation` in `donation-supabase.ts` to accept
+- [x] Extend `CreateDonationInput` and `createDonation` in `donation-supabase.ts` to accept
   `initialStatus: 'pending_receipt' | 'pending_payment'`; use it for the `status` column.
-- [ ] Update `handleWorkerDonationRequest` in `donation.ts`:
+- [x] Update `handleWorkerDonationRequest` in `donation.ts`:
   - Derive `initialStatus` from `eligibilityContext.paymentConfig.tier`:
     - `'manual'` → `'pending_receipt'`
-    - `'automated'` → `'pending_payment'` (reserved; Phase 2 will fill in gateway calls)
+    - `'automated'` → 501 `not_implemented` (Phase 1 stub — must not silently succeed)
   - Return `tier`, `iban`, `mbWayPhone` in the 201 response body.
-- [ ] Update `DonationClientSuccess` in `packages/client/src/donations.ts`:
+- [x] Update `DonationClientSuccess` in `packages/client/src/donations.ts`:
   - Add `tier: 'manual' | 'automated'`.
   - Add `iban: string | null` and `mbWayPhone: string | null` (present for manual tier).
   - Update `parseDonationSuccess` to parse these new fields.
-- [ ] Extend existing tests in `tests/workers/donation.test.ts` to cover:
+- [x] Extend existing tests in `tests/workers/donation.test.ts` to cover:
   - Manual-tier eligibility context returns `pending_receipt` initial status.
   - 201 response includes `tier`, `iban`, `mbWayPhone` for manual tier.
   - `payment_config_not_found` rejection when config is missing.
-- [ ] Final validation: `npm run typecheck`, `npm run lint`, `npm run test`, `npm run build`.
+- [x] Final validation: `npm run typecheck`, `npm run lint`, `npm run test`, `npm run build`.
 
 ## 3. Security Notes
 
@@ -84,4 +84,4 @@ Unchanged from `DONATION-WORKER-001`; only the `donation_created` response body 
 
 ## Completion Notes
 
-Pending implementation.
+Extended `DonationEligibilityContext` with `paymentConfig` and added a secondary SELECT from `shelter_payment_configs` in `getDonationEligibilityContext`. The automated-tier path returns `501 not_implemented` (Phase 1 stub). Manual-tier donations are created with `initialStatus: 'pending_receipt'` and the 201 response includes `tier`, `iban`, `mbWayPhone` for the donor to act on. `DonationClientSuccess` updated with the three new fields; all downstream test fixtures (mobile and web) updated accordingly. 2291 tests, full pipeline green.

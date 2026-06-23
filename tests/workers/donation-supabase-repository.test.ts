@@ -5,7 +5,7 @@ import type { SupabaseClientLike } from '../../apps/workers/src/pet-supabase';
 
 const makeQueryChain = (result: unknown) => {
   const chain: Record<string, unknown> = {};
-  const methods = ['select', 'insert', 'eq'];
+  const methods = ['select', 'insert', 'eq', 'is'];
   for (const method of methods) {
     chain[method] = vi.fn().mockReturnValue(chain);
   }
@@ -24,6 +24,8 @@ const makeClientByTable = (chains: Record<string, ReturnType<typeof makeQueryCha
   rpc: vi.fn(),
 }) as unknown as SupabaseClientLike;
 
+const VALID_IBAN = 'PT50000201231234567890154';
+
 const sampleInput: CreateDonationInput = {
   donorUserId: 'user-donor-1',
   shelterId: 'shelter-a',
@@ -32,6 +34,7 @@ const sampleInput: CreateDonationInput = {
   amountCents: 1000,
   paymentMethod: 'mb_way',
   provider: 'eupago',
+  initialStatus: 'pending_receipt',
   anonymous: false,
   donorDisplayName: 'João Silva',
   donorEmail: 'joao@example.pt',
@@ -41,7 +44,7 @@ const sampleInput: CreateDonationInput = {
 
 describe('createSupabaseDonationRepositories', () => {
   describe('getDonationEligibilityContext', () => {
-    it('loads shelter payment eligibility and optional pet shelter scope before insert', async () => {
+    it('loads shelter, payment config, and optional pet scope before insert', async () => {
       const shelterChain = makeQueryChain({
         data: {
           id: 'shelter-a',
@@ -50,11 +53,19 @@ describe('createSupabaseDonationRepositories', () => {
         },
         error: null,
       });
+      const configChain = makeQueryChain({
+        data: { tier: 'manual', iban: VALID_IBAN, mb_way_phone: null },
+        error: null,
+      });
       const petChain = makeQueryChain({
         data: { id: 'pet-1', shelter_id: 'shelter-a' },
         error: null,
       });
-      const client = makeClientByTable({ shelters: shelterChain, pets: petChain });
+      const client = makeClientByTable({
+        shelters: shelterChain,
+        shelter_payment_configs: configChain,
+        pets: petChain,
+      });
       const { donationRepository } = createSupabaseDonationRepositories({ client });
 
       await expect(
@@ -68,6 +79,7 @@ describe('createSupabaseDonationRepositories', () => {
           verificationStatus: 'verified',
           paymentAccountStatus: 'active',
         },
+        paymentConfig: { tier: 'manual', iban: VALID_IBAN, mbWayPhone: null },
         pet: { id: 'pet-1', shelterId: 'shelter-a' },
       });
       expect(client.from).toHaveBeenCalledWith('shelters');
@@ -75,6 +87,9 @@ describe('createSupabaseDonationRepositories', () => {
         'id,verification_status,payment_account_status',
       );
       expect(shelterChain.eq).toHaveBeenCalledWith('id', 'shelter-a');
+      expect(client.from).toHaveBeenCalledWith('shelter_payment_configs');
+      expect(configChain.select).toHaveBeenCalledWith('tier,iban,mb_way_phone');
+      expect(configChain.eq).toHaveBeenCalledWith('shelter_id', 'shelter-a');
       expect(client.from).toHaveBeenCalledWith('pets');
       expect(petChain.select).toHaveBeenCalledWith('id,shelter_id');
       expect(petChain.eq).toHaveBeenCalledWith('id', 'pet-1');
@@ -102,7 +117,7 @@ describe('createSupabaseDonationRepositories', () => {
           donor_user_id: 'user-donor-1',
           shelter_id: 'shelter-a',
           kind: 'one_time_donation',
-          status: 'created',
+          status: 'pending_receipt',
           provider: 'eupago',
           amount_cents: 1000,
           currency: 'EUR',

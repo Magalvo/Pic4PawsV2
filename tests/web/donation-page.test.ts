@@ -42,6 +42,9 @@ describe('donation page — boundary contract', () => {
       kind: 'one_time_donation',
       shelterId: 'shelter-abc',
       createdAt: '2026-06-14T00:00:00.000Z',
+      tier: 'manual',
+      iban: 'PT50000201231234567890154',
+      mbWayPhone: null,
     });
     const ui = createWebDonationUi({ donationClient: client });
     const result = await ui.submitDonation(validInput);

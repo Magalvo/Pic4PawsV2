@@ -40,6 +40,9 @@ export type DonationClientSuccess = {
   kind: DonationClientKind;
   shelterId: string;
   createdAt: string;
+  tier: 'manual' | 'automated';
+  iban: string | null;
+  mbWayPhone: string | null;
 };
 
 export type DonationClientFailureStatus =
@@ -198,7 +201,8 @@ const parseDonationSuccess = (
     typeof body.currency !== 'string' ||
     typeof body.kind !== 'string' ||
     typeof body.shelterId !== 'string' ||
-    typeof body.createdAt !== 'string'
+    typeof body.createdAt !== 'string' ||
+    typeof body.tier !== 'string'
   ) {
     return null;
   }
@@ -212,6 +216,9 @@ const parseDonationSuccess = (
     kind: body.kind as DonationClientKind,
     shelterId: body.shelterId,
     createdAt: body.createdAt,
+    tier: body.tier as 'manual' | 'automated',
+    iban: typeof body.iban === 'string' ? body.iban : null,
+    mbWayPhone: typeof body.mbWayPhone === 'string' ? body.mbWayPhone : null,
   };
 };
 

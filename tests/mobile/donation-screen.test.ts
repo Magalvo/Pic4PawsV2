@@ -30,6 +30,9 @@ describe('donation screen — boundary contract', () => {
       kind: 'one_time_donation',
       shelterId: 'shelter-001',
       createdAt: '2026-06-18T00:00:00.000Z',
+      tier: 'manual' as const,
+      iban: 'PT50000201231234567890154',
+      mbWayPhone: null,
     });
     const ui = createMobileDonationUi({ donationClient: client });
     const result = await ui.submitDonation(validInput);
@@ -46,6 +49,9 @@ describe('donation screen — boundary contract', () => {
       kind: 'monthly_sponsorship',
       shelterId: 'shelter-001',
       createdAt: '2026-06-18T00:00:00.000Z',
+      tier: 'manual' as const,
+      iban: 'PT50000201231234567890154',
+      mbWayPhone: null,
     });
     const ui = createMobileDonationUi({ donationClient: client });
     const result = await ui.submitDonation({ ...validInput, amountCents: 2500, kind: 'monthly_sponsorship' });
@@ -107,6 +113,9 @@ describe('donation screen — boundary contract', () => {
       kind: 'one_time_donation',
       shelterId: 'shelter-001',
       createdAt: '2026-06-18T00:00:00.000Z',
+      tier: 'manual' as const,
+      iban: 'PT50000201231234567890154',
+      mbWayPhone: null,
     });
     const ui = createMobileDonationUi({ donationClient: client });
     const state = ui.getInitialState();
@@ -130,6 +139,9 @@ describe('donation screen — boundary contract', () => {
           kind: 'one_time_donation',
           shelterId: 'shelter-001',
           createdAt: '2026-06-18T00:00:00.000Z',
+          tier: 'manual' as const,
+          iban: 'PT50000201231234567890154',
+          mbWayPhone: null,
         };
       },
     };
