@@ -3,7 +3,8 @@ export type MediaUploadPurpose =
   | 'shelter_public_image'
   | 'adoption_document'
   | 'identity_document'
-  | 'medical_record';
+  | 'medical_record'
+  | 'donation_receipt';
 
 export type MediaVisibility = 'public' | 'private';
 

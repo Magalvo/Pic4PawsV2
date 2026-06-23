@@ -304,4 +304,17 @@ describe('createMobileDonationReceiptUi — uploadAndSubmit', () => {
       expect.objectContaining({ receiptMediaId: MEDIA_ID }),
     );
   });
+
+  it('passes donation_receipt purpose to uploadMedia (F-03)', async () => {
+    const uploadClient = makeUploadClient(makeUploadSuccess());
+    const ui = createMobileDonationReceiptUi({
+      donationStatusClient: makeStatusClient({ ok: true, status: 'ok', donation: makeDonation() }),
+      mediaUploadClient: uploadClient,
+      submitReceiptClient: makeSubmitClient({ ok: true, status: 'receipt_submitted', donationId: DONATION_ID }),
+    });
+    await ui.uploadAndSubmit(DONATION_ID, makeFile());
+    expect(uploadClient.uploadMedia).toHaveBeenCalledWith(
+      expect.objectContaining({ request: expect.objectContaining({ purpose: 'donation_receipt' }) }),
+    );
+  });
 });

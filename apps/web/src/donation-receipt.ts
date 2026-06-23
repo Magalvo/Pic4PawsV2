@@ -190,7 +190,7 @@ export const createWebDonationReceiptUi = ({
     const uploadResult = await mediaUploadClient.uploadMedia({
       request: {
         mediaId: crypto.randomUUID(),
-        purpose: 'identity_document',
+        purpose: 'donation_receipt',
         requestedVisibility: 'private',
         mimeType: file.type,
         byteSize: file.size,
