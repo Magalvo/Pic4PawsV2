@@ -225,7 +225,7 @@ describe('createWebDonationReceiptUi — uploadAndSubmit', () => {
       {
         ok: false,
         phase: 'binary_upload',
-        status: 'binary_upload_failed',
+        status: 'signed_upload_failed',
         reasons: ['upload_rejected'],
         responseStatus: 403,
         mediaId: MEDIA_ID,
