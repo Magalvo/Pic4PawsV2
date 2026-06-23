@@ -1,6 +1,6 @@
 # Work-Item: DONATE-CONFIG-CLIENT-001 — Shelter Payment Config Client
 
-status: open
+status: done
 
 ## 1. Context & Problem
 
@@ -26,7 +26,7 @@ without direct HTTP knowledge.
 
 ## Acceptance Criteria
 
-- [ ] Add `packages/client/src/shelter-payment-config.ts` with:
+- [x] Add `packages/client/src/shelter-payment-config.ts` with:
   - `ShelterPaymentConfigClientInput` — `{ iban: string; mbWayPhone?: string | null }`.
   - `ShelterPaymentConfigClientSuccess` — `{ ok: true; status: 'payment_config_saved'; tier: 'manual'; iban: string; mbWayPhone: string | null }`.
   - `LoadPaymentConfigClientSuccess` — `{ ok: true; status: 'ok'; configured: boolean; tier: 'manual' | 'automated' | null; iban: string | null; mbWayPhone: string | null }`.
@@ -35,11 +35,11 @@ without direct HTTP knowledge.
     - `savePaymentConfig(shelterId, input)` → POST to `/shelters/:id/payment-config`.
   - `createLoadPaymentConfigClient({ workerBaseUrl, shelterPath, getAccessToken, fetch })`:
     - `loadPaymentConfig(shelterId)` → GET `/shelters/:id/payment-config`.
-- [ ] Export both factories and all types from `packages/client/src/index.ts`.
-- [ ] Tests in `tests/client/shelter-payment-config-client.test.ts` use fake fetch. Cover:
+- [x] Export both factories and all types from `packages/client/src/index.ts`.
+- [x] Tests in `tests/client/shelter-payment-config-client.test.ts` use fake fetch. Cover:
   - Save: unauthenticated, invalid config (server), success.
   - Load: unauthenticated, success (configured), success (not configured).
-- [ ] Final validation: `npm run typecheck`, `npm run lint`, `npm run test`, `npm run build`.
+- [x] Final validation: `npm run typecheck`, `npm run lint`, `npm run test`, `npm run build`.
 
 ## 3. Non-Goals
 
@@ -54,4 +54,4 @@ without direct HTTP knowledge.
 
 ## Completion Notes
 
-Pending implementation.
+Added `createSavePaymentConfigClient` and `createLoadPaymentConfigClient` following the `donations.ts` factory pattern. Load normalises the unconfigured case (`configured: false`) to `tier: null, iban: null, mbWayPhone: null` so callers don't need to branch on presence. Both factories use `createWorkerSubUrl` to build `/:shelterId/payment-config`. 14 tests, full pipeline green.

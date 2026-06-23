@@ -9,3 +9,4 @@ export * from './donations';
 export * from './sponsorships';
 export * from './notifications';
 export * from './users';
+export * from './shelter-payment-config';
