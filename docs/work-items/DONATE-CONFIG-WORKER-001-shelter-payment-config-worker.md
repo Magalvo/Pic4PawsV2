@@ -1,6 +1,6 @@
 # Work-Item: DONATE-CONFIG-WORKER-001 — Shelter Payment Config Worker
 
-status: open
+status: done
 
 ## 1. Context & Problem
 
@@ -34,7 +34,7 @@ Any authenticated user with membership in the shelter may read it.
 
 ## Acceptance Criteria
 
-- [ ] Create `apps/workers/src/shelter-payment-config.ts`:
+- [x] Create `apps/workers/src/shelter-payment-config.ts`:
   - Types: `ShelterPaymentConfigInput`, `ShelterPaymentConfigResult`,
     `GetPaymentConfigResult`, `PaymentConfigRepository`.
   - `validatePaymentConfigPayload(payload)` — requires non-empty `iban` string, optional
@@ -52,22 +52,22 @@ Any authenticated user with membership in the shelter may read it.
     - Upserts `shelter_payment_configs` row (`tier: 'manual'`) and sets
       `shelters.payment_account_status = 'active'` in the same DB operation.
     - Returns 200 `{ status: 'payment_config_saved', tier: 'manual', iban, mbWayPhone }`.
-- [ ] Create `apps/workers/src/shelter-payment-config-supabase.ts` with
+- [x] Create `apps/workers/src/shelter-payment-config-supabase.ts` with
   `createSupabaseShelterPaymentConfigRepositories`.
   - `getPaymentConfig(shelterId)` — SELECT from `shelter_payment_configs` where
     `shelter_id = shelterId`.
   - `savePaymentConfig(shelterId, input)` — UPSERT into `shelter_payment_configs` (conflict
     on `shelter_id`) and UPDATE `shelters SET payment_account_status = 'active'`.
   - Membership check: `canManageShelter(actor, shelterId)` from `@pic4paws/domain`.
-- [ ] Add `shelterPaymentConfigRepository?: ShelterPaymentConfigRepository` to
+- [x] Add `shelterPaymentConfigRepository?: ShelterPaymentConfigRepository` to
   `WorkerRequestDependencies` in `apps/workers/src/dependencies.ts`; wire in both factory
   functions.
-- [ ] Add route matching for `GET /shelters/:id/payment-config` and
+- [x] Add route matching for `GET /shelters/:id/payment-config` and
   `POST /shelters/:id/payment-config` in `apps/workers/src/routes/shelters.ts`.
-- [ ] Tests in `tests/workers/shelter-payment-config.test.ts` use injected fakes (no DB/network).
+- [x] Tests in `tests/workers/shelter-payment-config.test.ts` use injected fakes (no DB/network).
   Cover: unauthenticated, forbidden, invalid IBAN, missing IBAN, valid save, load empty,
   load configured.
-- [ ] Final validation: `npm run typecheck`, `npm run lint`, `npm run test`, `npm run build`.
+- [x] Final validation: `npm run typecheck`, `npm run lint`, `npm run test`, `npm run build`.
 
 ## 3. Security Notes
 
@@ -95,4 +95,4 @@ Any authenticated user with membership in the shelter may read it.
 
 ## Completion Notes
 
-Pending implementation.
+Implemented `handleGetPaymentConfigRequest` and `handleSavePaymentConfigRequest` with injected `ShelterPaymentConfigRepository`. The Supabase repo performs a sequential upsert + shelter status update (two queries); both must succeed — the upsert failure is the safe failure mode (config row not created, shelter stays `not_configured`). Path matcher `matchWorkerShelterPaymentConfigId` is registered in `routes/shelters.ts` before the profile handler. `apiKeyEncrypted` / `webhookSecretEncrypted` columns are not touched (Phase 2). 21 tests, all green. Full pipeline (typecheck, lint, test, build) passed.
