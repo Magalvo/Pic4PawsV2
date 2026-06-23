@@ -547,3 +547,247 @@ export const createDonationStatusClient = ({
     return success;
   },
 });
+
+// ─── Submit Receipt types ─────────────────────────────────────────────────────
+
+export type SubmitReceiptClientInput = {
+  receiptMediaId: string;
+};
+
+export type SubmitReceiptClientSuccess = {
+  ok: true;
+  status: 'receipt_submitted';
+  donationId: string;
+};
+
+export type SubmitReceiptClientFailureStatus =
+  | 'unauthenticated'
+  | 'forbidden'
+  | 'donation_not_found'
+  | 'donation_wrong_state'
+  | 'receipt_media_not_found'
+  | 'worker_request_failed'
+  | 'worker_response_invalid';
+
+export type SubmitReceiptClientFailure = {
+  ok: false;
+  status: SubmitReceiptClientFailureStatus;
+  reasons: string[];
+};
+
+export type SubmitReceiptClientResult = SubmitReceiptClientSuccess | SubmitReceiptClientFailure;
+
+export type CreateSubmitReceiptClientInput = {
+  workerBaseUrl: string;
+  donationsPath: `/${string}`;
+  getAccessToken: () => Promise<string | null>;
+  fetch: MediaUploadClientFetch;
+};
+
+export type SubmitReceiptClient = {
+  submitReceipt: (
+    donationId: string,
+    input: SubmitReceiptClientInput,
+  ) => Promise<SubmitReceiptClientResult>;
+};
+
+// ─── Review Donation types ────────────────────────────────────────────────────
+
+export type ReviewDonationClientInput = {
+  decision: 'approved' | 'rejected';
+};
+
+export type ReviewDonationClientSuccess = {
+  ok: true;
+  status: 'donation_approved' | 'donation_rejected';
+  donationId: string;
+};
+
+export type ReviewDonationClientFailureStatus =
+  | 'unauthenticated'
+  | 'forbidden'
+  | 'donation_not_found'
+  | 'donation_wrong_state'
+  | 'worker_request_failed'
+  | 'worker_response_invalid';
+
+export type ReviewDonationClientFailure = {
+  ok: false;
+  status: ReviewDonationClientFailureStatus;
+  reasons: string[];
+};
+
+export type ReviewDonationClientResult = ReviewDonationClientSuccess | ReviewDonationClientFailure;
+
+export type CreateReviewDonationClientInput = {
+  workerBaseUrl: string;
+  donationsPath: `/${string}`;
+  getAccessToken: () => Promise<string | null>;
+  fetch: MediaUploadClientFetch;
+};
+
+export type ReviewDonationClient = {
+  reviewDonation: (
+    donationId: string,
+    input: ReviewDonationClientInput,
+  ) => Promise<ReviewDonationClientResult>;
+};
+
+// ─── Private helpers (manual flow) ───────────────────────────────────────────
+
+const parseSubmitReceiptSuccess = (
+  body: Record<string, unknown> | null,
+): SubmitReceiptClientSuccess | null => {
+  if (!body || body.status !== 'receipt_submitted' || typeof body.donationId !== 'string') {
+    return null;
+  }
+  return { ok: true, status: 'receipt_submitted', donationId: body.donationId };
+};
+
+const parseSubmitReceiptFailureStatus = (
+  body: Record<string, unknown> | null,
+): SubmitReceiptClientFailureStatus => {
+  const status = body?.status;
+  if (
+    status === 'unauthenticated' ||
+    status === 'forbidden' ||
+    status === 'donation_not_found' ||
+    status === 'donation_wrong_state' ||
+    status === 'receipt_media_not_found'
+  ) {
+    return status;
+  }
+  return 'worker_request_failed';
+};
+
+const parseReviewDonationSuccess = (
+  body: Record<string, unknown> | null,
+): ReviewDonationClientSuccess | null => {
+  if (
+    !body ||
+    (body.status !== 'donation_approved' && body.status !== 'donation_rejected') ||
+    typeof body.donationId !== 'string'
+  ) {
+    return null;
+  }
+  return {
+    ok: true,
+    status: body.status as 'donation_approved' | 'donation_rejected',
+    donationId: body.donationId,
+  };
+};
+
+const parseReviewDonationFailureStatus = (
+  body: Record<string, unknown> | null,
+): ReviewDonationClientFailureStatus => {
+  const status = body?.status;
+  if (
+    status === 'unauthenticated' ||
+    status === 'forbidden' ||
+    status === 'donation_not_found' ||
+    status === 'donation_wrong_state'
+  ) {
+    return status;
+  }
+  return 'worker_request_failed';
+};
+
+// ─── Factory functions (manual flow) ─────────────────────────────────────────
+
+export const createSubmitReceiptClient = ({
+  workerBaseUrl,
+  donationsPath,
+  getAccessToken,
+  fetch,
+}: CreateSubmitReceiptClientInput): SubmitReceiptClient => ({
+  submitReceipt: async (donationId, input) => {
+    const accessToken = await getAccessToken();
+
+    if (!accessToken?.trim()) {
+      return { ok: false, status: 'unauthenticated', reasons: ['missing_access_token'] };
+    }
+
+    let response: Response;
+
+    try {
+      response = await fetch(
+        createWorkerSubUrl(workerBaseUrl, donationsPath, donationId, 'receipt'),
+        {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ receiptMediaId: input.receiptMediaId }),
+        },
+      );
+    } catch {
+      return { ok: false, status: 'worker_request_failed', reasons: ['network_error'] };
+    }
+
+    const body = await parseJsonResponse(response);
+
+    if (!response.ok) {
+      const status = parseSubmitReceiptFailureStatus(body);
+      const reasons = Array.isArray(body?.reasons) ? parseReasons(body) : [status];
+      return { ok: false, status, reasons: sanitizeReasons(reasons, status) };
+    }
+
+    const success = parseSubmitReceiptSuccess(body);
+
+    if (!success) {
+      return { ok: false, status: 'worker_response_invalid', reasons: ['invalid_worker_response'] };
+    }
+
+    return success;
+  },
+});
+
+export const createReviewDonationClient = ({
+  workerBaseUrl,
+  donationsPath,
+  getAccessToken,
+  fetch,
+}: CreateReviewDonationClientInput): ReviewDonationClient => ({
+  reviewDonation: async (donationId, input) => {
+    const accessToken = await getAccessToken();
+
+    if (!accessToken?.trim()) {
+      return { ok: false, status: 'unauthenticated', reasons: ['missing_access_token'] };
+    }
+
+    let response: Response;
+
+    try {
+      response = await fetch(
+        createWorkerSubUrl(workerBaseUrl, donationsPath, donationId, 'review'),
+        {
+          method: 'PATCH',
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ decision: input.decision }),
+        },
+      );
+    } catch {
+      return { ok: false, status: 'worker_request_failed', reasons: ['network_error'] };
+    }
+
+    const body = await parseJsonResponse(response);
+
+    if (!response.ok) {
+      const status = parseReviewDonationFailureStatus(body);
+      const reasons = Array.isArray(body?.reasons) ? parseReasons(body) : [status];
+      return { ok: false, status, reasons: sanitizeReasons(reasons, status) };
+    }
+
+    const success = parseReviewDonationSuccess(body);
+
+    if (!success) {
+      return { ok: false, status: 'worker_response_invalid', reasons: ['invalid_worker_response'] };
+    }
+
+    return success;
+  },
+});
