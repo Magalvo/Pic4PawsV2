@@ -1,6 +1,6 @@
 # WORKER-DISPATCH-MODULAR-001 — Dispatcher and Client Modularization
 
-**status**: open
+status: done
 **created**: 2026-06-13
 **priority**: P2/P3
 
@@ -21,6 +21,10 @@ brittle as more slices are added.
 - **D7**: Worker dispatcher and client package are route-order fragile. No structural
   enforcement of ordering rules. A single misplaced matcher could silently shadow an
   existing route.
+
+## States
+
+N/A — structural refactoring, no state machine or UI states.
 
 ## Contract
 
@@ -72,3 +76,7 @@ current single-package import contract (`@pic4paws/client`). No consumer changes
 | `packages/client/src/index.ts` | refactor to re-export from per-domain modules |
 | `packages/client/src/*.ts` | new per-domain client modules |
 | `tests/workers/route-table.test.ts` | new — route ordering assertions |
+
+## Completion Notes
+
+All deliverables were implemented in earlier PRs. Worker dispatcher split into `apps/workers/src/routes/{pets,shelters,adoptions,donations,sponsorships,notifications,webhooks,media,users}.ts` — each exports `handle(request, config, dependencies): Promise<Response | null>`. `apps/workers/src/index.ts` reduced to re-exports + the 10-line `ROUTE_HANDLERS` dispatch loop. Client package split into `packages/client/src/{pets,shelters,adoptions,donations,sponsorships,notifications,media,users}.ts` with `index.ts` re-exporting everything. Route-table test at `tests/workers/route-table.test.ts` asserts domain isolation (16 tests) and ordering invariants for overlapping path matchers. All 16 route-table tests pass.
