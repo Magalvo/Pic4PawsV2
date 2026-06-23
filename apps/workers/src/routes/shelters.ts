@@ -16,6 +16,11 @@ import {
   matchWorkerShelterVerificationId,
 } from '../shelter-verify';
 import {
+  handleGetPaymentConfigRequest,
+  handleSavePaymentConfigRequest,
+  matchWorkerShelterPaymentConfigId,
+} from '../shelter-payment-config';
+import {
   handleWorkerAdminPendingSheltersRequest,
   matchWorkerAdminPendingSheltersPath,
 } from '../admin-pending-shelters';
@@ -94,6 +99,26 @@ export const handle = async (
       request,
       shelterId: shelterPetListShelterId,
       shelterPetListRepository: dependencies.shelterPetListRepository,
+      authenticator: dependencies.petDraftAuthenticator,
+    });
+  }
+
+  const paymentConfigShelterId = matchWorkerShelterPaymentConfigId(url.pathname, config.workers.shelterPath);
+  if (paymentConfigShelterId !== null) {
+    const payload = request.method === 'POST' ? await request.json().catch(() => null) : null;
+    if (request.method === 'POST') {
+      return handleSavePaymentConfigRequest({
+        request,
+        payload,
+        shelterId: paymentConfigShelterId,
+        repository: dependencies.shelterPaymentConfigRepository,
+        authenticator: dependencies.petDraftAuthenticator,
+      });
+    }
+    return handleGetPaymentConfigRequest({
+      request,
+      shelterId: paymentConfigShelterId,
+      repository: dependencies.shelterPaymentConfigRepository,
       authenticator: dependencies.petDraftAuthenticator,
     });
   }

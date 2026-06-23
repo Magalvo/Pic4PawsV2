@@ -77,6 +77,8 @@ import {
 } from './user-register-supabase';
 import type { PushNotificationProvider, PushTokenRepository } from './push-token';
 import { createSupabasePushTokenRepositories } from './push-token-supabase';
+import type { ShelterPaymentConfigRepository } from './shelter-payment-config';
+import { createSupabaseShelterPaymentConfigRepositories } from './shelter-payment-config-supabase';
 
 export type WorkerSupabaseTableQueryLike = SupabaseAuthTableQueryLike & SupabaseTableQueryLike;
 
@@ -133,6 +135,7 @@ export type WorkerRequestDependencies = {
   userRegistrationRepository?: UserRegistrationRepository;
   pushTokenRepository?: PushTokenRepository;
   pushNotificationProvider?: PushNotificationProvider;
+  shelterPaymentConfigRepository?: ShelterPaymentConfigRepository;
   supabaseClientFactory?: WorkerSupabaseClientFactory;
   now?: () => string;
 };
@@ -203,6 +206,7 @@ export const createWorkerSupabaseDependencies = ({
       client: client as unknown as UserRegistrationSupabaseClientLike,
     });
     const pushTokenRepositories = createSupabasePushTokenRepositories({ client });
+    const shelterPaymentConfigRepositories = createSupabaseShelterPaymentConfigRepositories({ client });
     const notificationRepositories = createSupabaseNotificationRepositories({
       client,
       notificationPreferencesRepository: notificationPreferencesRepositories.notificationPreferencesRepository,
@@ -247,6 +251,7 @@ export const createWorkerSupabaseDependencies = ({
         adminPendingSheltersRepositories.adminPendingSheltersRepository,
       userRegistrationRepository: userRegistrationRepositories.userRegistrationRepository,
       pushTokenRepository: pushTokenRepositories.pushTokenRepository,
+      shelterPaymentConfigRepository: shelterPaymentConfigRepositories.shelterPaymentConfigRepository,
       // paymentWebhookVerifier is intentionally NOT set here — it is provider-SDK-specific
       // and must be injected by the production fetch handler or tests
       now,
@@ -357,5 +362,7 @@ export const resolveWorkerRequestDependencies = ({
       dependencies.userRegistrationRepository ?? supabaseDependencies.userRegistrationRepository,
     pushTokenRepository:
       dependencies.pushTokenRepository ?? supabaseDependencies.pushTokenRepository,
+    shelterPaymentConfigRepository:
+      dependencies.shelterPaymentConfigRepository ?? supabaseDependencies.shelterPaymentConfigRepository,
   };
 };
