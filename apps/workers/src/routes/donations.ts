@@ -42,7 +42,7 @@ export const handle = async (
       repository: dependencies.donationManualRepository,
       authenticator: dependencies.petDraftAuthenticator,
       notificationRepository: dependencies.notificationRepository,
-      now: dependencies.now?.() ?? new Date().toISOString(),
+      now: dependencies.now ?? (() => new Date().toISOString()),
     });
   }
 
@@ -74,6 +74,6 @@ export const handle = async (
     donationRepository: dependencies.donationRepository,
     authenticator: dependencies.petDraftAuthenticator,
     provider: config.payments.primaryProvider,
-    now: dependencies.now?.() ?? new Date().toISOString(),
+    now: dependencies.now ?? (() => new Date().toISOString()),
   });
 };

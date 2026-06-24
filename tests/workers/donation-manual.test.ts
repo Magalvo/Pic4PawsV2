@@ -62,9 +62,9 @@ const makeReceiptRepo = (
 ): DonationManualRepository => ({
   getDonationForAction: vi.fn().mockResolvedValue(donation),
   verifyMediaOwnership: vi.fn().mockResolvedValue(mediaOk),
-  submitReceipt: vi.fn().mockResolvedValue(undefined),
-  approveDonation: vi.fn().mockResolvedValue(undefined),
-  rejectDonation: vi.fn().mockResolvedValue(undefined),
+  submitReceipt: vi.fn().mockResolvedValue('ok'),
+  approveDonation: vi.fn().mockResolvedValue('ok'),
+  rejectDonation: vi.fn().mockResolvedValue('ok'),
 });
 
 const makeReviewRepo = (
@@ -72,9 +72,9 @@ const makeReviewRepo = (
 ): DonationManualRepository => ({
   getDonationForAction: vi.fn().mockResolvedValue(donation),
   verifyMediaOwnership: vi.fn().mockResolvedValue(true),
-  submitReceipt: vi.fn().mockResolvedValue(undefined),
-  approveDonation: vi.fn().mockResolvedValue(undefined),
-  rejectDonation: vi.fn().mockResolvedValue(undefined),
+  submitReceipt: vi.fn().mockResolvedValue('ok'),
+  approveDonation: vi.fn().mockResolvedValue('ok'),
+  rejectDonation: vi.fn().mockResolvedValue('ok'),
 });
 
 const makeNotificationRepo = (): NotificationRepository => ({
@@ -276,6 +276,21 @@ describe('handleSubmitReceiptRequest', () => {
     expect(body.donationId).toBe(DONATION_ID);
     expect(repo.submitReceipt).toHaveBeenCalledWith(DONATION_ID, MEDIA_ID);
   });
+
+  it('returns 409 when submitReceipt signals wrong_state (concurrent update race)', async () => {
+    const repo = makeReceiptRepo();
+    (repo.submitReceipt as ReturnType<typeof vi.fn>).mockResolvedValue('wrong_state');
+    const res = await handleSubmitReceiptRequest({
+      request: patchReceiptRequest(),
+      donationId: DONATION_ID,
+      payload: { receiptMediaId: MEDIA_ID },
+      repository: repo,
+      authenticator: makeAuth(makeDonor()),
+    });
+    expect(res.status).toBe(409);
+    const body = await res.json() as { status: string };
+    expect(body.status).toBe('donation_wrong_state');
+  });
 });
 
 // ─── handleReviewDonationRequest ─────────────────────────────────────────────
@@ -288,7 +303,7 @@ describe('handleReviewDonationRequest', () => {
       payload: { decision: 'approved' },
       repository: makeReviewRepo(),
       authenticator: makeAuth(makeShelterMember()),
-      now: '2026-06-23T10:00:00.000Z',
+      now: () => '2026-06-23T10:00:00.000Z',
     });
     expect(res.status).toBe(405);
   });
@@ -300,7 +315,7 @@ describe('handleReviewDonationRequest', () => {
       payload: { decision: 'approved' },
       repository: makeReviewRepo(),
       authenticator: makeAuth(makeShelterMember()),
-      now: '2026-06-23T10:00:00.000Z',
+      now: () => '2026-06-23T10:00:00.000Z',
     });
     expect(res.status).toBe(401);
   });
@@ -312,7 +327,7 @@ describe('handleReviewDonationRequest', () => {
       payload: { decision: 'approved' },
       repository: makeReviewRepo(),
       authenticator: makeAuth(makeDonor()),
-      now: '2026-06-23T10:00:00.000Z',
+      now: () => '2026-06-23T10:00:00.000Z',
     });
     expect(res.status).toBe(403);
     const body = await res.json() as { status: string };
@@ -328,7 +343,7 @@ describe('handleReviewDonationRequest', () => {
       payload: { decision: 'approved' },
       repository: repo,
       authenticator: makeAuth(makeShelterMember()),
-      now: '2026-06-23T10:00:00.000Z',
+      now: () => '2026-06-23T10:00:00.000Z',
     });
     expect(res.status).toBe(404);
   });
@@ -341,7 +356,7 @@ describe('handleReviewDonationRequest', () => {
       payload: { decision: 'approved' },
       repository: repo,
       authenticator: makeAuth(makeShelterMember()),
-      now: '2026-06-23T10:00:00.000Z',
+      now: () => '2026-06-23T10:00:00.000Z',
     });
     expect(res.status).toBe(409);
     const body = await res.json() as { status: string };
@@ -355,7 +370,7 @@ describe('handleReviewDonationRequest', () => {
       payload: { decision: 'maybe' },
       repository: makeReviewRepo(),
       authenticator: makeAuth(makeShelterMember()),
-      now: '2026-06-23T10:00:00.000Z',
+      now: () => '2026-06-23T10:00:00.000Z',
     });
     expect(res.status).toBe(400);
   });
@@ -369,7 +384,7 @@ describe('handleReviewDonationRequest', () => {
       payload: { decision: 'approved' },
       repository: repo,
       authenticator: makeAuth(makeShelterMember()),
-      now,
+      now: () => now,
     });
     expect(res.status).toBe(200);
     const body = await res.json() as { status: string; donationId: string };
@@ -393,7 +408,7 @@ describe('handleReviewDonationRequest', () => {
       repository: repo,
       authenticator: makeAuth(makeShelterMember()),
       notificationRepository: notificationRepo,
-      now: '2026-06-23T10:00:00.000Z',
+      now: () => '2026-06-23T10:00:00.000Z',
     });
     // fire-and-forget — called but not awaited
     expect(notificationRepo.notifyDonationPaid).toHaveBeenCalled();
@@ -408,7 +423,7 @@ describe('handleReviewDonationRequest', () => {
       payload: { decision: 'rejected' },
       repository: repo,
       authenticator: makeAuth(makeShelterMember()),
-      now,
+      now: () => now,
     });
     expect(res.status).toBe(200);
     const body = await res.json() as { status: string; donationId: string };
@@ -430,8 +445,43 @@ describe('handleReviewDonationRequest', () => {
       repository: repo,
       authenticator: makeAuth(makeShelterMember()),
       notificationRepository: notificationRepo,
-      now: '2026-06-23T10:00:00.000Z',
+      now: () => '2026-06-23T10:00:00.000Z',
     });
     expect(notificationRepo.notifyDonationPaid).not.toHaveBeenCalled();
+  });
+
+  it('returns 409 and skips notification when approveDonation signals wrong_state', async () => {
+    const repo = makeReviewRepo();
+    (repo.approveDonation as ReturnType<typeof vi.fn>).mockResolvedValue('wrong_state');
+    const notificationRepo = makeNotificationRepo();
+    const res = await handleReviewDonationRequest({
+      request: patchReviewRequest(),
+      donationId: DONATION_ID,
+      payload: { decision: 'approved' },
+      repository: repo,
+      authenticator: makeAuth(makeShelterMember()),
+      notificationRepository: notificationRepo,
+      now: () => '2026-06-23T10:00:00.000Z',
+    });
+    expect(res.status).toBe(409);
+    const body = await res.json() as { status: string };
+    expect(body.status).toBe('donation_wrong_state');
+    expect(notificationRepo.notifyDonationPaid).not.toHaveBeenCalled();
+  });
+
+  it('returns 409 when rejectDonation signals wrong_state (concurrent update race)', async () => {
+    const repo = makeReviewRepo();
+    (repo.rejectDonation as ReturnType<typeof vi.fn>).mockResolvedValue('wrong_state');
+    const res = await handleReviewDonationRequest({
+      request: patchReviewRequest(),
+      donationId: DONATION_ID,
+      payload: { decision: 'rejected' },
+      repository: repo,
+      authenticator: makeAuth(makeShelterMember()),
+      now: () => '2026-06-23T10:00:00.000Z',
+    });
+    expect(res.status).toBe(409);
+    const body = await res.json() as { status: string };
+    expect(body.status).toBe('donation_wrong_state');
   });
 });
