@@ -84,22 +84,26 @@ export const createSupabaseDonationManualRepositories = ({
       return result.data !== null;
     },
 
-    submitReceipt: async (donationId: string, receiptMediaId: string): Promise<void> => {
+    submitReceipt: async (donationId: string, receiptMediaId: string): Promise<'ok' | 'wrong_state'> => {
       const result = (await client
         .from('donation_transactions')
         .update({ receipt_media_id: receiptMediaId, status: 'pending_review' })
         .eq('id', donationId)
         .eq('status', 'pending_receipt')
-        .is('deleted_at', null)) as SupabaseQueryResult<unknown>;
+        .is('deleted_at', null)
+        .select('id')) as SupabaseQueryResult<Array<{ id: string }>>;
 
       if (result.error) {
         throw new SupabaseDonationManualRepositoryError(
           `Failed to submit receipt: ${result.error.message ?? 'unknown error'}`,
         );
       }
+
+      if (!result.data?.length) return 'wrong_state';
+      return 'ok';
     },
 
-    approveDonation: async (donationId: string, input: ApproveInput): Promise<void> => {
+    approveDonation: async (donationId: string, input: ApproveInput): Promise<'ok' | 'wrong_state'> => {
       const result = (await client
         .from('donation_transactions')
         .update({
@@ -110,16 +114,20 @@ export const createSupabaseDonationManualRepositories = ({
         })
         .eq('id', donationId)
         .eq('status', 'pending_review')
-        .is('deleted_at', null)) as SupabaseQueryResult<unknown>;
+        .is('deleted_at', null)
+        .select('id')) as SupabaseQueryResult<Array<{ id: string }>>;
 
       if (result.error) {
         throw new SupabaseDonationManualRepositoryError(
           `Failed to approve donation: ${result.error.message ?? 'unknown error'}`,
         );
       }
+
+      if (!result.data?.length) return 'wrong_state';
+      return 'ok';
     },
 
-    rejectDonation: async (donationId: string, input: RejectInput): Promise<void> => {
+    rejectDonation: async (donationId: string, input: RejectInput): Promise<'ok' | 'wrong_state'> => {
       const result = (await client
         .from('donation_transactions')
         .update({
@@ -129,13 +137,17 @@ export const createSupabaseDonationManualRepositories = ({
         })
         .eq('id', donationId)
         .eq('status', 'pending_review')
-        .is('deleted_at', null)) as SupabaseQueryResult<unknown>;
+        .is('deleted_at', null)
+        .select('id')) as SupabaseQueryResult<Array<{ id: string }>>;
 
       if (result.error) {
         throw new SupabaseDonationManualRepositoryError(
           `Failed to reject donation: ${result.error.message ?? 'unknown error'}`,
         );
       }
+
+      if (!result.data?.length) return 'wrong_state';
+      return 'ok';
     },
   };
 

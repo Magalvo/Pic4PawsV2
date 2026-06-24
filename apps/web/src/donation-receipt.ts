@@ -212,6 +212,17 @@ export const createWebDonationReceiptUi = ({
       };
     }
 
+    if (!uploadResult.mediaId?.trim()) {
+      return {
+        state: 'failed',
+        title: 'Não foi possível carregar o ficheiro',
+        message: 'O comprovativo foi carregado mas não foi identificado. Tenta de novo.',
+        status: 'media_upload_failed',
+        reasons: ['empty_media_id'],
+        canRetry: true,
+      };
+    }
+
     const submitResult = await submitReceiptClient.submitReceipt(donationId, {
       receiptMediaId: uploadResult.mediaId,
     });

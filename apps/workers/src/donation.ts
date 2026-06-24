@@ -223,7 +223,7 @@ export type HandleWorkerDonationRequestInput = {
   donationRepository?: DonationRepository;
   authenticator?: WorkerPetDraftAuthenticator;
   provider: DonationProvider;
-  now: string;
+  now: () => string;
 };
 
 export const handleWorkerDonationRequest = async ({
@@ -332,7 +332,7 @@ export const handleWorkerDonationRequest = async ({
     donorDisplayName: validation.data.donorDisplayName,
     donorEmail: validation.data.donorEmail,
     publicMessage: validation.data.publicMessage,
-    createdAt: now,
+    createdAt: now(),
   });
 
   return jsonResponse(
