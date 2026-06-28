@@ -62,8 +62,12 @@ export default function DoacaoReviewScreen() {
           onPress: async () => {
             if (!uiRef.current) return;
             setViewModel({ state: 'approving', title: 'A aprovar...' });
-            const result = await uiRef.current.approve(donationId);
-            setViewModel(result);
+            try {
+              const result = await uiRef.current.approve(donationId);
+              setViewModel(result);
+            } catch {
+              setViewModel({ state: 'failed', title: 'Erro', message: 'Não foi possível aprovar o donativo.' });
+            }
           },
         },
       ],
@@ -83,8 +87,12 @@ export default function DoacaoReviewScreen() {
           onPress: async () => {
             if (!uiRef.current) return;
             setViewModel({ state: 'rejecting', title: 'A rejeitar...' });
-            const result = await uiRef.current.reject(donationId);
-            setViewModel(result);
+            try {
+              const result = await uiRef.current.reject(donationId);
+              setViewModel(result);
+            } catch {
+              setViewModel({ state: 'failed', title: 'Erro', message: 'Não foi possível rejeitar o donativo.' });
+            }
           },
         },
       ],
