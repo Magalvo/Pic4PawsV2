@@ -20,6 +20,7 @@ export * from './media-policy';
 export * from './pet-lifecycle';
 
 export type PaymentProvider = 'eupago' | 'ifthenpay' | 'stripe';
+export type ActivePaymentProvider = 'ifthenpay' | 'eupago';
 export type PaymentMethod = 'mb_way' | 'multibanco' | 'card' | 'bank_transfer' | 'unknown';
 export type DonationKind = 'one_time_donation' | 'monthly_sponsorship';
 export type DonationStatus =

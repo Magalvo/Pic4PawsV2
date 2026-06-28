@@ -114,6 +114,7 @@ export const donationStatusEnum = pgEnum('donation_status', [
 ]);
 
 export const shelterPaymentTierEnum = pgEnum('shelter_payment_tier', ['manual', 'automated']);
+export const shelterActiveProviderEnum = pgEnum('shelter_active_provider', ['ifthenpay', 'eupago']);
 
 export const sponsorshipStatusEnum = pgEnum('sponsorship_status', [
   'active',
@@ -213,6 +214,10 @@ export const shelterPaymentConfigs = pgTable(
     apiKeyEncrypted: text('api_key_encrypted'),
     webhookSecretEncrypted: text('webhook_secret_encrypted'),
     webhookUrlPath: text('webhook_url_path'),
+    activeProvider: shelterActiveProviderEnum('active_provider'),
+    eupagoApiKeyEncrypted: text('eupago_api_key_encrypted'),
+    eupagoWebhookSecretEncrypted: text('eupago_webhook_secret_encrypted'),
+    ifthenpayAntiPhishingKey: text('ifthenpay_anti_phishing_key'),
     status: paymentAccountStatusEnum('status').notNull().default('not_configured'),
     ...auditColumns,
   },
