@@ -499,6 +499,64 @@ describe('handleSavePaymentConfigRequest — automated tier', () => {
     });
     expect(res.status).toBe(200);
   });
+
+  it('automated → manual with pending payments returns 409', async () => {
+    const repo: ShelterPaymentConfigRepository = {
+      getPaymentConfig: vi.fn().mockResolvedValue({
+        tier: 'automated',
+        iban: null,
+        mbWayPhone: null,
+        activeProvider: 'eupago',
+        eupagoApiKeyConfigured: true,
+        ifthenpayAntiPhishingKeyConfigured: false,
+      }),
+      savePaymentConfig: vi.fn().mockResolvedValue(undefined),
+      checkPendingPaymentDonations: vi.fn().mockResolvedValue(true),
+    };
+    const req = new Request(`https://worker.test/shelters/${SHELTER_ID}/payment-config`, {
+      method: 'POST',
+      headers: { Authorization: 'Bearer tok' },
+    });
+    const res = await handleSavePaymentConfigRequest({
+      request: req,
+      payload: { tier: 'manual', iban: 'PT50000201231234567890154', mbWayPhone: null },
+      shelterId: SHELTER_ID,
+      repository: repo,
+      authenticator: makeAuthenticator(makeActor()),
+    });
+    expect(res.status).toBe(409);
+    const body = await res.json() as { status: string };
+    expect(body.status).toBe('provider_switch_blocked');
+    expect(repo.savePaymentConfig).not.toHaveBeenCalled();
+  });
+
+  it('automated → manual allowed when no pending payments', async () => {
+    const repo: ShelterPaymentConfigRepository = {
+      getPaymentConfig: vi.fn().mockResolvedValue({
+        tier: 'automated',
+        iban: null,
+        mbWayPhone: null,
+        activeProvider: 'eupago',
+        eupagoApiKeyConfigured: true,
+        ifthenpayAntiPhishingKeyConfigured: false,
+      }),
+      savePaymentConfig: vi.fn().mockResolvedValue(undefined),
+      checkPendingPaymentDonations: vi.fn().mockResolvedValue(false),
+    };
+    const req = new Request(`https://worker.test/shelters/${SHELTER_ID}/payment-config`, {
+      method: 'POST',
+      headers: { Authorization: 'Bearer tok' },
+    });
+    const res = await handleSavePaymentConfigRequest({
+      request: req,
+      payload: { tier: 'manual', iban: 'PT50000201231234567890154', mbWayPhone: null },
+      shelterId: SHELTER_ID,
+      repository: repo,
+      authenticator: makeAuthenticator(makeActor()),
+    });
+    expect(res.status).toBe(200);
+    expect(repo.savePaymentConfig).toHaveBeenCalled();
+  });
 });
 
 // ─── GET handler — extended response ─────────────────────────────────────────
