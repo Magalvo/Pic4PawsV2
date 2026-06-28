@@ -270,6 +270,45 @@ Rules:
 
 `DonationTransaction` records one-time donations and recurring sponsorship payments.
 
+### ShelterPaymentConfig
+
+`ShelterPaymentConfig` records how a shelter receives money. One row per shelter. Tier
+`'manual'` requires no PSP — donors transfer via IBAN or MB WAY and upload a receipt.
+Tier `'automated'` requires an `activeProvider` and its credentials; the system calls
+the PSP API to generate a payment reference on the donor's behalf.
+
+```ts
+export type ActivePaymentProvider = 'ifthenpay' | 'eupago';
+
+export type ShelterPaymentTier = 'manual' | 'automated';
+
+export type ShelterPaymentConfig = AuditMetadata & {
+  id: UUID;
+  shelterId: UUID;
+  tier: ShelterPaymentTier;
+  iban: string | null;
+  mbWayPhone: string | null;
+  activeProvider: ActivePaymentProvider | null;
+  // Provider credentials are stored encrypted; never returned in API responses.
+};
+```
+
+Rules:
+
+- `activeProvider` must be set when `tier = 'automated'`; must be null when `tier = 'manual'`.
+- API credentials (`eupagoApiKeyEncrypted`, `ifthenpayAntiPhishingKey`, etc.) are
+  provider-specific columns; they are never returned in worker responses, only read
+  server-side for reference generation and webhook validation.
+- Changing `activeProvider` while donations are `pending_payment` is not permitted (guard
+  in the config worker).
+- Each PSP sends callbacks to its own dedicated webhook path so both providers can operate
+  simultaneously across different shelters: `GET /webhooks/payments/ifthenpay` and
+  `POST /webhooks/payments/eupago`.
+
+### DonationTransaction
+
+`DonationTransaction` records one-time donations and recurring sponsorship payments.
+
 ```ts
 export type DonationKind = 'one_time_donation' | 'monthly_sponsorship';
 
@@ -320,6 +359,9 @@ Rules:
 - `providerPaymentId` and `idempotencyKey` must be unique.
 - Raw PSP event payloads should be stored in a separate audit/event table with sensitive fields minimized.
 - Donation records may need legal retention even when donor profile data is deleted.
+- Each PSP uses its own dedicated webhook path: `GET /webhooks/payments/ifthenpay` (anti-phishing key
+  in query) and `POST /webhooks/payments/eupago` (HMAC-SHA256 via `x-eupago-signature` header).
+  The legacy `POST /webhooks/payments` path is deprecated once both provider-specific endpoints are live.
 
 ## 6. Supporting Entities
 
@@ -329,6 +371,8 @@ The core interfaces above imply additional tables/contracts:
 - `MediaAsset`: stores R2 object keys, mime types, visibility and derivative metadata.
 - `FeedPost`: publishable feed entry derived from pets and shelter content.
 - `Sponsorship`: active recurring commitment for a donor, pet and shelter.
+- `ShelterPaymentConfig`: per-shelter payment tier, IBAN/MB WAY details, and encrypted
+  PSP credentials. One row per shelter. See §5 `ShelterPaymentConfig`.
 - `PaymentWebhookEvent`: immutable provider event log for idempotency and audits.
 - `AuditEvent`: security, admin and financial state-transition trail.
 - `Notification`: user/shelter alerts for applications, payments and moderation.
