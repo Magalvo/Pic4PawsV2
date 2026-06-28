@@ -24,6 +24,7 @@ export type DonationClientInput = {
   kind: DonationClientKind;
   paymentMethod: DonationClientPaymentMethod;
   dataProcessingAccepted: true;
+  mbWayPhone?: string | null;
   petId?: string | null;
   publicMessage?: string | null;
   anonymous?: boolean;
@@ -298,6 +299,7 @@ const buildDonationPayload = (input: DonationClientInput): Record<string, unknow
   amountCents: input.amountCents,
   kind: input.kind,
   paymentMethod: input.paymentMethod,
+  mbWayPhone: input.mbWayPhone ?? null,
   petId: input.petId ?? null,
   publicMessage: input.publicMessage ?? null,
   anonymous: input.anonymous ?? false,

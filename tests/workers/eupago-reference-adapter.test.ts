@@ -8,6 +8,7 @@ const baseInput: PaymentReferenceInput = {
   currency: 'EUR',
   shelterId: 'shelter-abc',
   orderId: 'order-uuid-001',
+  paymentMethod: 'multibanco',
 };
 
 const makeFetch = (status: number, body: unknown): typeof fetch =>
@@ -21,7 +22,7 @@ const makeTimeoutFetch = (): typeof fetch =>
 
 // ─── Multibanco ───────────────────────────────────────────────────────────────
 
-describe('createEupagoReferenceAdapter — Multibanco (no mbWayPhone)', () => {
+describe('createEupagoReferenceAdapter — paymentMethod: multibanco', () => {
   it('returns multibanco reference on successful response', async () => {
     const fetch = makeFetch(200, {
       transactionID: 'txn-mb-001',
@@ -45,7 +46,7 @@ describe('createEupagoReferenceAdapter — Multibanco (no mbWayPhone)', () => {
     });
   });
 
-  it('uses multibanco endpoint when mbWayPhone is absent', async () => {
+  it('uses multibanco endpoint when paymentMethod is multibanco', async () => {
     const fetch = makeFetch(200, {
       transactionID: 'txn-mb-002',
       entity: '10611',
@@ -82,7 +83,13 @@ describe('createEupagoReferenceAdapter — Multibanco (no mbWayPhone)', () => {
 
 // ─── MB WAY ───────────────────────────────────────────────────────────────────
 
-describe('createEupagoReferenceAdapter — MB WAY (with mbWayPhone)', () => {
+const mbWayInput: PaymentReferenceInput = {
+  ...baseInput,
+  paymentMethod: 'mb_way',
+  mbWayPhone: '+351910000001',
+};
+
+describe('createEupagoReferenceAdapter — paymentMethod: mb_way', () => {
   it('returns mb_way reference on successful response', async () => {
     const fetch = makeFetch(200, {
       transactionID: 'txn-mbway-001',
@@ -90,12 +97,8 @@ describe('createEupagoReferenceAdapter — MB WAY (with mbWayPhone)', () => {
       expiryDate: '2026-07-01T00:00:00.000Z',
     });
 
-    const adapter = createEupagoReferenceAdapter({
-      apiKey: 'key-abc',
-      mbWayPhone: '+351910000001',
-      fetch,
-    });
-    const result = await adapter.createReference(baseInput);
+    const adapter = createEupagoReferenceAdapter({ apiKey: 'key-abc', fetch });
+    const result = await adapter.createReference(mbWayInput);
 
     expect(result).toEqual({
       ok: true,
@@ -108,19 +111,15 @@ describe('createEupagoReferenceAdapter — MB WAY (with mbWayPhone)', () => {
     });
   });
 
-  it('uses mbway endpoint when mbWayPhone is present', async () => {
+  it('uses mbway endpoint when paymentMethod is mb_way', async () => {
     const fetch = makeFetch(200, {
       transactionID: 'txn-mbway-002',
       alias: '+351910000001',
       expiryDate: null,
     });
 
-    const adapter = createEupagoReferenceAdapter({
-      apiKey: 'key-abc',
-      mbWayPhone: '+351910000001',
-      fetch,
-    });
-    await adapter.createReference(baseInput);
+    const adapter = createEupagoReferenceAdapter({ apiKey: 'key-abc', fetch });
+    await adapter.createReference(mbWayInput);
 
     const [url] = (fetch as ReturnType<typeof vi.fn>).mock.calls[0] as [string, unknown];
     expect(url).toContain('mbway');
