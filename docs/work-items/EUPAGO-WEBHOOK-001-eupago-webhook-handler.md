@@ -1,8 +1,10 @@
 ---
 id: EUPAGO-WEBHOOK-001
 title: Eupago provider — isolated webhook endpoints
-status: todo
+status: done
 depends-on: EUPAGO-DB-001
+pr: 279
+merged: 2026-06-28
 ---
 
 # Work-Item: EUPAGO-WEBHOOK-001 — Isolated Provider Webhook Endpoints

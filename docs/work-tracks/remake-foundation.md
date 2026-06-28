@@ -109,17 +109,22 @@ Dispatcher + client modularization (PR #147):
 `WORKER-DISPATCH-MODULAR-001` — 8 per-domain route modules under `apps/workers/src/routes/`;
 8 per-domain client modules under `packages/client/src/`; route-table test enforces ordering.
 
+Eupago multi-provider payment support (PRs #276–#280, PR #281 in review):
+`EUPAGO-DB-001` — `shelter_active_provider` enum + encrypted credential columns on `shelter_payment_configs`
+`EUPAGO-CONFIG-WORKER-001` — `activeProvider` in `GET/PATCH /shelters/:id/payment-config`; AES-256-GCM credential encryption
+`EUPAGO-WEBHOOK-001` — isolated per-provider webhook endpoints (`/webhooks/payments/eupago`, `/webhooks/payments/ifthenpay`); per-shelter HMAC verification
+`EUPAGO-REFERENCE-FACTORY-001` — `PaymentReferenceFactory` interface; Eupago + Ifthenpay adapters; Supabase factory; automated-tier stub replaced with full PSP flow
+`EUPAGO-DONATION-CLIENT-001` (PR #281) — `DonationClientSuccess` discriminated union; `DonationClientPaymentReference` type; `submitted_automated` Web + Mobile state
+
 ## Current Focus
 
 **This work track is complete.**
 
-Main branch HEAD: PR #227 (docs cleanup post-PR #226). Tests: 2097 / 254 files.
-All validation gates pass. Tracks A–G are done (shelter verification + admin review
-queue + all supplementary items through PR #227).
+Main branch HEAD: PR #281 (`EUPAGO-DONATION-CLIENT-001`, `c9afc6c`). Tests: 2515 / 279 files.
+All validation gates pass.
 
-There are no remaining open work items in this track. See `docs/work-tracks/track-a-real-ui.md`
-for the UI wiring track (also complete) and `docs/agent-resume.md` section 5 for
-the next candidate tracks (production readiness gaps).
+There are no remaining planned work items in this track. See `docs/agent-resume.md` section 5 for
+the next candidate tracks (production readiness gaps, SDD audit).
 
 ## Branching Convention
 

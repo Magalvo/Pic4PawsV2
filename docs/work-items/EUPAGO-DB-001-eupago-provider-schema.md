@@ -1,15 +1,17 @@
----
+﻿---
 id: EUPAGO-DB-001
 title: Eupago provider — schema additions
-status: todo
+status: done
+pr: 277
+merged: 2026-06-28
 ---
 
-# Work-Item: EUPAGO-DB-001 — Eupago Provider Schema Additions
+# Work-Item: EUPAGO-DB-001 â€” Eupago Provider Schema Additions
 
 ## 1. Context & Problem
 
 `DONATE-TIER-DB-001` (merged) added `shelter_payment_configs` with two nullable
-placeholder columns — `provider paymentProviderEnum` and `apiKeyEncrypted text` — reserved
+placeholder columns â€” `provider paymentProviderEnum` and `apiKeyEncrypted text` â€” reserved
 for Phase 2 automated payments. `IFTHENPAY-WEBHOOK-001` (merged) wired Ifthenpay webhook
 validation using a global env var (`IFTHENPAY_WEBHOOK_SECRET`).
 
@@ -22,7 +24,7 @@ Adding Eupago as a second supported provider requires:
 3. A new domain type `ActivePaymentProvider` exported from `@pic4paws/domain`.
 
 The existing placeholder columns (`provider`, `apiKeyEncrypted`, `webhookSecretEncrypted`,
-`webhookUrlPath`) remain in place — they are nullable and unused. New named columns are
+`webhookUrlPath`) remain in place â€” they are nullable and unused. New named columns are
 added alongside them; the placeholders are documented as superseded.
 
 ## Goal
@@ -32,7 +34,7 @@ Add a `shelter_active_provider` Postgres enum and four new columns to
 
 ## States
 
-Schema-only migration — no new request/response states. Downstream work items
+Schema-only migration â€” no new request/response states. Downstream work items
 (`EUPAGO-CONFIG-WORKER-001`, `EUPAGO-REFERENCE-FACTORY-001`, `EUPAGO-WEBHOOK-001`)
 introduce state changes.
 
@@ -86,7 +88,7 @@ introduce state changes.
   before insert and decrypted only within the Worker at request time. The application layer
   uses AES-256-GCM; the encryption key comes from a `ENCRYPTION_SECRET` env var (never
   stored in the DB).
-- `ifthenpay_anti_phishing_key` is an opaque string provided by Ifthenpay — it is not a
+- `ifthenpay_anti_phishing_key` is an opaque string provided by Ifthenpay â€” it is not a
   secret in the cryptographic sense but must not be returned in API responses to clients.
 - The existing `apiKeyEncrypted` and `webhookSecretEncrypted` placeholder columns are
   superseded by the provider-specific columns above. They remain in the schema as nullable
