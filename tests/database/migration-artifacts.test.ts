@@ -6,6 +6,7 @@ import {
   manualDonationTierMigration,
   migrationArtifacts,
   notificationsMigration,
+  paymentConfigRlsMigration,
   processPaymentWebhookEventMigration,
   pushTokensMigration,
   registerShelterMigration,
@@ -27,6 +28,7 @@ describe('database migration artifacts', () => {
       pushTokensMigration,
       manualDonationTierMigration,
       eupagoProviderMigration,
+      paymentConfigRlsMigration,
     ]);
   });
 
@@ -154,6 +156,27 @@ describe('database migration artifacts', () => {
     );
 
     expect(() => assertNonDestructiveMigration(manualDonationTierMigration)).not.toThrow();
+  });
+
+  it('protects payment configuration as a server-only table in migration 0009', () => {
+    expect(paymentConfigRlsMigration.id).toBe('0009_payment_config_rls');
+    expect(paymentConfigRlsMigration.filename).toBe('0009_payment_config_rls.sql');
+    expect(paymentConfigRlsMigration.destructive).toBe(false);
+
+    const sql = renderMigrationArtifact(paymentConfigRlsMigration);
+
+    expect(sql).toContain(
+      'alter table public.shelter_payment_configs enable row level security;',
+    );
+    expect(sql).toContain(
+      'revoke all privileges on table public.shelter_payment_configs from anon, authenticated;',
+    );
+    expect(sql).toContain(
+      'grant select, insert, update, delete on table public.shelter_payment_configs to service_role;',
+    );
+    expect(sql).not.toContain('create policy');
+    expect(sql).not.toMatch(/grant .* to (anon|authenticated)/);
+    expect(() => assertNonDestructiveMigration(paymentConfigRlsMigration)).not.toThrow();
   });
 
   it('guards migration artifacts against destructive SQL', () => {

@@ -20,6 +20,19 @@ npm run db:generate-migrations
 | 0004 | `processPaymentWebhookEventMigration` | `process_payment_webhook_event` RPC |
 | 0005 | `registerUserMigration` | `register_user` RPC — inserts `public.users` profile after Worker creates the Supabase auth user via `auth.admin.createUser()` |
 
+| 0006 | `pushTokensMigration` | Push notification tokens and owner RLS |
+| 0007 | `manualDonationTierMigration` | Manual donation tier and shelter payment configuration |
+| 0008 | `eupagoProviderMigration` | Per-shelter automated payment provider credentials |
+| 0009 | `paymentConfigRlsMigration` | Server-only RLS and privileges for payment configuration |
+
+## Database Policy Tests
+
+Policy tests live in `supabase/tests/` and run against the local disposable database:
+
+```sh
+supabase test db
+```
+
 ## Cold Start
 
 1. Review `supabase/config.toml`.
