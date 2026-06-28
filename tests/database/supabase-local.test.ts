@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   assertSafeSupabaseDryRunCommand,
   initialDatabaseMigration,
+  migrationArtifacts,
   renderSupabaseDryRunGuide,
   renderSupabaseMigrationFile,
   supabaseDryRunPlan,
@@ -32,6 +33,18 @@ describe('Supabase local configuration contract', () => {
     expect(migrationFile.sql).toContain('create table public.users');
     expect(migrationFile.sql).toContain('alter table public.pets enable row level security;');
     expect(migrationFile.sql).not.toMatch(/\b(drop\s+table|drop\s+schema|truncate|delete\s+from)\b/i);
+  });
+
+  it('keeps every committed Supabase migration aligned with its TypeScript artifact', () => {
+    for (const artifact of migrationArtifacts) {
+      const migrationFile = renderSupabaseMigrationFile(artifact);
+      const committedSql = readFileSync(migrationFile.path, 'utf8');
+      const normalizeLineEndings = (value: string) => value.replace(/\r\n/g, '\n');
+
+      expect(normalizeLineEndings(committedSql)).toBe(
+        normalizeLineEndings(`${migrationFile.sql}\n`),
+      );
+    }
   });
 
   it('documents a safe local dry-run plan without remote project commands', () => {

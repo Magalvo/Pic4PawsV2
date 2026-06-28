@@ -422,6 +422,23 @@ export const eupagoProviderMigration: MigrationArtifact = {
   sql: eupagoProviderSql,
 };
 
+const paymentConfigRlsSql = `
+alter table public.shelter_payment_configs enable row level security;
+
+revoke all privileges on table public.shelter_payment_configs from anon, authenticated;
+
+grant select, insert, update, delete on table public.shelter_payment_configs to service_role;
+`.trim();
+
+export const paymentConfigRlsMigration: MigrationArtifact = {
+  id: '0009_payment_config_rls',
+  filename: '0009_payment_config_rls.sql',
+  description:
+    'Protects shelter_payment_configs as a server-only table with RLS and explicit role privileges.',
+  destructive: false,
+  sql: paymentConfigRlsSql,
+};
+
 export const migrationArtifacts = [
   initialDatabaseMigration,
   notificationsMigration,
@@ -431,6 +448,7 @@ export const migrationArtifacts = [
   pushTokensMigration,
   manualDonationTierMigration,
   eupagoProviderMigration,
+  paymentConfigRlsMigration,
 ] as const;
 
 export const assertNonDestructiveMigration = (artifact: MigrationArtifact): void => {

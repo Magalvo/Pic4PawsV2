@@ -85,6 +85,7 @@ describe('RLS SQL rendering', () => {
       media_assets: ['select', 'insert', 'update', 'delete', 'all'],
       adoption_applications: ['select', 'insert', 'update', 'all'],
       donation_transactions: ['select', 'all'],
+      shelter_payment_configs: [],
     });
   });
 
