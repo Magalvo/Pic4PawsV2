@@ -22,7 +22,7 @@ import type { DonationRepository } from './donation';
 import { createSupabaseDonationRepositories } from './donation-supabase';
 import type { DonationListRepository } from './donation-list';
 import { createSupabaseDonationListRepositories } from './donation-list-supabase';
-import type { PaymentWebhookRepository, PaymentWebhookVerifier } from './payment-webhook';
+import type { PaymentWebhookRepository } from './payment-webhook';
 import { createSupabasePaymentWebhookRepositories } from './payment-webhook-supabase';
 import type { DonationStatusRepository } from './donation-status';
 import { createSupabaseDonationStatusRepositories } from './donation-status-supabase';
@@ -116,7 +116,6 @@ export type WorkerRequestDependencies = {
   adoptionListRepository?: AdoptionListRepository;
   donationRepository?: DonationRepository;
   donationListRepository?: DonationListRepository;
-  paymentWebhookVerifier?: PaymentWebhookVerifier;
   paymentWebhookRepository?: PaymentWebhookRepository;
   donationStatusRepository?: DonationStatusRepository;
   sponsorshipRepository?: SponsorshipRepository;
@@ -272,8 +271,6 @@ export const createWorkerSupabaseDependencies = ({
             fetch: globalThis.fetch,
           })
         : undefined,
-      // paymentWebhookVerifier is intentionally NOT set here — it is provider-SDK-specific
-      // and must be injected by the production fetch handler or tests
       now,
     };
   } catch {
@@ -332,7 +329,6 @@ export const resolveWorkerRequestDependencies = ({
       dependencies.donationRepository ?? supabaseDependencies.donationRepository,
     donationListRepository:
       dependencies.donationListRepository ?? supabaseDependencies.donationListRepository,
-    paymentWebhookVerifier: dependencies.paymentWebhookVerifier,
     pushNotificationProvider: dependencies.pushNotificationProvider,
     paymentWebhookRepository:
       dependencies.paymentWebhookRepository ?? supabaseDependencies.paymentWebhookRepository,
