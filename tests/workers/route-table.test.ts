@@ -81,10 +81,35 @@ describe('route-table: domain isolation (each handler returns null for foreign p
 });
 
 describe('route-table: method guards (405 before any repository access)', () => {
-  it('webhooks: GET to webhook path → 405', async () => {
-    const response = await handleWebhooks(get(PATHS.webhook), config, deps);
+  it('webhooks: GET to /ifthenpay sub-path returns a response (not null)', async () => {
+    // GET is the valid method for ifthenpay so it will not return 405, but it will not be null
+    const response = await handleWebhooks(
+      get(`${PATHS.webhook}/ifthenpay`),
+      config,
+      deps,
+    );
     expect(response).not.toBeNull();
+  });
+
+  it('webhooks: POST to /eupago returns non-null (valid method)', async () => {
+    const req = new Request(`https://w.test${PATHS.webhook}/eupago`, { method: 'POST' });
+    const response = await handleWebhooks(req, config, deps);
+    expect(response).not.toBeNull();
+  });
+
+  it('webhooks: GET to /eupago → 405', async () => {
+    const response = await handleWebhooks(get(`${PATHS.webhook}/eupago`), config, deps);
     expect(response?.status).toBe(405);
+  });
+
+  it('webhooks: legacy base path → 410', async () => {
+    const response = await handleWebhooks(get(PATHS.webhook), config, deps);
+    expect(response?.status).toBe(410);
+  });
+
+  it('webhooks: unknown sub-path is ignored (returns null)', async () => {
+    const response = await handleWebhooks(get(`${PATHS.webhook}/unknown`), config, deps);
+    expect(response).toBeNull();
   });
 
   it('media: GET to media upload path → 405', async () => {

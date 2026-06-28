@@ -59,6 +59,7 @@ describe('parseEnvironmentConfig', () => {
           ifthenpayWebhookSecret: null,
           stripeSecretKey: null,
           stripeWebhookSecret: null,
+          encryptionSecret: null,
         },
       },
     });
@@ -145,6 +146,7 @@ describe('redactEnvironmentConfig', () => {
         ifthenpayWebhookSecret: null,
         stripeSecretKey: null,
         stripeWebhookSecret: null,
+        encryptionSecret: null,
       },
     });
   });

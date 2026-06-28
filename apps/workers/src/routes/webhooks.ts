@@ -1,17 +1,11 @@
 import { handleWorkerPaymentWebhookRequest } from '../payment-webhook';
-import {
-  resolveWorkerRequestDependencies,
-  WorkerSupabaseWiringError,
-  type WorkerRequestDependencies,
-} from '../dependencies';
+import type { WorkerRequestDependencies } from '../dependencies';
+import { resolveWorkerRequestDependencies } from '../dependencies';
+import { createIfthenpayWebhookVerifier } from '../ifthenpay-verifier';
+import { createEupagoVerifier } from '../eupago-verifier';
+import { decryptCredential } from '../crypto';
 import { jsonResponse } from './shared';
 import type { WorkerParsedConfig } from './shared';
-
-const providerWebhookMethods = {
-  eupago: 'POST',
-  ifthenpay: 'GET',
-  stripe: 'POST',
-} as const;
 
 export const handle = async (
   request: Request,
@@ -19,49 +13,130 @@ export const handle = async (
   dependencies: WorkerRequestDependencies,
 ): Promise<Response | null> => {
   const url = new URL(request.url);
-  if (url.pathname !== config.workers.paymentWebhookPath) return null;
-  const provider = config.payments.primaryProvider;
-  const allowedMethod = providerWebhookMethods[provider];
+  const basePath = config.workers.paymentWebhookPath;
+  const { pathname } = url;
 
-  if (request.method !== allowedMethod) {
-    return jsonResponse(
-      { status: 'method_not_allowed', allowedMethods: [allowedMethod] },
-      { status: 405, headers: { Allow: allowedMethod } },
-    );
-  }
+  if (!pathname.startsWith(basePath)) return null;
 
-  const rawBody = await request.text();
-  if (!config.payments.webhooksEnabled) {
-    return jsonResponse({ status: 'payment_webhooks_disabled', provider }, { status: 503 });
-  }
+  const subPath = pathname.slice(basePath.length);
 
-  let resolvedDependencies = dependencies;
-  if (dependencies.paymentWebhookVerifier && !dependencies.paymentWebhookRepository) {
-    try {
-      resolvedDependencies = resolveWorkerRequestDependencies({ config, dependencies });
-    } catch (error) {
-      if (error instanceof WorkerSupabaseWiringError) {
-        return jsonResponse({ status: 'dependency_configuration_error' }, { status: 500 });
-      }
-      throw error;
+  // ── 1. Ifthenpay route: GET /webhooks/payments/ifthenpay ─────────────────────
+  if (subPath === '/ifthenpay') {
+    if (request.method !== 'GET') {
+      return jsonResponse(
+        { status: 'method_not_allowed', allowedMethods: ['GET'] },
+        { status: 405, headers: { Allow: 'GET' } },
+      );
     }
+
+    if (!config.payments.webhooksEnabled) {
+      return jsonResponse(
+        { status: 'payment_webhooks_disabled', provider: 'ifthenpay' },
+        { status: 503 },
+      );
+    }
+
+    const rawBody = await request.text();
+    const requestId = url.searchParams.get('requestId');
+    const resolved = resolveWorkerRequestDependencies({ config, dependencies });
+
+    let antiPhishingKey: string | null = null;
+    if (requestId && resolved.eupagoWebhookRepository) {
+      const shelterId = await resolved.eupagoWebhookRepository
+        .getShelterId(requestId)
+        .catch(() => null);
+      antiPhishingKey = shelterId
+        ? await resolved.eupagoWebhookRepository
+            .getIfthenpayAntiPhishingKey(shelterId)
+            .catch(() => null)
+        : null;
+    }
+
+    if (!antiPhishingKey) {
+      return jsonResponse({ status: 'webhook_signature_invalid' }, { status: 401 });
+    }
+
+    return handleWorkerPaymentWebhookRequest({
+      request,
+      rawBody,
+      provider: 'ifthenpay',
+      webhookSecret: antiPhishingKey,
+      paymentWebhookVerifier:
+        resolved.paymentWebhookVerifier ?? createIfthenpayWebhookVerifier(),
+      paymentWebhookRepository: resolved.paymentWebhookRepository,
+      notificationRepository: resolved.notificationRepository,
+      now: resolved.now?.() ?? new Date().toISOString(),
+    });
   }
 
-  const webhookSecretMap: Record<string, string | null> = {
-    eupago: config.payments.eupagoWebhookSecret,
-    ifthenpay: config.payments.ifthenpayWebhookSecret,
-    stripe: config.payments.stripeWebhookSecret,
-  };
-  const webhookSecret = webhookSecretMap[provider] ?? '';
+  // ── 2. Eupago route: POST /webhooks/payments/eupago ──────────────────────────
+  if (subPath === '/eupago') {
+    if (request.method !== 'POST') {
+      return jsonResponse(
+        { status: 'method_not_allowed', allowedMethods: ['POST'] },
+        { status: 405, headers: { Allow: 'POST' } },
+      );
+    }
 
-  return handleWorkerPaymentWebhookRequest({
-    request,
-    rawBody,
-    provider,
-    webhookSecret,
-    paymentWebhookVerifier: resolvedDependencies.paymentWebhookVerifier,
-    paymentWebhookRepository: resolvedDependencies.paymentWebhookRepository,
-    notificationRepository: resolvedDependencies.notificationRepository,
-    now: resolvedDependencies.now?.() ?? new Date().toISOString(),
-  });
+    if (!config.payments.webhooksEnabled) {
+      return jsonResponse(
+        { status: 'payment_webhooks_disabled', provider: 'eupago' },
+        { status: 503 },
+      );
+    }
+
+    const rawBody = await request.text();
+
+    let transactionId: string | null = null;
+    try {
+      const body = JSON.parse(rawBody) as Record<string, unknown>;
+      transactionId = typeof body.transactionId === 'string' ? body.transactionId : null;
+    } catch { /* keep null */ }
+
+    const resolved = resolveWorkerRequestDependencies({ config, dependencies });
+    let decryptedSecret: string | null = null;
+
+    if (transactionId && resolved.eupagoWebhookRepository) {
+      const shelterId = await resolved.eupagoWebhookRepository
+        .getShelterId(transactionId)
+        .catch(() => null);
+      const encryptedSecret = shelterId
+        ? await resolved.eupagoWebhookRepository
+            .getEncryptedEupagoWebhookSecret(shelterId)
+            .catch(() => null)
+        : null;
+      if (encryptedSecret && config.payments.encryptionSecret) {
+        decryptedSecret = await decryptCredential(
+          encryptedSecret,
+          config.payments.encryptionSecret,
+        ).catch(() => null);
+      }
+    }
+
+    if (!decryptedSecret) {
+      return jsonResponse({ status: 'webhook_signature_invalid' }, { status: 401 });
+    }
+
+    return handleWorkerPaymentWebhookRequest({
+      request,
+      rawBody,
+      provider: 'eupago',
+      webhookSecret: decryptedSecret,
+      paymentWebhookVerifier: resolved.paymentWebhookVerifier ?? createEupagoVerifier(),
+      paymentWebhookRepository: resolved.paymentWebhookRepository,
+      notificationRepository: resolved.notificationRepository,
+      now: resolved.now?.() ?? new Date().toISOString(),
+    });
+  }
+
+  // ── 3. Legacy path: GET|POST /webhooks/payments → 410 Gone ───────────────────
+  if (subPath === '') {
+    const hint =
+      request.method === 'GET'
+        ? 'Use GET /webhooks/payments/ifthenpay'
+        : 'Use POST /webhooks/payments/eupago';
+    return jsonResponse({ status: 'gone', message: hint }, { status: 410 });
+  }
+
+  return null;
 };

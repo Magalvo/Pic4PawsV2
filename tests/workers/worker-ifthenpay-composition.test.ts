@@ -12,6 +12,10 @@ vi.mock('@supabase/supabase-js', () => ({
 
 const { default: worker } = await import('../../apps/workers/src/index');
 
+const ANTI_PHISHING_KEY = 'ifthenpay-anti-phishing-key';
+const SHELTER_ID = 'shelter-ifthenpay-001';
+const REQUEST_ID = 'i2szvoUfPYBMWdSxqO3n';
+
 const validIfthenpayEnv: WorkerEnv = {
   APP_ENV: 'production',
   PUBLIC_APP_ORIGIN: 'https://pic4paws.pt',
@@ -27,16 +31,31 @@ const validIfthenpayEnv: WorkerEnv = {
   PAYMENT_PRIMARY_PROVIDER: 'ifthenpay',
   PAYMENT_WEBHOOKS_ENABLED: 'true',
   IFTHENPAY_API_KEY: 'ifthenpay-api-key',
-  IFTHENPAY_WEBHOOK_SECRET: 'ifthenpay-anti-phishing-key',
+  IFTHENPAY_WEBHOOK_SECRET: ANTI_PHISHING_KEY,
 };
 
+// New path: /webhooks/payments/ifthenpay
 const callbackUrl =
-  'https://worker.test/webhooks/payments' +
-  '?key=ifthenpay-anti-phishing-key' +
-  '&orderId=1887' +
-  '&amount=33.61' +
-  '&requestId=i2szvoUfPYBMWdSxqO3n' +
+  'https://worker.test/webhooks/payments/ifthenpay' +
+  `?key=${ANTI_PHISHING_KEY}` +
+  `&orderId=1887` +
+  `&amount=33.61` +
+  `&requestId=${REQUEST_ID}` +
   '&payment_datetime=03-01-2024%2015%3A15%3A16';
+
+const makeFromMock = () =>
+  vi.fn().mockImplementation((table: string) => ({
+    select: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    is: vi.fn().mockReturnThis(),
+    maybeSingle: vi.fn().mockResolvedValue({
+      data:
+        table === 'donation_transactions'
+          ? { shelter_id: SHELTER_ID }
+          : { ifthenpay_anti_phishing_key: ANTI_PHISHING_KEY },
+      error: null,
+    }),
+  }));
 
 describe('default Worker Ifthenpay webhook composition', () => {
   beforeEach(() => {
@@ -50,13 +69,13 @@ describe('default Worker Ifthenpay webhook composition', () => {
         new_status: 'paid',
         processed_at: '2026-06-20T12:00:00.000Z',
         financial_timestamp: '2026-06-20T12:00:00.000Z',
-        raw_provider_event_ids: ['i2szvoUfPYBMWdSxqO3n:paid'],
+        raw_provider_event_ids: [`${REQUEST_ID}:paid`],
       },
       error: null,
     });
     supabaseMock.createClient.mockReturnValue({
       auth: { getUser: vi.fn() },
-      from: vi.fn(),
+      from: makeFromMock(),
       rpc: supabaseMock.rpc,
     });
   });
@@ -70,20 +89,31 @@ describe('default Worker Ifthenpay webhook composition', () => {
       donationFound: true,
     });
     expect(supabaseMock.rpc).toHaveBeenCalledWith('process_payment_webhook_event', {
-      p_provider_event_id: 'i2szvoUfPYBMWdSxqO3n:paid',
+      p_provider_event_id: `${REQUEST_ID}:paid`,
       p_provider: 'ifthenpay',
-      p_provider_payment_id: 'i2szvoUfPYBMWdSxqO3n',
+      p_provider_payment_id: REQUEST_ID,
       p_new_status: 'paid',
       p_payload: {
         orderId: '1887',
         amount: '33.61',
-        requestId: 'i2szvoUfPYBMWdSxqO3n',
+        requestId: REQUEST_ID,
         payment_datetime: '03-01-2024 15:15:16',
       },
       p_received_at: expect.any(String),
     });
     expect(JSON.stringify(supabaseMock.rpc.mock.calls[0]?.[1]?.p_payload)).not.toContain(
-      'ifthenpay-anti-phishing-key',
+      ANTI_PHISHING_KEY,
     );
+  });
+
+  it('old GET /webhooks/payments → 410 gone', async () => {
+    const legacyUrl =
+      'https://worker.test/webhooks/payments' +
+      `?key=${ANTI_PHISHING_KEY}&requestId=${REQUEST_ID}&orderId=1887&amount=33.61&payment_datetime=...`;
+
+    const response = await worker.fetch(new Request(legacyUrl, { method: 'GET' }), validIfthenpayEnv);
+    expect(response.status).toBe(410);
+    const body = await response.json() as { status: string };
+    expect(body.status).toBe('gone');
   });
 });

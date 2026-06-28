@@ -44,6 +44,7 @@ const validConfig: EnvironmentConfig = {
     ifthenpayWebhookSecret: null,
     stripeSecretKey: 'stripe-secret',
     stripeWebhookSecret: 'stripe-webhook-secret',
+    encryptionSecret: null,
   },
 };
 
