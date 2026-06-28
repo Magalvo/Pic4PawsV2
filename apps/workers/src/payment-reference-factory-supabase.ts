@@ -7,7 +7,7 @@ import type { SupabaseClientLike } from './pet-supabase';
 type ShelterReferenceConfigRow = {
   active_provider: 'eupago' | 'ifthenpay' | null;
   eupago_api_key_encrypted: string | null;
-  ifthenpay_api_key_encrypted: string | null;
+  api_key_encrypted: string | null;
   mb_way_phone: string | null;
 };
 
@@ -25,7 +25,7 @@ export const createSupabasePaymentReferenceFactory = ({
   createReference: async (input) => {
     const { data, error } = await client
       .from('shelter_payment_configs')
-      .select('active_provider,eupago_api_key_encrypted,ifthenpay_api_key_encrypted,mb_way_phone')
+      .select('active_provider,eupago_api_key_encrypted,api_key_encrypted,mb_way_phone')
       .eq('shelter_id', input.shelterId)
       .is('deleted_at', null)
       .maybeSingle();
@@ -51,10 +51,10 @@ export const createSupabasePaymentReferenceFactory = ({
     }
 
     if (row.active_provider === 'ifthenpay') {
-      if (!row.ifthenpay_api_key_encrypted) return NOT_CONFIGURED;
+      if (!row.api_key_encrypted) return NOT_CONFIGURED;
       let apiKey: string;
       try {
-        apiKey = await decryptCredential(row.ifthenpay_api_key_encrypted, encryptionSecret);
+        apiKey = await decryptCredential(row.api_key_encrypted, encryptionSecret);
       } catch {
         return NOT_CONFIGURED;
       }
