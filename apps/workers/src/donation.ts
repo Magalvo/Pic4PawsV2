@@ -1,4 +1,5 @@
 import type { WorkerPetDraftAuthenticator } from './pet-drafts';
+import type { PaymentReferenceFactory } from './payment-reference-factory';
 
 export type DonationKind = 'one_time_donation' | 'monthly_sponsorship';
 
@@ -39,6 +40,7 @@ export type DonationEligibilityQuery = {
 
 export type DonationPaymentConfig = {
   tier: 'manual' | 'automated';
+  activeProvider: 'eupago' | 'ifthenpay' | null;
   iban: string | null;
   mbWayPhone: string | null;
 };
@@ -70,6 +72,8 @@ export type DonationRepository = {
     query: DonationEligibilityQuery,
   ) => Promise<DonationEligibilityContext>;
   createDonation: (input: CreateDonationInput) => Promise<CreateDonationResult>;
+  setProviderPaymentId?: (donationId: string, providerPaymentId: string) => Promise<void>;
+  failDonation?: (donationId: string) => Promise<void>;
 };
 
 // ─── Payload validation ───────────────────────────────────────────────────────
@@ -223,6 +227,7 @@ export type HandleWorkerDonationRequestInput = {
   donationRepository?: DonationRepository;
   authenticator?: WorkerPetDraftAuthenticator;
   provider: DonationProvider;
+  paymentReferenceFactory?: PaymentReferenceFactory;
   now: () => string;
 };
 
@@ -232,6 +237,7 @@ export const handleWorkerDonationRequest = async ({
   donationRepository,
   authenticator,
   provider,
+  paymentReferenceFactory,
   now,
 }: HandleWorkerDonationRequestInput): Promise<Response> => {
   // 1. Method check
@@ -304,21 +310,69 @@ export const handleWorkerDonationRequest = async ({
     );
   }
 
-  // 8. Derive tier and initial status
+  // 8. Derive tier and create donation
   // paymentConfig is guaranteed non-null here (payment_config_not_found would have rejected)
   const paymentConfig = eligibilityContext.paymentConfig!;
 
-  // Automated tier is reserved for Phase 2 — must not silently succeed in Phase 1
   if (paymentConfig.tier === 'automated') {
+    const activeProvider = paymentConfig.activeProvider;
+
+    if (!paymentReferenceFactory || !activeProvider) {
+      return jsonResponse(
+        { status: 'provider_credentials_unavailable' },
+        { status: 503 },
+      );
+    }
+
+    // Create the donation row first (status: pending_payment)
+    const donationResult = await donationRepository.createDonation({
+      donorUserId: actor.id,
+      shelterId: validation.data.shelterId,
+      petId: validation.data.petId,
+      kind: validation.data.kind,
+      amountCents: validation.data.amountCents,
+      paymentMethod: validation.data.paymentMethod,
+      provider: activeProvider,
+      initialStatus: 'pending_payment',
+      anonymous: validation.data.anonymous,
+      donorDisplayName: validation.data.donorDisplayName,
+      donorEmail: validation.data.donorEmail,
+      publicMessage: validation.data.publicMessage,
+      createdAt: now(),
+    });
+
+    const refResult = await paymentReferenceFactory.createReference({
+      donationId: donationResult.donationId,
+      amountCents: validation.data.amountCents,
+      currency: 'EUR',
+      shelterId: validation.data.shelterId,
+      orderId: donationResult.donationId,
+    });
+
+    if (!refResult.ok) {
+      await donationRepository.failDonation?.(donationResult.donationId).catch(() => {});
+      return jsonResponse({ status: 'payment_reference_failed' }, { status: 502 });
+    }
+
+    await donationRepository
+      .setProviderPaymentId?.(donationResult.donationId, refResult.providerPaymentId)
+      .catch(async () => {
+        await donationRepository.failDonation?.(donationResult.donationId).catch(() => {});
+      });
+
     return jsonResponse(
-      { status: 'not_implemented', reason: 'automated_tier_not_supported' },
-      { status: 501 },
+      {
+        status: 'donation_created',
+        donationId: donationResult.donationId,
+        tier: 'automated',
+        provider: activeProvider,
+        reference: refResult.reference,
+      },
+      { status: 201 },
     );
   }
 
-  const initialStatus = 'pending_receipt';
-
-  // 9. Create donation
+  // Manual tier
   const result = await donationRepository.createDonation({
     donorUserId: actor.id,
     shelterId: validation.data.shelterId,
@@ -327,7 +381,7 @@ export const handleWorkerDonationRequest = async ({
     amountCents: validation.data.amountCents,
     paymentMethod: validation.data.paymentMethod,
     provider,
-    initialStatus,
+    initialStatus: 'pending_receipt',
     anonymous: validation.data.anonymous,
     donorDisplayName: validation.data.donorDisplayName,
     donorEmail: validation.data.donorEmail,

@@ -561,6 +561,17 @@ export type {
   R2UploadPresignerResult,
 } from './r2-signer';
 
+export type {
+  PaymentReferenceFactory,
+  PaymentReferenceInput,
+  PaymentReferenceResult,
+  PaymentReference,
+} from './payment-reference-factory';
+export { createEupagoReferenceAdapter } from './eupago-reference-adapter';
+export type { CreateEupagoReferenceAdapterInput } from './eupago-reference-adapter';
+export { createIfthenpayReferenceAdapter } from './ifthenpay-reference-adapter';
+export type { CreateIfthenpayReferenceAdapterInput } from './ifthenpay-reference-adapter';
+
 export type WorkerEnv = EnvironmentRecord;
 
 const ROUTE_HANDLERS = [

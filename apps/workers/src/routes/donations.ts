@@ -74,6 +74,7 @@ export const handle = async (
     donationRepository: dependencies.donationRepository,
     authenticator: dependencies.petDraftAuthenticator,
     provider: config.payments.primaryProvider,
+    paymentReferenceFactory: dependencies.paymentReferenceFactory,
     now: dependencies.now ?? (() => new Date().toISOString()),
   });
 };

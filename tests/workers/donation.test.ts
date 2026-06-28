@@ -1,6 +1,10 @@
 import { describe, expect, it, vi } from 'vitest';
 import { handleWorkerRequest } from '../../apps/workers/src/index';
-import type { DonationRepository, CreateDonationResult } from '../../apps/workers/src/index';
+import type {
+  DonationRepository,
+  CreateDonationResult,
+  PaymentReferenceFactory,
+} from '../../apps/workers/src/index';
 import type { WorkerPetDraftAuthenticator } from '../../apps/workers/src/index';
 import type { AuthenticatedActor } from '@pic4paws/domain';
 import type { EnvironmentRecord } from '@pic4paws/config';
@@ -63,7 +67,7 @@ const makeDonationRepo = (
       verificationStatus: 'verified',
       paymentAccountStatus: 'active',
     },
-    paymentConfig: { tier: 'manual', iban: VALID_IBAN, mbWayPhone: null },
+    paymentConfig: { tier: 'manual', activeProvider: null, iban: VALID_IBAN, mbWayPhone: null },
     pet: null,
   }),
   createDonation: vi.fn().mockResolvedValue(result),
@@ -219,7 +223,7 @@ describe('POST /donations — donation initiation', () => {
           verificationStatus: 'pending_review',
           paymentAccountStatus: 'active',
         },
-        paymentConfig: { tier: 'manual', iban: VALID_IBAN, mbWayPhone: null },
+        paymentConfig: { tier: 'manual', activeProvider: null, iban: VALID_IBAN, mbWayPhone: null },
         pet: null,
       }),
       createDonation: vi.fn(),
@@ -247,7 +251,7 @@ describe('POST /donations — donation initiation', () => {
           verificationStatus: 'verified',
           paymentAccountStatus: 'active',
         },
-        paymentConfig: { tier: 'manual', iban: VALID_IBAN, mbWayPhone: null },
+        paymentConfig: { tier: 'manual', activeProvider: null, iban: VALID_IBAN, mbWayPhone: null },
         pet: { id: 'pet-1', shelterId: 'shelter-b' },
       }),
       createDonation: vi.fn(),
@@ -395,11 +399,11 @@ describe('POST /donations — donation initiation', () => {
     expect(donationRepository.createDonation).not.toHaveBeenCalled();
   });
 
-  it('returns 501 not_implemented for automated-tier shelter (Phase 1 stub)', async () => {
+  it('automated tier + no factory → 503 provider_credentials_unavailable', async () => {
     const donationRepository: DonationRepository = {
       getDonationEligibilityContext: vi.fn().mockResolvedValue({
         shelter: { id: 'shelter-a', verificationStatus: 'verified', paymentAccountStatus: 'active' },
-        paymentConfig: { tier: 'automated', iban: null, mbWayPhone: null },
+        paymentConfig: { tier: 'automated', activeProvider: 'eupago', iban: null, mbWayPhone: null },
         pet: null,
       }),
       createDonation: vi.fn(),
@@ -408,11 +412,82 @@ describe('POST /donations — donation initiation', () => {
     const response = await handleWorkerRequest(makeDonationRequest(), validEnv, {
       petDraftAuthenticator: fakeAuth,
       donationRepository,
+      // no paymentReferenceFactory
     });
     const body = (await response.json()) as { status: string };
 
-    expect(response.status).toBe(501);
-    expect(body.status).toBe('not_implemented');
+    expect(response.status).toBe(503);
+    expect(body.status).toBe('provider_credentials_unavailable');
     expect(donationRepository.createDonation).not.toHaveBeenCalled();
+  });
+
+  it('automated tier + factory ok:true → 201 donation_created with reference', async () => {
+    const donationRepository: DonationRepository = {
+      getDonationEligibilityContext: vi.fn().mockResolvedValue({
+        shelter: { id: 'shelter-a', verificationStatus: 'verified', paymentAccountStatus: 'active' },
+        paymentConfig: { tier: 'automated', activeProvider: 'eupago', iban: null, mbWayPhone: null },
+        pet: null,
+      }),
+      createDonation: vi.fn().mockResolvedValue(donationResult),
+      setProviderPaymentId: vi.fn().mockResolvedValue(undefined),
+    };
+
+    const factory: PaymentReferenceFactory = {
+      createReference: vi.fn().mockResolvedValue({
+        ok: true,
+        providerPaymentId: 'txn-eupago-999',
+        reference: { method: 'multibanco', entity: '10611', reference: '123456789', expiresAt: null },
+      }),
+    };
+
+    const response = await handleWorkerRequest(makeDonationRequest(), validEnv, {
+      petDraftAuthenticator: fakeAuth,
+      donationRepository,
+      paymentReferenceFactory: factory,
+      now: () => '2026-06-28T10:00:00.000Z',
+    });
+    const body = (await response.json()) as Record<string, unknown>;
+
+    expect(response.status).toBe(201);
+    expect(body.status).toBe('donation_created');
+    expect(body.tier).toBe('automated');
+    expect(body.provider).toBe('eupago');
+    expect((body.reference as Record<string, unknown>).method).toBe('multibanco');
+    expect(donationRepository.createDonation).toHaveBeenCalledWith(
+      expect.objectContaining({ initialStatus: 'pending_payment', provider: 'eupago' }),
+    );
+    expect(donationRepository.setProviderPaymentId).toHaveBeenCalledWith(
+      donationResult.donationId,
+      'txn-eupago-999',
+    );
+  });
+
+  it('automated tier + factory ok:false → 502 payment_reference_failed', async () => {
+    const failDonation = vi.fn().mockResolvedValue(undefined);
+    const donationRepository: DonationRepository = {
+      getDonationEligibilityContext: vi.fn().mockResolvedValue({
+        shelter: { id: 'shelter-a', verificationStatus: 'verified', paymentAccountStatus: 'active' },
+        paymentConfig: { tier: 'automated', activeProvider: 'eupago', iban: null, mbWayPhone: null },
+        pet: null,
+      }),
+      createDonation: vi.fn().mockResolvedValue(donationResult),
+      failDonation,
+    };
+
+    const factory: PaymentReferenceFactory = {
+      createReference: vi.fn().mockResolvedValue({ ok: false, reason: 'psp_error' }),
+    };
+
+    const response = await handleWorkerRequest(makeDonationRequest(), validEnv, {
+      petDraftAuthenticator: fakeAuth,
+      donationRepository,
+      paymentReferenceFactory: factory,
+      now: () => '2026-06-28T10:00:00.000Z',
+    });
+    const body = (await response.json()) as { status: string };
+
+    expect(response.status).toBe(502);
+    expect(body.status).toBe('payment_reference_failed');
+    expect(failDonation).toHaveBeenCalledWith(donationResult.donationId);
   });
 });

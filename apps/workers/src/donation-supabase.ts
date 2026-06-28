@@ -34,6 +34,7 @@ type DonationEligibilityShelterRow = {
 
 type DonationEligibilityPaymentConfigRow = {
   tier: 'manual' | 'automated';
+  active_provider: 'eupago' | 'ifthenpay' | null;
   iban: string | null;
   mb_way_phone: string | null;
 };
@@ -74,7 +75,7 @@ export const createSupabaseDonationRepositories = ({
       if (shelterRow) {
         const configResult = await client
           .from('shelter_payment_configs')
-          .select('tier,iban,mb_way_phone')
+          .select('tier,active_provider,iban,mb_way_phone')
           .eq('shelter_id', shelterId)
           .is('deleted_at', null)
           .maybeSingle();
@@ -106,7 +107,12 @@ export const createSupabaseDonationRepositories = ({
             }
           : null,
         paymentConfig: configRow
-          ? { tier: configRow.tier, iban: configRow.iban, mbWayPhone: configRow.mb_way_phone }
+          ? {
+              tier: configRow.tier,
+              activeProvider: configRow.active_provider,
+              iban: configRow.iban,
+              mbWayPhone: configRow.mb_way_phone,
+            }
           : null,
         pet: petRow ? { id: petRow.id, shelterId: petRow.shelter_id } : null,
       };
@@ -149,6 +155,28 @@ export const createSupabaseDonationRepositories = ({
         donationId: result.data.id,
         createdAt: result.data.created_at,
       };
+    },
+    setProviderPaymentId: async (donationId: string, providerPaymentId: string): Promise<void> => {
+      const result = await client
+        .from('donation_transactions')
+        .update({ provider_payment_id: providerPaymentId })
+        .eq('id', donationId);
+      if (result.error) {
+        throw new SupabaseDonationRepositoryError(
+          `Failed to set provider_payment_id: ${result.error.message}`,
+        );
+      }
+    },
+    failDonation: async (donationId: string): Promise<void> => {
+      const result = await client
+        .from('donation_transactions')
+        .update({ status: 'failed' })
+        .eq('id', donationId);
+      if (result.error) {
+        throw new SupabaseDonationRepositoryError(
+          `Failed to fail donation: ${result.error.message}`,
+        );
+      }
     },
   };
 
