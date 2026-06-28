@@ -2,7 +2,6 @@ import { appConfig, parseEnvironmentConfig, type EnvironmentRecord } from '@pic4
 import type { WorkerRequestDependencies } from './dependencies';
 import { createR2UploadSignerWorkerDependencies } from './r2-signer';
 import { createSupabaseSdkWorkerDependencies } from './supabase-sdk';
-import { createIfthenpayWebhookVerifier } from './ifthenpay-verifier';
 import { handle as handleWebhooks } from './routes/webhooks';
 import { handle as handleMedia } from './routes/media';
 import { handle as handlePets } from './routes/pets';
@@ -640,14 +639,9 @@ export default {
     const dependencies = createSupabaseSdkWorkerDependencies();
 
     if (parsedConfig.ok) {
-      const providerDeps: Partial<WorkerRequestDependencies> = {};
-      if (parsedConfig.config.payments.primaryProvider === 'ifthenpay') {
-        providerDeps.paymentWebhookVerifier = createIfthenpayWebhookVerifier();
-      }
       return handleWorkerRequest(request, env, {
         ...dependencies,
         ...createR2UploadSignerWorkerDependencies({ config: parsedConfig.config }),
-        ...providerDeps,
       });
     }
 

@@ -61,8 +61,7 @@ export const handle = async (
       rawBody,
       provider: 'ifthenpay',
       webhookSecret: antiPhishingKey,
-      paymentWebhookVerifier:
-        resolved.paymentWebhookVerifier ?? createIfthenpayWebhookVerifier(),
+      paymentWebhookVerifier: createIfthenpayWebhookVerifier(),
       paymentWebhookRepository: resolved.paymentWebhookRepository,
       notificationRepository: resolved.notificationRepository,
       now: resolved.now?.() ?? new Date().toISOString(),
@@ -122,7 +121,7 @@ export const handle = async (
       rawBody,
       provider: 'eupago',
       webhookSecret: decryptedSecret,
-      paymentWebhookVerifier: resolved.paymentWebhookVerifier ?? createEupagoVerifier(),
+      paymentWebhookVerifier: createEupagoVerifier(),
       paymentWebhookRepository: resolved.paymentWebhookRepository,
       notificationRepository: resolved.notificationRepository,
       now: resolved.now?.() ?? new Date().toISOString(),

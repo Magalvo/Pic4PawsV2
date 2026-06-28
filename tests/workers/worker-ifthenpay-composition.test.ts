@@ -106,6 +106,21 @@ describe('default Worker Ifthenpay webhook composition', () => {
     );
   });
 
+  it('accepts a valid callback when the primary provider is Eupago', async () => {
+    const response = await worker.fetch(new Request(callbackUrl, { method: 'GET' }), {
+      ...validIfthenpayEnv,
+      PAYMENT_PRIMARY_PROVIDER: 'eupago',
+      EUPAGO_API_KEY: 'eupago-api-key',
+      EUPAGO_WEBHOOK_SECRET: 'eupago-webhook-secret',
+    });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      status: 'webhook_accepted',
+      donationFound: true,
+    });
+  });
+
   it('old GET /webhooks/payments → 410 gone', async () => {
     const legacyUrl =
       'https://worker.test/webhooks/payments' +

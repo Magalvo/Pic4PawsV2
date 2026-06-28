@@ -131,6 +131,33 @@ describe('Worker Eupago webhook composition', () => {
     await expect(res.json()).resolves.toMatchObject({ status: 'webhook_accepted' });
   });
 
+  it('accepts a valid callback when the primary provider is Ifthenpay', async () => {
+    const body = makeBody();
+    const sig = await computeHmacHex(body, EUPAGO_WEBHOOK_SECRET);
+    supabaseMock.createClient.mockReturnValue({
+      auth: { getUser: vi.fn() },
+      from: makeFromMock(),
+      rpc: supabaseMock.rpc,
+    });
+
+    const res = await worker.fetch(
+      new Request('https://worker.test/webhooks/payments/eupago', {
+        method: 'POST',
+        headers: { 'x-eupago-signature': sig, 'Content-Type': 'application/json' },
+        body,
+      }),
+      {
+        ...validEupagoEnv,
+        PAYMENT_PRIMARY_PROVIDER: 'ifthenpay',
+        IFTHENPAY_API_KEY: 'ifthenpay-api-key',
+        IFTHENPAY_WEBHOOK_SECRET: 'ifthenpay-webhook-secret',
+      },
+    );
+
+    expect(res.status).toBe(200);
+    await expect(res.json()).resolves.toMatchObject({ status: 'webhook_accepted' });
+  });
+
   it('invalid signature → 401', async () => {
     const body = makeBody();
     supabaseMock.createClient.mockReturnValue({
