@@ -1,8 +1,10 @@
----
+﻿---
 id: EUPAGO-REFERENCE-FACTORY-001
 title: Eupago provider — payment reference factory
-status: todo
+status: done
 depends-on: EUPAGO-CONFIG-WORKER-001
+pr: 280
+merged: 2026-06-28
 ---
 
 # Work-Item: EUPAGO-REFERENCE-FACTORY-001 — Payment Reference Factory
@@ -115,31 +117,31 @@ at implementation time (as was done for `IFTHENPAY-WEBHOOK-001`).
 
 ## Acceptance Criteria
 
-- [ ] Create `apps/workers/src/payment-reference-factory.ts`:
+- [x] Create `apps/workers/src/payment-reference-factory.ts`:
   - Types: `PaymentReferenceInput`, `PaymentReference`, `PaymentReferenceResult`,
     `PaymentReferenceFactory`.
   - Export all types from the barrel `apps/workers/src/index.ts`.
 
-- [ ] Create `apps/workers/src/eupago-reference-adapter.ts`:
+- [x] Create `apps/workers/src/eupago-reference-adapter.ts`:
   - `createEupagoReferenceAdapter({ apiKey, fetch }): PaymentReferenceFactory`.
   - HTTP calls use an injected `fetch` (no global `fetch`) so tests can stub the network.
   - Adapts Eupago HTTP response to `PaymentReferenceResult`.
   - Logs nothing; surfaces errors as `{ ok: false, reason }`.
 
-- [ ] Create `apps/workers/src/ifthenpay-reference-adapter.ts`:
+- [x] Create `apps/workers/src/ifthenpay-reference-adapter.ts`:
   - `createIfthenpayReferenceAdapter({ apiKey, fetch }): PaymentReferenceFactory`.
   - Same contract; concrete Ifthenpay endpoint confirmed from official docs at implementation.
 
-- [ ] Update `handleWorkerDonationRequest` in `apps/workers/src/donation.ts`:
+- [x] Update `handleWorkerDonationRequest` in `apps/workers/src/donation.ts`:
   - Replace `501 not_implemented` automated-tier stub with the factory dispatch above.
   - The factory is passed as an injected dependency; `handleWorkerDonationRequest` must
     not construct the adapter directly.
 
-- [ ] Add `paymentReferenceFactory?: PaymentReferenceFactory` to `WorkerRequestDependencies`
+- [x] Add `paymentReferenceFactory?: PaymentReferenceFactory` to `WorkerRequestDependencies`
   in `apps/workers/src/dependencies.ts`. The Supabase factory function wires it from
   the shelter's decrypted credentials at request time (not at app startup).
 
-- [ ] Tests in `tests/workers/eupago-reference-adapter.test.ts` (new, ≥ 8 tests):
+- [x] Tests in `tests/workers/eupago-reference-adapter.test.ts` (new, ≥ 8 tests):
   - Multibanco reference returned when `mbWayPhone` absent.
   - MB WAY reference returned when `mbWayPhone` present.
   - PSP HTTP 4xx → `{ ok: false, reason: 'psp_error' }`.
@@ -147,12 +149,12 @@ at implementation time (as was done for `IFTHENPAY-WEBHOOK-001`).
   - Malformed PSP response → `{ ok: false, reason: 'invalid_response' }`.
   - All tests use a fake `fetch`; no real HTTP calls.
 
-- [ ] Extend `tests/workers/donation.test.ts`:
+- [x] Extend `tests/workers/donation.test.ts`:
   - Automated-tier + eupago → 201 with `reference` block in response.
   - `paymentReferenceFactory` returns `{ ok: false }` → 502 `payment_reference_failed`.
   - `provider_credentials_unavailable` when credentials missing.
 
-- [ ] Final validation: `npm run typecheck`, `npm run lint`, `npm run test`, `npm run build`.
+- [x] Final validation: `npm run typecheck`, `npm run lint`, `npm run test`, `npm run build`.
 
 ## 3. Security Notes
 

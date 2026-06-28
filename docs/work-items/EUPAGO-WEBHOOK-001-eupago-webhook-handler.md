@@ -1,8 +1,10 @@
----
+﻿---
 id: EUPAGO-WEBHOOK-001
 title: Eupago provider — isolated webhook endpoints
-status: todo
+status: done
 depends-on: EUPAGO-DB-001
+pr: 279
+merged: 2026-06-28
 ---
 
 # Work-Item: EUPAGO-WEBHOOK-001 — Isolated Provider Webhook Endpoints
@@ -101,7 +103,7 @@ Legacy path:
 
 ## Acceptance Criteria
 
-- [ ] Create `apps/workers/src/eupago-verifier.ts`:
+- [x] Create `apps/workers/src/eupago-verifier.ts`:
   - `createEupagoVerifier(): PaymentWebhookVerifier`.
   - Reads `x-eupago-signature` from `signatureHeader` (passed by webhook router).
   - Computes `HMAC-SHA256(rawBody, eupagoWebhookSecret)` using the Web Crypto API
@@ -109,11 +111,11 @@ Legacy path:
   - Returns `null` if signature mismatches or required fields are absent.
   - Does NOT persist the anti-phishing key or signature value.
 
-- [ ] Create `apps/workers/src/eupago-webhook-supabase.ts`:
+- [x] Create `apps/workers/src/eupago-webhook-supabase.ts`:
   - `getEupagoWebhookSecret(shelterId): Promise<string | null>` — decrypts and returns
     `eupago_webhook_secret_encrypted` for the given shelter.
 
-- [ ] Update `apps/workers/src/routes/webhooks.ts`:
+- [x] Update `apps/workers/src/routes/webhooks.ts`:
   - Remove `GET /webhooks/payments` and `POST /webhooks/payments` handlers.
   - Add `GET /webhooks/payments/ifthenpay` → `handleWorkerPaymentWebhookRequest` with
     per-shelter anti-phishing key resolution.
@@ -123,16 +125,16 @@ Legacy path:
   - Update `matchWorkerWebhookPath` or introduce `matchWorkerIfthenpayWebhookPath` and
     `matchWorkerEupagoWebhookPath` for correct path dispatch.
 
-- [ ] Update `apps/workers/src/routes/webhooks.ts` route registration order:
+- [x] Update `apps/workers/src/routes/webhooks.ts` route registration order:
   ```
   1. /webhooks/payments/ifthenpay  (GET)
   2. /webhooks/payments/eupago     (POST)
   3. /webhooks/payments            (GET|POST → 410)
   ```
 
-- [ ] Update `tests/workers/route-table.test.ts` to assert the new ordering.
+- [x] Update `tests/workers/route-table.test.ts` to assert the new ordering.
 
-- [ ] Tests in `tests/workers/eupago-verifier.test.ts` (new, ≥ 8 tests):
+- [x] Tests in `tests/workers/eupago-verifier.test.ts` (new, ≥ 8 tests):
   - Valid HMAC → parsed `ParsedWebhookEvent` with `newStatus: 'paid'`.
   - Tampered body → `null`.
   - Wrong secret → `null`.
@@ -141,18 +143,18 @@ Legacy path:
   - Non-`'Success'` status → `null` (not mapped until confirmed).
   - MB WAY and Multibanco variants both parse correctly.
 
-- [ ] Tests in `tests/workers/eupago-webhook-composition.test.ts` (new, ≥ 5 tests):
+- [x] Tests in `tests/workers/eupago-webhook-composition.test.ts` (new, ≥ 5 tests):
   - Valid Eupago callback → 200 `webhook_accepted`.
   - Invalid signature → 401.
   - Legacy `POST /webhooks/payments` → 410 `gone`.
   - Legacy `GET /webhooks/payments` → 410 `gone`.
   - Eupago route rejects GET → 405.
 
-- [ ] Extend `tests/workers/worker-ifthenpay-composition.test.ts`:
+- [x] Extend `tests/workers/worker-ifthenpay-composition.test.ts`:
   - Ifthenpay callbacks now sent to `GET /webhooks/payments/ifthenpay` (update URL).
   - Old `GET /webhooks/payments` URL → assert 410.
 
-- [ ] Final validation: `npm run typecheck`, `npm run lint`, `npm run test`, `npm run build`.
+- [x] Final validation: `npm run typecheck`, `npm run lint`, `npm run test`, `npm run build`.
 
 ## 3. Security Notes
 
