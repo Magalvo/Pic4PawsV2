@@ -7,6 +7,16 @@ const optionalSecret = z
   .transform((value) => (value.length > 0 ? value : null))
   .optional()
   .default('');
+const encryptionSecretSchema = z
+  .string()
+  .trim()
+  .optional()
+  .default('')
+  .refine(
+    (v) => v === '' || /^[0-9a-f]{64}$/.test(v),
+    'When set, must be 64 lowercase hex characters (32 bytes for AES-256-GCM)',
+  )
+  .transform((v) => (v.length > 0 ? v : null));
 const booleanFlag = z.enum(['true', 'false']).optional().default('false').transform((value) => value === 'true');
 
 const environmentSchema = z
@@ -38,7 +48,7 @@ const environmentSchema = z
     IFTHENPAY_WEBHOOK_SECRET: optionalSecret,
     STRIPE_SECRET_KEY: optionalSecret,
     STRIPE_WEBHOOK_SECRET: optionalSecret,
-    ENCRYPTION_SECRET: optionalSecret,
+    ENCRYPTION_SECRET: encryptionSecretSchema,
   })
   .superRefine((env, context) => {
     const providerRequirements = {
@@ -173,7 +183,7 @@ export const parseEnvironmentConfig = (
         ifthenpayWebhookSecret: optionalSecretToNullable(env.IFTHENPAY_WEBHOOK_SECRET),
         stripeSecretKey: optionalSecretToNullable(env.STRIPE_SECRET_KEY),
         stripeWebhookSecret: optionalSecretToNullable(env.STRIPE_WEBHOOK_SECRET),
-        encryptionSecret: optionalSecretToNullable(env.ENCRYPTION_SECRET),
+        encryptionSecret: env.ENCRYPTION_SECRET,
       },
     },
   };

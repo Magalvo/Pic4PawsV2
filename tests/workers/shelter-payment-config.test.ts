@@ -371,7 +371,7 @@ describe('validatePaymentConfigPayload — automated tier', () => {
 
 // ─── POST handler — automated tier + provider-switch guard ────────────────────
 
-const ENCRYPTION_SECRET = 'aaaabbbbccccddddeeeeffffgggghhhh'; // 32 bytes
+const ENCRYPTION_SECRET = 'a'.repeat(64); // 64 hex chars = 32 bytes
 
 describe('handleSavePaymentConfigRequest — automated tier', () => {
   it('saves eupago config with encrypted credentials', async () => {

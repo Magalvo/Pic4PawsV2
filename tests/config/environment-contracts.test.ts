@@ -100,6 +100,43 @@ describe('parseEnvironmentConfig', () => {
     });
   });
 
+  it('accepts a valid 64-char lowercase hex ENCRYPTION_SECRET', () => {
+    const result = parseEnvironmentConfig({ ...validEnv, ENCRYPTION_SECRET: 'a'.repeat(64) });
+    expect(result).toMatchObject({
+      ok: true,
+      config: { payments: { encryptionSecret: 'a'.repeat(64) } },
+    });
+  });
+
+  it('rejects ENCRYPTION_SECRET shorter than 64 hex chars', () => {
+    const result = parseEnvironmentConfig({ ...validEnv, ENCRYPTION_SECRET: 'a'.repeat(32) });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors.some((e) => e.path === 'ENCRYPTION_SECRET')).toBe(true);
+    }
+  });
+
+  it('rejects ENCRYPTION_SECRET with non-hex characters', () => {
+    const result = parseEnvironmentConfig({ ...validEnv, ENCRYPTION_SECRET: 'g'.repeat(64) });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors.some((e) => e.path === 'ENCRYPTION_SECRET')).toBe(true);
+    }
+  });
+
+  it('rejects ENCRYPTION_SECRET with uppercase hex characters', () => {
+    const result = parseEnvironmentConfig({ ...validEnv, ENCRYPTION_SECRET: 'A'.repeat(64) });
+    expect(result.ok).toBe(false);
+    if (!result.ok) {
+      expect(result.errors.some((e) => e.path === 'ENCRYPTION_SECRET')).toBe(true);
+    }
+  });
+
+  it('absent ENCRYPTION_SECRET defaults to null', () => {
+    const result = parseEnvironmentConfig(validEnv);
+    expect(result).toMatchObject({ ok: true, config: { payments: { encryptionSecret: null } } });
+  });
+
   it('parses the payment webhook processing feature flag explicitly', () => {
     expect(parseEnvironmentConfig({ ...validEnv, PAYMENT_WEBHOOKS_ENABLED: 'true' })).toMatchObject({
       ok: true,
