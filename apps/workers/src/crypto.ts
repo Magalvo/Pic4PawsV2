@@ -7,8 +7,8 @@ const fromHex = (hex: string): Uint8Array =>
   new Uint8Array((hex.match(/.{2}/g) ?? []).map((b) => parseInt(b, 16)));
 
 const importKey = (secret: string): Promise<CryptoKey> => {
-  const raw = new TextEncoder().encode(secret.slice(0, 32));
-  return crypto.subtle.importKey('raw', raw, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
+  const raw = fromHex(secret);
+  return crypto.subtle.importKey('raw', raw.buffer as ArrayBuffer, { name: 'AES-GCM' }, false, ['encrypt', 'decrypt']);
 };
 
 export const encryptCredential = async (plain: string, secret: string): Promise<string> => {

@@ -6,7 +6,7 @@ import type { PaymentReferenceInput } from '../../apps/workers/src/payment-refer
 import type { SupabaseClientLike } from '../../apps/workers/src/pet-supabase';
 import { shelterPaymentConfigs } from '../../packages/database/src/schema';
 
-const ENCRYPTION_SECRET = '0123456789abcdef0123456789abcdef';
+const ENCRYPTION_SECRET = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
 
 const input: PaymentReferenceInput = {
   donationId: 'donation-001',

@@ -17,7 +17,7 @@ const { default: worker } = await import('../../apps/workers/src/index');
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const ENCRYPTION_SECRET = 'aaaabbbbccccddddeeeeffffgggghhhh'; // 32 bytes
+const ENCRYPTION_SECRET = 'a'.repeat(64); // 64 hex chars = 32 bytes
 const EUPAGO_WEBHOOK_SECRET = 'eupago-webhook-secret-for-test';
 const SHELTER_ID = 'shelter-abc-123';
 const TRANSACTION_ID = 'txn-eupago-001';
