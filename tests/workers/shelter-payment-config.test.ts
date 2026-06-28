@@ -30,11 +30,13 @@ const makeAuthenticator = (actor: AuthenticatedActor | null): WorkerPetDraftAuth
 const makeGetRepo = (record: Awaited<ReturnType<ShelterPaymentConfigRepository['getPaymentConfig']>>): ShelterPaymentConfigRepository => ({
   getPaymentConfig: vi.fn().mockResolvedValue(record),
   savePaymentConfig: vi.fn().mockResolvedValue(undefined),
+  checkPendingPaymentDonations: vi.fn().mockResolvedValue(false),
 });
 
-const makeSaveRepo = (): ShelterPaymentConfigRepository => ({
+const makeSaveRepo = (hasPending = false): ShelterPaymentConfigRepository => ({
   getPaymentConfig: vi.fn().mockResolvedValue(null),
   savePaymentConfig: vi.fn().mockResolvedValue(undefined),
+  checkPendingPaymentDonations: vi.fn().mockResolvedValue(hasPending),
 });
 
 const makeRequest = (method: string): Request =>
@@ -168,7 +170,7 @@ describe('handleGetPaymentConfigRequest', () => {
     const res = await handleGetPaymentConfigRequest({
       request: req,
       shelterId: SHELTER_ID,
-      repository: makeGetRepo({ tier: 'manual', iban: VALID_IBAN, mbWayPhone: '+351912345678' }),
+      repository: makeGetRepo({ tier: 'manual', iban: VALID_IBAN, mbWayPhone: '+351912345678', activeProvider: null, eupagoApiKeyConfigured: false, ifthenpayAntiPhishingKeyConfigured: false }),
       authenticator: makeAuthenticator(makeActor()),
     });
     expect(res.status).toBe(200);
@@ -260,7 +262,7 @@ describe('handleSavePaymentConfigRequest', () => {
     expect(body.mbWayPhone).toBeNull();
     expect(repo.savePaymentConfig).toHaveBeenCalledWith(
       SHELTER_ID,
-      { iban: VALID_IBAN, mbWayPhone: null },
+      { tier: 'manual', iban: VALID_IBAN, mbWayPhone: null, activeProvider: null, eupagoApiKeyEncrypted: null, eupagoWebhookSecretEncrypted: null, ifthenpayAntiPhishingKey: null },
     );
   });
 
@@ -282,7 +284,7 @@ describe('handleSavePaymentConfigRequest', () => {
     expect(body.mbWayPhone).toBe('+351912345678');
     expect(repo.savePaymentConfig).toHaveBeenCalledWith(
       SHELTER_ID,
-      { iban: VALID_IBAN, mbWayPhone: '+351912345678' },
+      { tier: 'manual', iban: VALID_IBAN, mbWayPhone: '+351912345678', activeProvider: null, eupagoApiKeyEncrypted: null, eupagoWebhookSecretEncrypted: null, ifthenpayAntiPhishingKey: null },
     );
   });
 
@@ -298,5 +300,254 @@ describe('handleSavePaymentConfigRequest', () => {
       authenticator: makeAuthenticator(makeActor()),
     });
     expect(res.status).toBe(501);
+  });
+});
+
+// ─── validatePaymentConfigPayload — automated tier ────────────────────────────
+
+describe('validatePaymentConfigPayload — automated tier', () => {
+  it('tier=automated without activeProvider → invalid', () => {
+    const result = validatePaymentConfigPayload({ tier: 'automated' });
+    expect(result.valid).toBe(false);
+    if (!result.valid) expect(result.reasons).toContain('active_provider_required');
+  });
+
+  it('tier=automated with unknown activeProvider → invalid', () => {
+    const result = validatePaymentConfigPayload({ tier: 'automated', activeProvider: 'stripe' });
+    expect(result.valid).toBe(false);
+    if (!result.valid) expect(result.reasons).toContain('active_provider_required');
+  });
+
+  it('tier=automated eupago without eupagoApiKey → invalid', () => {
+    const result = validatePaymentConfigPayload({
+      tier: 'automated',
+      activeProvider: 'eupago',
+      eupagoWebhookSecret: 'sec',
+    });
+    expect(result.valid).toBe(false);
+    if (!result.valid) expect(result.reasons).toContain('eupago_api_key_required');
+  });
+
+  it('tier=automated eupago without eupagoWebhookSecret → invalid', () => {
+    const result = validatePaymentConfigPayload({
+      tier: 'automated',
+      activeProvider: 'eupago',
+      eupagoApiKey: 'key',
+    });
+    expect(result.valid).toBe(false);
+    if (!result.valid) expect(result.reasons).toContain('eupago_webhook_secret_required');
+  });
+
+  it('tier=automated eupago with all fields → valid', () => {
+    const result = validatePaymentConfigPayload({
+      tier: 'automated',
+      activeProvider: 'eupago',
+      eupagoApiKey: 'key',
+      eupagoWebhookSecret: 'sec',
+    });
+    expect(result.valid).toBe(true);
+  });
+
+  it('tier=automated ifthenpay without key → invalid', () => {
+    const result = validatePaymentConfigPayload({ tier: 'automated', activeProvider: 'ifthenpay' });
+    expect(result.valid).toBe(false);
+    if (!result.valid) expect(result.reasons).toContain('ifthenpay_anti_phishing_key_required');
+  });
+
+  it('tier=automated ifthenpay with key → valid', () => {
+    const result = validatePaymentConfigPayload({
+      tier: 'automated',
+      activeProvider: 'ifthenpay',
+      ifthenpayAntiPhishingKey: 'key-123',
+    });
+    expect(result.valid).toBe(true);
+  });
+
+  it('omitting tier defaults to manual tier validation', () => {
+    const result = validatePaymentConfigPayload({ iban: VALID_IBAN });
+    expect(result.valid).toBe(true);
+  });
+});
+
+// ─── POST handler — automated tier + provider-switch guard ────────────────────
+
+const ENCRYPTION_SECRET = 'aaaabbbbccccddddeeeeffffgggghhhh'; // 32 bytes
+
+describe('handleSavePaymentConfigRequest — automated tier', () => {
+  it('saves eupago config with encrypted credentials', async () => {
+    const repo = makeSaveRepo();
+    const req = new Request(`https://worker.test/shelters/${SHELTER_ID}/payment-config`, {
+      method: 'POST',
+      headers: { Authorization: 'Bearer tok' },
+    });
+    const res = await handleSavePaymentConfigRequest({
+      request: req,
+      payload: { tier: 'automated', activeProvider: 'eupago', eupagoApiKey: 'api-key', eupagoWebhookSecret: 'wh-secret' },
+      shelterId: SHELTER_ID,
+      repository: repo,
+      authenticator: makeAuthenticator(makeActor()),
+      encryptionSecret: ENCRYPTION_SECRET,
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json() as Record<string, unknown>;
+    expect(body.status).toBe('payment_config_saved');
+    expect(body.tier).toBe('automated');
+    expect(body.activeProvider).toBe('eupago');
+    expect(repo.savePaymentConfig).toHaveBeenCalledOnce();
+    const [, savedInput] = (repo.savePaymentConfig as ReturnType<typeof vi.fn>).mock.calls[0] as [string, Record<string, unknown>];
+    // credentials must be encrypted — not the raw values
+    expect(savedInput['eupagoApiKeyEncrypted']).toBeDefined();
+    expect(savedInput['eupagoApiKeyEncrypted']).not.toBe('api-key');
+    expect(savedInput['eupagoWebhookSecretEncrypted']).toBeDefined();
+    expect(savedInput['eupagoWebhookSecretEncrypted']).not.toBe('wh-secret');
+  });
+
+  it('returns 503 when encryptionSecret is missing for eupago automated tier', async () => {
+    const req = new Request(`https://worker.test/shelters/${SHELTER_ID}/payment-config`, {
+      method: 'POST',
+      headers: { Authorization: 'Bearer tok' },
+    });
+    const res = await handleSavePaymentConfigRequest({
+      request: req,
+      payload: { tier: 'automated', activeProvider: 'eupago', eupagoApiKey: 'key', eupagoWebhookSecret: 'sec' },
+      shelterId: SHELTER_ID,
+      repository: makeSaveRepo(),
+      authenticator: makeAuthenticator(makeActor()),
+      encryptionSecret: null,
+    });
+    expect(res.status).toBe(503);
+    const body = await res.json() as { status: string };
+    expect(body.status).toBe('encryption_not_configured');
+  });
+
+  it('saves ifthenpay config without encryption', async () => {
+    const repo = makeSaveRepo();
+    const req = new Request(`https://worker.test/shelters/${SHELTER_ID}/payment-config`, {
+      method: 'POST',
+      headers: { Authorization: 'Bearer tok' },
+    });
+    const res = await handleSavePaymentConfigRequest({
+      request: req,
+      payload: { tier: 'automated', activeProvider: 'ifthenpay', ifthenpayAntiPhishingKey: 'anti-phishing-123' },
+      shelterId: SHELTER_ID,
+      repository: repo,
+      authenticator: makeAuthenticator(makeActor()),
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json() as Record<string, unknown>;
+    expect(body.status).toBe('payment_config_saved');
+    expect(body.activeProvider).toBe('ifthenpay');
+    const [, savedInput] = (repo.savePaymentConfig as ReturnType<typeof vi.fn>).mock.calls[0] as [string, Record<string, unknown>];
+    expect(savedInput['ifthenpayAntiPhishingKey']).toBe('anti-phishing-123');
+  });
+
+  it('provider switch with pending payments returns 409', async () => {
+    const repo: ShelterPaymentConfigRepository = {
+      getPaymentConfig: vi.fn().mockResolvedValue({
+        tier: 'automated',
+        iban: null,
+        mbWayPhone: null,
+        activeProvider: 'ifthenpay',
+        eupagoApiKeyConfigured: false,
+        ifthenpayAntiPhishingKeyConfigured: true,
+      }),
+      savePaymentConfig: vi.fn().mockResolvedValue(undefined),
+      checkPendingPaymentDonations: vi.fn().mockResolvedValue(true),
+    };
+    const req = new Request(`https://worker.test/shelters/${SHELTER_ID}/payment-config`, {
+      method: 'POST',
+      headers: { Authorization: 'Bearer tok' },
+    });
+    const res = await handleSavePaymentConfigRequest({
+      request: req,
+      payload: { tier: 'automated', activeProvider: 'eupago', eupagoApiKey: 'key', eupagoWebhookSecret: 'sec' },
+      shelterId: SHELTER_ID,
+      repository: repo,
+      authenticator: makeAuthenticator(makeActor()),
+      encryptionSecret: ENCRYPTION_SECRET,
+    });
+    expect(res.status).toBe(409);
+    const body = await res.json() as { status: string };
+    expect(body.status).toBe('provider_switch_blocked');
+    expect(repo.savePaymentConfig).not.toHaveBeenCalled();
+  });
+
+  it('provider switch allowed when no pending payments', async () => {
+    const repo: ShelterPaymentConfigRepository = {
+      getPaymentConfig: vi.fn().mockResolvedValue({
+        tier: 'automated',
+        iban: null,
+        mbWayPhone: null,
+        activeProvider: 'ifthenpay',
+        eupagoApiKeyConfigured: false,
+        ifthenpayAntiPhishingKeyConfigured: true,
+      }),
+      savePaymentConfig: vi.fn().mockResolvedValue(undefined),
+      checkPendingPaymentDonations: vi.fn().mockResolvedValue(false),
+    };
+    const req = new Request(`https://worker.test/shelters/${SHELTER_ID}/payment-config`, {
+      method: 'POST',
+      headers: { Authorization: 'Bearer tok' },
+    });
+    const res = await handleSavePaymentConfigRequest({
+      request: req,
+      payload: { tier: 'automated', activeProvider: 'eupago', eupagoApiKey: 'key', eupagoWebhookSecret: 'sec' },
+      shelterId: SHELTER_ID,
+      repository: repo,
+      authenticator: makeAuthenticator(makeActor()),
+      encryptionSecret: ENCRYPTION_SECRET,
+    });
+    expect(res.status).toBe(200);
+  });
+});
+
+// ─── GET handler — extended response ─────────────────────────────────────────
+
+describe('handleGetPaymentConfigRequest — provider fields', () => {
+  it('returns activeProvider and presence flags for automated config', async () => {
+    const req = new Request(`https://worker.test/shelters/${SHELTER_ID}/payment-config`, {
+      headers: { Authorization: 'Bearer tok' },
+    });
+    const res = await handleGetPaymentConfigRequest({
+      request: req,
+      shelterId: SHELTER_ID,
+      repository: makeGetRepo({
+        tier: 'automated',
+        iban: null,
+        mbWayPhone: null,
+        activeProvider: 'eupago',
+        eupagoApiKeyConfigured: true,
+        ifthenpayAntiPhishingKeyConfigured: false,
+      }),
+      authenticator: makeAuthenticator(makeActor()),
+    });
+    expect(res.status).toBe(200);
+    const body = await res.json() as Record<string, unknown>;
+    expect(body.activeProvider).toBe('eupago');
+    expect(body.eupagoApiKeyConfigured).toBe(true);
+    expect(body.ifthenpayAntiPhishingKeyConfigured).toBe(false);
+  });
+
+  it('never returns raw encrypted credential values in GET response', async () => {
+    const req = new Request(`https://worker.test/shelters/${SHELTER_ID}/payment-config`, {
+      headers: { Authorization: 'Bearer tok' },
+    });
+    const res = await handleGetPaymentConfigRequest({
+      request: req,
+      shelterId: SHELTER_ID,
+      repository: makeGetRepo({
+        tier: 'automated',
+        iban: null,
+        mbWayPhone: null,
+        activeProvider: 'eupago',
+        eupagoApiKeyConfigured: true,
+        ifthenpayAntiPhishingKeyConfigured: false,
+      }),
+      authenticator: makeAuthenticator(makeActor()),
+    });
+    const body = await res.json() as Record<string, unknown>;
+    expect(body['eupagoApiKeyEncrypted']).toBeUndefined();
+    expect(body['eupagoWebhookSecretEncrypted']).toBeUndefined();
+    expect(body['ifthenpayAntiPhishingKey']).toBeUndefined();
   });
 });
