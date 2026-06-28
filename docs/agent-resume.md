@@ -61,9 +61,9 @@ Do not batch items that can be reviewed or merged independently.
 
 ## 4. Current State As Of 2026-06-28
 
-**Repository status**: 2440 tests passing (274 test files). Push notifications complete. Full manual-donation slice complete + fully audit-remediated.
+**Repository status**: 2442 tests passing (274 test files). Push notifications complete. Full manual-donation slice complete + fully audit-remediated (all P1–P2 findings from 2026-06-28 audit resolved).
 
-**Main branch HEAD**: PR #269 (fix audit F-01/F-09/F-10) — `c1ed2bf`.
+**Main branch HEAD**: PR #273 (fix P2-2 push-token ladder) — `633d823`.
 - `npm run typecheck` ✅
 - `npm run lint` ✅
 - `npm run test` ✅
@@ -73,7 +73,7 @@ Do not batch items that can be reviewed or merged independently.
 
 **Latest checkpoint**: [2026-06-23-donation-manual-complete.md](docs/checkpoints/2026-06-23-donation-manual-complete.md) — covers PRs #240–#267, 2437 tests
 
-**Latest audit**: [2026-06-23-sdd-audit-prs-235-258.md](docs/audits/2026-06-23-sdd-audit-prs-235-258.md) — score 7/10; F-02–F-08/F-11–F-14 + N-01/N-02 remediated by PRs #261–#267; F-01/F-09/F-10 re-closed by PR #269 (2026-06-24). All findings resolved.
+**Latest audit**: [2026-06-28-sdd-audit-prs-257-269.md](docs/audits/2026-06-28-sdd-audit-prs-257-269.md) — score 7/10; P1 (donation_receipt allowlist) closed by PR #272; P2-2 (push-token ladder) closed by PR #273; P3s closed by hygiene sweep. All findings resolved.
 
 **Track E complete**: `PASSWD-RESET-WEB-001` (PR #207) + `PASSWD-RESET-MOBILE-001` (PR #208). Web: `/recuperar-palavra-passe` + `/recuperar-palavra-passe/confirmar`; mobile: `(auth)/recuperar-palavra-passe` screen (confirm step on web). Mobile `redirectTo` uses `EXPO_PUBLIC_WEB_BASE_URL ?? 'https://pic4paws.pt'`.
 
@@ -434,7 +434,7 @@ per deployment.
 
 ## 5. Recommended Next Work Item
 
-**Status as of 2026-06-28**: Tracks A–H complete. GDPR-LEGAL-001 merged (PR #239). Push notification delivery complete (PRs #240–#244). Full manual donation slice complete (PRs #245–#256) + fully audit-remediated (PRs #261–#267 + PR #269; all F-01–F-14 + N-01/N-02 resolved). 2440 tests passing.
+**Status as of 2026-06-28**: Tracks A–H complete. GDPR-LEGAL-001 merged (PR #239). Push notifications done (PRs #240–#244). Full manual donation slice done (PRs #245–#256) + fully audit-remediated — all P1/P2/P3 findings from 2026-06-28 audit resolved (PRs #272–#274). 2442 tests passing.
 
 **Production-readiness gaps (confirmed):**
 
@@ -465,10 +465,10 @@ Continue Pic4Paws V2 development from main using strict SDD/TDD:
 - Validate: npm run typecheck, lint, test, build
 - After any env.ts change: npm run build --workspace=packages/config
 
-Current state (2026-06-28, HEAD c1ed2bf / PR #269): 2440 tests passing (274 files).
+Current state (2026-06-28, HEAD 633d823 / PR #273): 2442 tests passing (274 files).
 Tracks A–H complete. GDPR legal pages done (PR #239). Push notifications done (PRs #240–#244).
-Full manual donation slice done + fully audit-remediated (PRs #245–#256, #261–#267, #269).
-All audit findings F-01–F-14 + N-01/N-02 resolved.
+Full manual donation slice done + fully audit-remediated (PRs #245–#256, #261–#267, #272–#274).
+All 2026-06-28 audit findings (P1–P3) resolved.
 Next: consult docs/work-tracks/remake-foundation.md for the next planned track, or run a
 fresh SDD audit (/sdd-audit) to establish the new baseline before the next feature track.
 Consult section 5 for the full production-readiness gap list.

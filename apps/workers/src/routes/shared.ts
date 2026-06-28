@@ -1,13 +1,13 @@
 import type { parseEnvironmentConfig } from '@pic4paws/config';
 import type { WorkerRequestDependencies } from '../dependencies';
+import { jsonResponse, extractBearerToken } from '../http';
 
 export type WorkerParsedConfig = Extract<
   ReturnType<typeof parseEnvironmentConfig>,
   { ok: true }
 >['config'];
 
-export const jsonResponse = (body: unknown, init?: ResponseInit): Response =>
-  Response.json(body, init);
+export { jsonResponse };
 
 export const parseJsonBody = async (request: Request): Promise<unknown | null> => {
   try {
@@ -17,18 +17,11 @@ export const parseJsonBody = async (request: Request): Promise<unknown | null> =
   }
 };
 
-export const parseAuthorizationBearer = (request: Request): string | null => {
-  const authorizationHeader = request.headers.get('Authorization');
-  if (!authorizationHeader?.startsWith('Bearer ')) return null;
-  const bearerToken = authorizationHeader.slice('Bearer '.length).trim();
-  return bearerToken.length > 0 ? bearerToken : null;
-};
-
 export const authenticateWorkerActor = async (
   request: Request,
   dependencies: WorkerRequestDependencies,
 ) => {
-  const bearerToken = parseAuthorizationBearer(request);
+  const bearerToken = extractBearerToken(request);
   if (!bearerToken) {
     return { ok: false as const, response: jsonResponse({ status: 'unauthenticated' }, { status: 401 }) };
   }
