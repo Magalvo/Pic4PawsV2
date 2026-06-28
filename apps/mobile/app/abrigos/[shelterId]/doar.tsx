@@ -12,14 +12,14 @@ import {
   View,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { createClient } from '@supabase/supabase-js';
 import { createDonationClient } from '@pic4paws/client';
 import type { DonationClientKind, DonationClientPaymentMethod } from '@pic4paws/client';
 import {
   createMobileDonationUi,
   type MobileDonationResultViewModel,
 } from '../../../src/donation';
-import { workerUrl, supabaseUrl, supabaseAnonKey } from '../../../src/env';
+import { workerUrl } from '../../../src/env';
+import { mobileSupabaseClient } from '../../../src/supabase';
 
 type FormState = {
   amountEuros: string;
@@ -55,6 +55,17 @@ const PAYMENT_METHODS: DonationClientPaymentMethod[] = [
   'bank_transfer',
 ];
 
+const donationClient = createDonationClient({
+  workerBaseUrl: workerUrl(),
+  donationsPath: '/donations',
+  getAccessToken: async () => {
+    const { data: { session } } = await mobileSupabaseClient.auth.getSession();
+    return session?.access_token ?? null;
+  },
+  fetch: globalThis.fetch,
+});
+const ui = createMobileDonationUi({ donationClient });
+
 export default function DoarScreen() {
   const { shelterId } = useLocalSearchParams<{ shelterId: string }>();
   const router = useRouter();
@@ -71,24 +82,18 @@ export default function DoarScreen() {
   const handleSubmit = async () => {
     if (!canSubmit) return;
     setSubmitting(true);
-    const supabase = createClient(supabaseUrl(), supabaseAnonKey(), { auth: { persistSession: false } });
-    const { data: { session } } = await supabase.auth.getSession();
-    const donationClient = createDonationClient({
-      workerBaseUrl: workerUrl(),
-      donationsPath: '/donations',
-      getAccessToken: async () => session?.access_token ?? null,
-      fetch: globalThis.fetch,
-    });
-    const ui = createMobileDonationUi({ donationClient });
-    const result = await ui.submitDonation({
-      shelterId,
-      amountCents,
-      kind: form.kind,
-      paymentMethod: form.paymentMethod,
-      dataProcessingAccepted: true,
-    });
-    setViewModel(result);
-    setSubmitting(false);
+    try {
+      const result = await ui.submitDonation({
+        shelterId,
+        amountCents,
+        kind: form.kind,
+        paymentMethod: form.paymentMethod,
+        dataProcessingAccepted: true,
+      });
+      setViewModel(result);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   if (viewModel?.state === 'submitted') {
