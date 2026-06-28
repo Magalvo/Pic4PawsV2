@@ -4,6 +4,8 @@ export type PaymentReferenceInput = {
   currency: 'EUR';
   shelterId: string;
   orderId: string;
+  paymentMethod: 'mb_way' | 'multibanco';
+  mbWayPhone?: string | null;
 };
 
 export type PaymentReference =

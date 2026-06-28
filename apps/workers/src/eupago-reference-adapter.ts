@@ -9,7 +9,6 @@ const EUPAGO_BASE = 'https://clientes.eupago.pt/api/v1.02';
 
 export type CreateEupagoReferenceAdapterInput = {
   apiKey: string;
-  mbWayPhone?: string | null;
   fetch: typeof globalThis.fetch;
 };
 
@@ -120,11 +119,10 @@ const createMbWayReference = (
 
 export const createEupagoReferenceAdapter = ({
   apiKey,
-  mbWayPhone,
   fetch: fetchFn,
 }: CreateEupagoReferenceAdapterInput): PaymentReferenceFactory => ({
   createReference: (input: PaymentReferenceInput): Promise<PaymentReferenceResult> =>
-    mbWayPhone
-      ? createMbWayReference(input, mbWayPhone, apiKey, fetchFn)
+    input.paymentMethod === 'mb_way' && input.mbWayPhone
+      ? createMbWayReference(input, input.mbWayPhone, apiKey, fetchFn)
       : createMultibancoReference(input, apiKey, fetchFn),
 });

@@ -25,6 +25,7 @@ type FormState = {
   amountEuros: string;
   kind: DonationClientKind;
   paymentMethod: DonationClientPaymentMethod;
+  mbWayPhone: string;
   dataProcessingAccepted: boolean;
 };
 
@@ -32,6 +33,7 @@ const initialForm: FormState = {
   amountEuros: '',
   kind: 'one_time_donation',
   paymentMethod: 'mb_way',
+  mbWayPhone: '',
   dataProcessingAccepted: false,
 };
 
@@ -88,6 +90,7 @@ export default function DoarScreen() {
         amountCents,
         kind: form.kind,
         paymentMethod: form.paymentMethod,
+        mbWayPhone: form.paymentMethod === 'mb_way' ? form.mbWayPhone || null : null,
         dataProcessingAccepted: true,
       });
       setViewModel(result);
@@ -228,6 +231,21 @@ export default function DoarScreen() {
               ))}
             </View>
           </View>
+
+          {form.paymentMethod === 'mb_way' && (
+            <View style={styles.field}>
+              <Text style={styles.label}>Telemóvel MB Way</Text>
+              <TextInput
+                style={styles.input}
+                value={form.mbWayPhone}
+                onChangeText={(v) => setField('mbWayPhone', v)}
+                editable={!submitting}
+                keyboardType="phone-pad"
+                placeholder="+351910000000"
+                placeholderTextColor="#9ca3af"
+              />
+            </View>
+          )}
 
           <View style={styles.toggleRow}>
             <Text style={styles.label}>Aceito o tratamento de dados pessoais</Text>

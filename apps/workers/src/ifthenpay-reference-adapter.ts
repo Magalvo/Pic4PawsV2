@@ -9,7 +9,6 @@ const IFTHENPAY_BASE = 'https://api.ifthenpay.com';
 
 export type CreateIfthenpayReferenceAdapterInput = {
   apiKey: string;
-  mbWayPhone?: string | null;
   fetch: typeof globalThis.fetch;
 };
 
@@ -82,17 +81,16 @@ const callIfthenpay = async (
 
 export const createIfthenpayReferenceAdapter = ({
   apiKey,
-  mbWayPhone,
   fetch: fetchFn,
 }: CreateIfthenpayReferenceAdapterInput): PaymentReferenceFactory => ({
   createReference: (input: PaymentReferenceInput): Promise<PaymentReferenceResult> => {
-    if (mbWayPhone) {
+    if (input.paymentMethod === 'mb_way' && input.mbWayPhone) {
       return callIfthenpay(
         `${IFTHENPAY_BASE}/spg/payment/mbway`,
         {
           OrderId: input.orderId,
           Amount: amountValue(input.amountCents),
-          MobilePhone: mbWayPhone,
+          MobilePhone: input.mbWayPhone,
           Currency: input.currency,
         },
         apiKey,

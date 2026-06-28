@@ -83,6 +83,7 @@ type ValidatedDonationPayload = {
   amountCents: number;
   kind: DonationKind;
   paymentMethod: DonationPaymentMethod;
+  mbWayPhone: string | null;
   petId: string | null;
   publicMessage: string | null;
   anonymous: boolean;
@@ -167,6 +168,7 @@ export const validateDonationPayload = (payload: unknown): ValidateDonationPaylo
       anonymous: (anonymous as boolean),
       donorDisplayName: (p['donorDisplayName'] as string | null) ?? null,
       donorEmail: (p['donorEmail'] as string | null) ?? null,
+      mbWayPhone: isNullableString(p['mbWayPhone']) ? (p['mbWayPhone'] as string | null) : null,
       dataProcessingAccepted: true,
     },
   };
@@ -341,12 +343,28 @@ export const handleWorkerDonationRequest = async ({
       createdAt: now(),
     });
 
+    const refMethod = validation.data.paymentMethod;
+    if (refMethod !== 'mb_way' && refMethod !== 'multibanco') {
+      return jsonResponse(
+        { status: 'donation_not_eligible', reasons: ['payment_method_not_supported'] },
+        { status: 409 },
+      );
+    }
+    if (refMethod === 'mb_way' && !validation.data.mbWayPhone) {
+      return jsonResponse(
+        { status: 'invalid_donation', reasons: ['mb_way_phone_required'] },
+        { status: 400 },
+      );
+    }
+
     const refResult = await paymentReferenceFactory.createReference({
       donationId: donationResult.donationId,
       amountCents: validation.data.amountCents,
       currency: 'EUR',
       shelterId: validation.data.shelterId,
       orderId: donationResult.donationId,
+      paymentMethod: refMethod,
+      mbWayPhone: validation.data.mbWayPhone,
     });
 
     if (!refResult.ok) {

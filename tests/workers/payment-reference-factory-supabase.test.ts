@@ -14,6 +14,7 @@ const input: PaymentReferenceInput = {
   currency: 'EUR',
   shelterId: 'shelter-001',
   orderId: 'order-001',
+  paymentMethod: 'multibanco',
 };
 
 const makeClient = (data: Record<string, unknown> | null) => {

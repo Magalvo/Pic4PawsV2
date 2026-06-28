@@ -42,11 +42,7 @@ export const createSupabasePaymentReferenceFactory = ({
       } catch {
         return NOT_CONFIGURED;
       }
-      const adapter = createEupagoReferenceAdapter({
-        apiKey,
-        mbWayPhone: row.mb_way_phone ?? undefined,
-        fetch: fetchFn,
-      });
+      const adapter = createEupagoReferenceAdapter({ apiKey, fetch: fetchFn });
       return adapter.createReference(input);
     }
 
@@ -58,11 +54,7 @@ export const createSupabasePaymentReferenceFactory = ({
       } catch {
         return NOT_CONFIGURED;
       }
-      const adapter = createIfthenpayReferenceAdapter({
-        apiKey,
-        mbWayPhone: row.mb_way_phone ?? undefined,
-        fetch: fetchFn,
-      });
+      const adapter = createIfthenpayReferenceAdapter({ apiKey, fetch: fetchFn });
       return adapter.createReference(input);
     }
 

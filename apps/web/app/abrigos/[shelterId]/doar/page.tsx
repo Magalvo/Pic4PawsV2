@@ -18,6 +18,7 @@ type FormState = {
   amountEuros: string;
   kind: DonationClientKind;
   paymentMethod: DonationClientPaymentMethod;
+  mbWayPhone: string;
   dataProcessingAccepted: boolean;
 };
 
@@ -25,6 +26,7 @@ const initialForm: FormState = {
   amountEuros: '',
   kind: 'one_time_donation',
   paymentMethod: 'mb_way',
+  mbWayPhone: '',
   dataProcessingAccepted: false,
 };
 
@@ -63,6 +65,7 @@ export default function DoarPage({ params }: Props) {
       amountCents,
       kind: form.kind,
       paymentMethod: form.paymentMethod,
+      mbWayPhone: form.paymentMethod === 'mb_way' ? form.mbWayPhone || null : null,
       dataProcessingAccepted: true,
     });
     setViewModel(result);
@@ -164,6 +167,19 @@ export default function DoarPage({ params }: Props) {
             <option value="bank_transfer">Transferência bancária</option>
           </select>
         </label>
+        {form.paymentMethod === 'mb_way' && (
+          <label>
+            Telemóvel MB Way
+            <input
+              type="tel"
+              value={form.mbWayPhone}
+              onChange={set('mbWayPhone')}
+              placeholder="+351910000000"
+              required
+              disabled={submitting}
+            />
+          </label>
+        )}
         <label>
           <input
             type="checkbox"

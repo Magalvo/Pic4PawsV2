@@ -47,7 +47,7 @@ const validPayload = {
   shelterId: 'shelter-a',
   amountCents: 1000,
   kind: 'one_time_donation',
-  paymentMethod: 'mb_way',
+  paymentMethod: 'multibanco',
   petId: null,
   publicMessage: null,
   anonymous: false,
@@ -489,5 +489,66 @@ describe('POST /donations — donation initiation', () => {
     expect(response.status).toBe(502);
     expect(body.status).toBe('payment_reference_failed');
     expect(failDonation).toHaveBeenCalledWith(donationResult.donationId);
+  });
+
+  it('automated tier + mb_way without mbWayPhone → 400 mb_way_phone_required', async () => {
+    const donationRepository: DonationRepository = {
+      getDonationEligibilityContext: vi.fn().mockResolvedValue({
+        shelter: { id: 'shelter-a', verificationStatus: 'verified', paymentAccountStatus: 'active' },
+        paymentConfig: { tier: 'automated', activeProvider: 'eupago', iban: null, mbWayPhone: null },
+        pet: null,
+      }),
+      createDonation: vi.fn().mockResolvedValue(donationResult),
+    };
+    const factory: PaymentReferenceFactory = { createReference: vi.fn() };
+
+    const response = await handleWorkerRequest(
+      makeDonationRequest({ ...validPayload, paymentMethod: 'mb_way' }),
+      validEnv,
+      { petDraftAuthenticator: fakeAuth, donationRepository, paymentReferenceFactory: factory },
+    );
+    const body = (await response.json()) as { status: string; reasons: string[] };
+
+    expect(response.status).toBe(400);
+    expect(body.reasons).toContain('mb_way_phone_required');
+    expect(factory.createReference).not.toHaveBeenCalled();
+  });
+
+  it('automated tier + mb_way with mbWayPhone + factory ok:true → 201 with mb_way reference', async () => {
+    const donationRepository: DonationRepository = {
+      getDonationEligibilityContext: vi.fn().mockResolvedValue({
+        shelter: { id: 'shelter-a', verificationStatus: 'verified', paymentAccountStatus: 'active' },
+        paymentConfig: { tier: 'automated', activeProvider: 'eupago', iban: null, mbWayPhone: null },
+        pet: null,
+      }),
+      createDonation: vi.fn().mockResolvedValue(donationResult),
+      setProviderPaymentId: vi.fn().mockResolvedValue(undefined),
+    };
+    const factory: PaymentReferenceFactory = {
+      createReference: vi.fn().mockResolvedValue({
+        ok: true,
+        providerPaymentId: 'txn-mbway-001',
+        reference: { method: 'mb_way', phone: '+351910000001', expiresAt: null },
+      }),
+    };
+
+    const response = await handleWorkerRequest(
+      makeDonationRequest({ ...validPayload, paymentMethod: 'mb_way', mbWayPhone: '+351910000001' }),
+      validEnv,
+      {
+        petDraftAuthenticator: fakeAuth,
+        donationRepository,
+        paymentReferenceFactory: factory,
+        now: () => '2026-06-28T10:00:00.000Z',
+      },
+    );
+    const body = (await response.json()) as Record<string, unknown>;
+
+    expect(response.status).toBe(201);
+    expect(body.tier).toBe('automated');
+    expect((body.reference as Record<string, unknown>).method).toBe('mb_way');
+    expect(factory.createReference).toHaveBeenCalledWith(
+      expect.objectContaining({ paymentMethod: 'mb_way', mbWayPhone: '+351910000001' }),
+    );
   });
 });
