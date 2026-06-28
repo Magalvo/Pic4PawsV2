@@ -264,11 +264,13 @@ export const handleSavePaymentConfigRequest = async ({
 
   const validated = validation.input;
 
-  // Provider-switch guard
-  if (validated.tier === 'automated') {
-    const currentConfig = await repository.getPaymentConfig(shelterId);
-    const currentProvider = currentConfig?.activeProvider ?? null;
-    if (currentProvider !== null && currentProvider !== validated.activeProvider) {
+  // Provider-switch guard: block any transition away from the current active provider
+  // (automated→automated with different provider, or automated→manual) when pending payments exist
+  const currentConfig = await repository.getPaymentConfig(shelterId);
+  const currentProvider = currentConfig?.activeProvider ?? null;
+  if (currentProvider !== null) {
+    const incomingProvider = validated.tier === 'automated' ? validated.activeProvider : null;
+    if (currentProvider !== incomingProvider) {
       const hasPending = await repository.checkPendingPaymentDonations(shelterId);
       if (hasPending) {
         return jsonResponse({ status: 'provider_switch_blocked' }, { status: 409 });
