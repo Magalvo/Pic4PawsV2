@@ -88,7 +88,7 @@ describe('createSupabaseDonationRepositories', () => {
       );
       expect(shelterChain.eq).toHaveBeenCalledWith('id', 'shelter-a');
       expect(client.from).toHaveBeenCalledWith('shelter_payment_configs');
-      expect(configChain.select).toHaveBeenCalledWith('tier,iban,mb_way_phone');
+      expect(configChain.select).toHaveBeenCalledWith('tier,active_provider,iban,mb_way_phone');
       expect(configChain.eq).toHaveBeenCalledWith('shelter_id', 'shelter-a');
       expect(client.from).toHaveBeenCalledWith('pets');
       expect(petChain.select).toHaveBeenCalledWith('id,shelter_id');

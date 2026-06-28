@@ -83,6 +83,8 @@ import type { DonationManualRepository } from './donation-manual';
 import { createSupabaseDonationManualRepositories } from './donation-manual-supabase';
 import type { EupagoWebhookRepository } from './eupago-webhook-supabase';
 import { createEupagoWebhookRepositories } from './eupago-webhook-supabase';
+import type { PaymentReferenceFactory } from './payment-reference-factory';
+import { createSupabasePaymentReferenceFactory } from './payment-reference-factory-supabase';
 
 export type WorkerSupabaseTableQueryLike = SupabaseAuthTableQueryLike & SupabaseTableQueryLike;
 
@@ -142,6 +144,7 @@ export type WorkerRequestDependencies = {
   shelterPaymentConfigRepository?: ShelterPaymentConfigRepository;
   donationManualRepository?: DonationManualRepository;
   eupagoWebhookRepository?: EupagoWebhookRepository;
+  paymentReferenceFactory?: PaymentReferenceFactory;
   supabaseClientFactory?: WorkerSupabaseClientFactory;
   now?: () => string;
 };
@@ -262,6 +265,13 @@ export const createWorkerSupabaseDependencies = ({
       shelterPaymentConfigRepository: shelterPaymentConfigRepositories.shelterPaymentConfigRepository,
       donationManualRepository: donationManualRepositories.donationManualRepository,
       eupagoWebhookRepository: eupagoWebhookRepo,
+      paymentReferenceFactory: config.payments.encryptionSecret
+        ? createSupabasePaymentReferenceFactory({
+            client,
+            encryptionSecret: config.payments.encryptionSecret,
+            fetch: globalThis.fetch,
+          })
+        : undefined,
       // paymentWebhookVerifier is intentionally NOT set here — it is provider-SDK-specific
       // and must be injected by the production fetch handler or tests
       now,
