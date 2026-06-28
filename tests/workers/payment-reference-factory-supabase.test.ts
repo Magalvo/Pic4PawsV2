@@ -56,7 +56,6 @@ describe('createSupabasePaymentReferenceFactory schema contract', () => {
       'active_provider',
       'eupago_api_key_encrypted',
       'api_key_encrypted',
-      'mb_way_phone',
     ]);
     expect(selected.every((column) => schemaColumns.includes(column))).toBe(true);
     expect(selected).not.toContain('ifthenpay_api_key_encrypted');

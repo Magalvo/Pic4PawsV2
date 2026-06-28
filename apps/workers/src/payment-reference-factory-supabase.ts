@@ -8,7 +8,6 @@ type ShelterReferenceConfigRow = {
   active_provider: 'eupago' | 'ifthenpay' | null;
   eupago_api_key_encrypted: string | null;
   api_key_encrypted: string | null;
-  mb_way_phone: string | null;
 };
 
 const NOT_CONFIGURED: PaymentReferenceResult = { ok: false, reason: 'invalid_response' };
@@ -25,7 +24,7 @@ export const createSupabasePaymentReferenceFactory = ({
   createReference: async (input) => {
     const { data, error } = await client
       .from('shelter_payment_configs')
-      .select('active_provider,eupago_api_key_encrypted,api_key_encrypted,mb_way_phone')
+      .select('active_provider,eupago_api_key_encrypted,api_key_encrypted')
       .eq('shelter_id', input.shelterId)
       .is('deleted_at', null)
       .maybeSingle();
