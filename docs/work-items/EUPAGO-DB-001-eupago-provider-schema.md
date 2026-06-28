@@ -40,10 +40,10 @@ introduce state changes.
 
 ## Acceptance Criteria
 
-- [ ] Add `ActivePaymentProvider = 'ifthenpay' | 'eupago'` to `packages/domain/src/index.ts`
+- [x] Add `ActivePaymentProvider = 'ifthenpay' | 'eupago'` to `packages/domain/src/index.ts`
   and export it from `packages/domain/src/index.ts`.
 
-- [ ] Add migration artifact `0008_eupago_provider` to
+- [x] Add migration artifact `0008_eupago_provider` to
   `packages/database/src/migration-artifacts.ts`:
 
   ```sql
@@ -68,7 +68,7 @@ introduce state changes.
     ADD COLUMN ifthenpay_anti_phishing_key text;
   ```
 
-- [ ] Update `packages/database/src/schema.ts`:
+- [x] Update `packages/database/src/schema.ts`:
   - Add `shelterActiveProviderEnum = pgEnum('shelter_active_provider', ['ifthenpay', 'eupago'])`.
   - Add four columns to `shelterPaymentConfigs` Drizzle table definition:
     - `activeProvider: shelterActiveProviderEnum('active_provider')`  (nullable)
@@ -76,11 +76,11 @@ introduce state changes.
     - `eupagoWebhookSecretEncrypted: text('eupago_webhook_secret_encrypted')` (nullable)
     - `ifthenpayAntiPhishingKey: text('ifthenpay_anti_phishing_key')` (nullable)
 
-- [ ] `assertNonDestructiveMigration` passes for migration 0008 (no DROP/TRUNCATE/DELETE).
+- [x] `assertNonDestructiveMigration` passes for migration 0008 (no DROP/TRUNCATE/DELETE).
 
-- [ ] No existing test breaks (additive only).
+- [x] No existing test breaks (additive only).
 
-- [ ] Final validation: `npm run typecheck`, `npm run lint`, `npm run test`, `npm run build`.
+- [x] Final validation: `npm run typecheck`, `npm run lint`, `npm run test`, `npm run build`.
 
 ## 3. Security Notes
 

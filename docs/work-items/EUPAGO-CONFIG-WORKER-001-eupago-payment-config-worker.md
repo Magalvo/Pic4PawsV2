@@ -1,4 +1,4 @@
----
+﻿---
 id: EUPAGO-CONFIG-WORKER-001
 title: Eupago provider — payment config worker extension
 status: done
@@ -87,30 +87,30 @@ type GetPaymentConfigResponse =
 
 ## Acceptance Criteria
 
-- [ ] Extend `validatePaymentConfigPayload` in `apps/workers/src/shelter-payment-config.ts`
+- [x] Extend `validatePaymentConfigPayload` in `apps/workers/src/shelter-payment-config.ts`
   with the rules above; return `reasons` including:
   - `'active_provider_required'`: `tier = 'automated'` but no `activeProvider`
   - `'eupago_api_key_required'`: `activeProvider = 'eupago'` but `eupagoApiKey` absent
   - `'eupago_webhook_secret_required'`: `activeProvider = 'eupago'` but `eupagoWebhookSecret` absent
   - `'ifthenpay_anti_phishing_key_required'`: `activeProvider = 'ifthenpay'` but key absent
 
-- [ ] Add `checkPendingPaymentDonations(shelterId)` to `PaymentConfigRepository`:
+- [x] Add `checkPendingPaymentDonations(shelterId)` to `PaymentConfigRepository`:
   returns `Promise<boolean>` — true if any `pending_payment` donations exist for the
   shelter.
 
-- [ ] Add provider-switch guard in `handleSavePaymentConfigRequest`:
+- [x] Add provider-switch guard in `handleSavePaymentConfigRequest`:
   if `activeProvider` differs from the current stored value AND pending payments exist,
   return 409 `provider_switch_blocked`.
 
-- [ ] Add `encryptCredential(plain: string, secret: string): string` and
+- [x] Add `encryptCredential(plain: string, secret: string): string` and
   `decryptCredential(encrypted: string, secret: string): string` utility functions
   (AES-256-GCM) in `apps/workers/src/crypto.ts` (new file). The `ENCRYPTION_SECRET`
   env var is the key; add it to `packages/config/src/env.ts`.
 
-- [ ] Update `handleSavePaymentConfigRequest` to encrypt `eupagoApiKey` and
+- [x] Update `handleSavePaymentConfigRequest` to encrypt `eupagoApiKey` and
   `eupagoWebhookSecret` before passing them to the repository.
 
-- [ ] Update `ShelterPaymentConfigRepository.savePaymentConfig` signature to accept:
+- [x] Update `ShelterPaymentConfigRepository.savePaymentConfig` signature to accept:
   ```ts
   {
     tier: 'manual' | 'automated';
@@ -123,14 +123,14 @@ type GetPaymentConfigResponse =
   }
   ```
 
-- [ ] Update `handleGetPaymentConfigRequest` to return `activeProvider`,
+- [x] Update `handleGetPaymentConfigRequest` to return `activeProvider`,
   `eupagoApiKeyConfigured`, and `ifthenpayAntiPhishingKeyConfigured` from the
   stored row (presence flags, never raw values).
 
-- [ ] Update `createSupabaseShelterPaymentConfigRepositories` to read/write new columns
+- [x] Update `createSupabaseShelterPaymentConfigRepositories` to read/write new columns
   and implement `checkPendingPaymentDonations`.
 
-- [ ] Tests in `tests/workers/shelter-payment-config.test.ts` (extend existing):
+- [x] Tests in `tests/workers/shelter-payment-config.test.ts` (extend existing):
   - `tier = 'automated'` without `activeProvider` → 400 `invalid_provider_config`
   - `activeProvider = 'eupago'` without `eupagoApiKey` → 400
   - `activeProvider = 'eupago'` with all credentials → 200 `payment_config_saved`
@@ -138,12 +138,12 @@ type GetPaymentConfigResponse =
   - Provider switch with pending payments → 409 `provider_switch_blocked`
   - GET returns `activeProvider` and presence flags, no raw credential values
 
-- [ ] Tests in `tests/workers/crypto.test.ts` (new):
+- [x] Tests in `tests/workers/crypto.test.ts` (new):
   - Encrypt/decrypt round-trip matches original.
   - Different secrets produce different ciphertext.
   - Tampered ciphertext fails decryption.
 
-- [ ] Final validation: `npm run typecheck`, `npm run lint`, `npm run test`, `npm run build`.
+- [x] Final validation: `npm run typecheck`, `npm run lint`, `npm run test`, `npm run build`.
 
 ## 3. Security Notes
 

@@ -1,4 +1,4 @@
----
+﻿---
 id: EUPAGO-DONATION-CLIENT-001
 title: Eupago — automated donation client + Web + Mobile boundaries
 status: done
@@ -87,14 +87,14 @@ When `tier === 'automated'`:
 
 ## Acceptance Criteria
 
-- [ ] `packages/client/src/donations.ts`:
+- [x] `packages/client/src/donations.ts`:
   - Add `DonationClientPaymentReference` type
   - Make `DonationClientSuccess` a discriminated union on `tier`
   - Add `payment_reference_failed` | `provider_credentials_unavailable` to `DonationClientFailureStatus`
   - Update `parseDonationSuccess` to validate and return both union branches
   - Update `parseDonationFailureStatus` to map both new statuses
 
-- [ ] Tests in `tests/client/donation-client.test.ts` (new or extend existing):
+- [x] Tests in `tests/client/donation-client.test.ts` (new or extend existing):
   - 201 manual tier → manual union branch with `iban`
   - 201 automated tier + multibanco → automated union branch with `reference.method === 'multibanco'`
   - 201 automated tier + mb_way → automated union branch with `reference.method === 'mb_way'`
@@ -102,17 +102,17 @@ When `tier === 'automated'`:
   - 503 `provider_credentials_unavailable` → client failure with that status
   - Missing `reference` on automated tier → `worker_response_invalid`
 
-- [ ] `packages/domain/src/` or `packages/client/src/`: `WebDonationUi` extended to handle
+- [x] `packages/domain/src/` or `packages/client/src/`: `WebDonationUi` extended to handle
   `submitted_automated` state (show payment reference block); `submitted_manual` is the
   existing submitted state renamed where needed
 
-- [ ] Web: `createWebDonationUi` handles new states with PT-PT copy:
+- [x] Web: `createWebDonationUi` handles new states with PT-PT copy:
   - Multibanco: "Entidade: XXXXX · Referência: XXXXXXXXX · Válido até: DD/MM/YYYY"
   - MB WAY: "Aceite o pagamento no número XXXXXXXXX"
 
-- [ ] Mobile: `createMobileDonationUi` handles new states with same PT-PT copy
+- [x] Mobile: `createMobileDonationUi` handles new states with same PT-PT copy
 
-- [ ] Final validation: `npm run typecheck`, `npm run lint`, `npm run test`, `npm run build`
+- [x] Final validation: `npm run typecheck`, `npm run lint`, `npm run test`, `npm run build`
 
 ## Affected Files
 
