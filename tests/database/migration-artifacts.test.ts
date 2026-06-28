@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   assertNonDestructiveMigration,
+  eupagoProviderMigration,
   initialDatabaseMigration,
   manualDonationTierMigration,
   migrationArtifacts,
@@ -25,6 +26,7 @@ describe('database migration artifacts', () => {
       registerUserMigration,
       pushTokensMigration,
       manualDonationTierMigration,
+      eupagoProviderMigration,
     ]);
   });
 
