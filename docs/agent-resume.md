@@ -63,7 +63,7 @@ Do not batch items that can be reviewed or merged independently.
 
 **Repository status**: 2442 tests passing (274 test files). Push notifications complete. Full manual-donation slice complete + fully audit-remediated (all P1–P2 findings from 2026-06-28 audit resolved).
 
-**Main branch HEAD**: PR #273 (fix P2-2 push-token ladder) — `633d823`.
+**Main branch HEAD**: PR #274 (P3 hygiene sweep — helpers consolidated, defensive try/catch, docs) — `1588a22`.
 - `npm run typecheck` ✅
 - `npm run lint` ✅
 - `npm run test` ✅
@@ -465,7 +465,7 @@ Continue Pic4Paws V2 development from main using strict SDD/TDD:
 - Validate: npm run typecheck, lint, test, build
 - After any env.ts change: npm run build --workspace=packages/config
 
-Current state (2026-06-28, HEAD 633d823 / PR #273): 2442 tests passing (274 files).
+Current state (2026-06-28, HEAD 1588a22 / PR #274): 2442 tests passing (274 files).
 Tracks A–H complete. GDPR legal pages done (PR #239). Push notifications done (PRs #240–#244).
 Full manual donation slice done + fully audit-remediated (PRs #245–#256, #261–#267, #272–#274).
 All 2026-06-28 audit findings (P1–P3) resolved.
