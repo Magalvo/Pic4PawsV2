@@ -1,8 +1,9 @@
 ---
 id: EUPAGO-DONATION-CLIENT-001
 title: Eupago — automated donation client + Web + Mobile boundaries
-status: todo
+status: in-review
 depends-on: EUPAGO-REFERENCE-FACTORY-001
+pr: 281
 ---
 
 # Work-Item: EUPAGO-DONATION-CLIENT-001 — Automated Donation Client + UI Boundaries

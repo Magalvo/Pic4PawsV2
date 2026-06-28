@@ -1,8 +1,10 @@
 ---
 id: EUPAGO-CONFIG-WORKER-001
 title: Eupago provider — payment config worker extension
-status: todo
+status: done
 depends-on: EUPAGO-DB-001
+pr: 278
+merged: 2026-06-28
 ---
 
 # Work-Item: EUPAGO-CONFIG-WORKER-001 — Extend Payment Config for Provider Selection

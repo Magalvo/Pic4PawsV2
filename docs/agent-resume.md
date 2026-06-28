@@ -61,9 +61,9 @@ Do not batch items that can be reviewed or merged independently.
 
 ## 4. Current State As Of 2026-06-28
 
-**Repository status**: 2442 tests passing (274 test files). Push notifications complete. Full manual-donation slice complete + fully audit-remediated (all P1–P3 findings from 2026-06-28 audit resolved).
+**Repository status**: 2515 tests passing (279 test files). Push notifications complete. Full manual-donation slice complete + fully audit-remediated. Eupago multi-provider payment support complete through PR #280 (merged); PR #281 (`EUPAGO-DONATION-CLIENT-001`) in review.
 
-**Main branch HEAD**: PR #274 (P3 hygiene sweep — helpers consolidated, defensive try/catch, docs) — `1588a22`.
+**Main branch HEAD**: PR #280 (`EUPAGO-REFERENCE-FACTORY-001` — payment reference factory, Eupago/Ifthenpay adapters, replace 501 stub) — `16602c4`.
 - `npm run typecheck` ✅
 - `npm run lint` ✅
 - `npm run test` ✅
@@ -71,7 +71,7 @@ Do not batch items that can be reviewed or merged independently.
 
 > **Note**: `packages/config/dist/` and `packages/domain/dist/` are gitignored. After pulling or switching branches, run `npm run build -w packages/config` and/or `npm run build -w packages/domain` if typecheck fails on `EnvironmentConfig` or domain types.
 
-**Latest checkpoint**: [2026-06-23-donation-manual-complete.md](docs/checkpoints/2026-06-23-donation-manual-complete.md) — covers PRs #240–#267, 2437 tests
+**Latest checkpoint**: [2026-06-28-eupago-provider-support.md](docs/checkpoints/2026-06-28-eupago-provider-support.md) — covers PRs #276–#281, Eupago multi-provider support
 
 **Latest audit**: [2026-06-28-sdd-audit-prs-257-269.md](docs/audits/2026-06-28-sdd-audit-prs-257-269.md) — score 7/10; P1 (donation_receipt allowlist) closed by PR #272; P2-2 (push-token ladder) closed by PR #273; P3s closed by hygiene sweep. All findings resolved.
 
@@ -250,6 +250,14 @@ Do not batch items that can be reviewed or merged independently.
 - `MOBILE-DONATE-RECEIPT-001` (PR #254) — `comprovativo.tsx` screen; `expo-image-picker`; `isUploading` disabled-button guard; try/catch
 - `WEB-DONATE-REVIEW-001` (PR #255) — `createWebDonationReviewUi`; idle/loading/loaded/approved/rejected/forbidden/failed states; shelter-side review panel
 - `MOBILE-DONATE-REVIEW-001` (PR #256) — `doacoes/[donationId].tsx` screen; `createMobileDonationReviewUi`; `mobileSupabaseClient` singleton; `uiRef` null-guards
+
+**Eupago multi-provider payment support (PRs #276–#280; PR #281 in review)**:
+- PR #276 — spec: SDD update + 4 new Eupago work items
+- `EUPAGO-DB-001` (PR #277) — `shelter_active_provider` enum (`eupago | ifthenpay`); `eupago_api_key_encrypted` + `ifthenpay_api_key_encrypted` columns on `shelter_payment_configs`
+- `EUPAGO-CONFIG-WORKER-001` (PR #278) — `activeProvider` in `GET/PATCH /shelters/:id/payment-config`; AES-256-GCM credential encryption (`encryptCredential`/`decryptCredential`); provider-switch guard; `ShelterPaymentConfigClient` extended with `activeProvider`
+- `EUPAGO-WEBHOOK-001` (PR #279) — isolated per-provider webhook endpoints (`/webhooks/payments/eupago`, `/webhooks/payments/ifthenpay`); `EupagoWebhookVerifier` (query-param `chave` HMAC); per-shelter HMAC key lookup; old `GET /webhooks/payments` retired
+- `EUPAGO-REFERENCE-FACTORY-001` (PR #280) — `PaymentReferenceFactory` interface + `PaymentReferenceInput` + `PaymentReferenceResult` + `PaymentReference` discriminated union (`multibanco | mb_way | bank_transfer`); `createEupagoReferenceAdapter`; `createIfthenpayReferenceAdapter`; `createSupabasePaymentReferenceFactory`; automated-tier 501 stub in `POST /donations` replaced with full PSP flow (create row → call PSP → set `providerPaymentId` or fail)
+- `EUPAGO-DONATION-CLIENT-001` (PR #281, in review) — `DonationClientSuccess` discriminated union on `tier`; `DonationClientPaymentReference` type (`multibanco | mb_way | bank_transfer`); `payment_reference_failed` + `provider_credentials_unavailable` statuses; `submitted_automated` Web + Mobile ViewModel state; pages render Multibanco entity/reference or MB WAY phone
 
 Real UI screens, auth, and navigation (PRs #157–#199):
 
@@ -434,23 +442,26 @@ per deployment.
 
 ## 5. Recommended Next Work Item
 
-**Status as of 2026-06-28**: Tracks A–H complete. GDPR-LEGAL-001 merged (PR #239). Push notifications done (PRs #240–#244). Full manual donation slice done (PRs #245–#256) + fully audit-remediated — all P1/P2/P3 findings from 2026-06-28 audit resolved (PRs #272–#274). 2442 tests passing.
+**Status as of 2026-06-28**: Tracks A–H complete. GDPR-LEGAL-001 merged (PR #239). Push notifications done (PRs #240–#244). Full manual donation slice done (PRs #245–#256) + fully audit-remediated (PRs #272–#274). Eupago multi-provider support done through PR #280; PR #281 (`EUPAGO-DONATION-CLIENT-001`) in review. 2515 tests passing.
+
+**Immediate next step**: merge PR #281 (`EUPAGO-DONATION-CLIENT-001`).
 
 **Production-readiness gaps (confirmed):**
 
 1. ~~**GDPR legal pages**~~ — **Done** (`GDPR-LEGAL-001`, PR #239).
 
-2. **Payment provider env wiring** — `paymentWebhookVerifier` is `null` by factory default; Ifthenpay credentials must be configured in production `.env`. Not a code work item — deployment config. Blocks donations/sponsorships in production.
+2. **Payment provider env wiring** — `PAYMENT_ENCRYPTION_SECRET` must be set in Workers env before any shelter can save Eupago/Ifthenpay credentials. Not a code work item — deployment config. Per-shelter credentials are now stored encrypted in DB; the encryption key must be provisioned before shelters can configure automated payments.
 
-3. ~~**Push notification delivery**~~ — **Done** (PRs #240–#244). `PUSH-TOKEN-WORKER-001` → `PUSH-TOKEN-CLIENT-001` → `PUSH-DISPATCH-001` → `MOBILE-PUSH-001` all merged. `expo-notifications` installed in `apps/mobile`.
+3. ~~**Push notification delivery**~~ — **Done** (PRs #240–#244).
 
 4. **Mobile app store artifacts** — EAS build configuration, app icons, splash screens, bundle identifiers not yet set up. Required before App Store / Play Store submission.
 
-**Recommended next**: consult `docs/work-tracks/remake-foundation.md` for the next planned track. Consider running a fresh SDD audit (`/sdd-audit`) to establish the new baseline before the next feature track begins.
+**Recommended next after PR #281 merges**: run a fresh SDD audit (`/sdd-audit`) to establish the Eupago baseline. The last audit covered PRs #257–#269; the Eupago track (PRs #276–#281) has not yet been audited.
 
 **Known deferred items:**
 - Mobile routing integration test (unauthenticated → redirect → sign-in → `returnTo`) requires React Native Testing Library setup.
 - P2-2 (fragile `isEmailAlreadyRegistered` string matching in `apps/workers/src/user-register-supabase.ts`) — deferred until Supabase SDK upgrade provides a stable error code.
+- End-to-end Eupago smoke test against the real API (staging environment, not yet set up).
 
 ## 6. Handoff Prompt For New Agent Session
 
@@ -465,11 +476,12 @@ Continue Pic4Paws V2 development from main using strict SDD/TDD:
 - Validate: npm run typecheck, lint, test, build
 - After any env.ts change: npm run build --workspace=packages/config
 
-Current state (2026-06-28, HEAD 1588a22 / PR #274): 2442 tests passing (274 files).
+Current state (2026-06-28, HEAD 16602c4 / PR #280): 2515 tests passing (279 files).
 Tracks A–H complete. GDPR legal pages done (PR #239). Push notifications done (PRs #240–#244).
 Full manual donation slice done + fully audit-remediated (PRs #245–#256, #261–#267, #272–#274).
-All 2026-06-28 audit findings (P1–P3) resolved.
-Next: consult docs/work-tracks/remake-foundation.md for the next planned track, or run a
-fresh SDD audit (/sdd-audit) to establish the new baseline before the next feature track.
+Eupago multi-provider support done through PR #280 (DB schema, payment config, webhook isolation,
+payment reference factory). PR #281 (EUPAGO-DONATION-CLIENT-001 — automated donation client +
+Web + Mobile boundaries) is open in review — merge it first, then run a fresh SDD audit
+(/sdd-audit) to establish the Eupago baseline.
 Consult section 5 for the full production-readiness gap list.
 ```

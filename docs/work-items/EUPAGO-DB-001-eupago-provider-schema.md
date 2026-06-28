@@ -1,7 +1,9 @@
 ---
 id: EUPAGO-DB-001
 title: Eupago provider — schema additions
-status: todo
+status: done
+pr: 277
+merged: 2026-06-28
 ---
 
 # Work-Item: EUPAGO-DB-001 — Eupago Provider Schema Additions

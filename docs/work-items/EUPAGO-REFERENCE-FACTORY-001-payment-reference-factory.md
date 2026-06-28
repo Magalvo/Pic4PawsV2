@@ -1,8 +1,10 @@
 ---
 id: EUPAGO-REFERENCE-FACTORY-001
 title: Eupago provider — payment reference factory
-status: todo
+status: done
 depends-on: EUPAGO-CONFIG-WORKER-001
+pr: 280
+merged: 2026-06-28
 ---
 
 # Work-Item: EUPAGO-REFERENCE-FACTORY-001 — Payment Reference Factory
