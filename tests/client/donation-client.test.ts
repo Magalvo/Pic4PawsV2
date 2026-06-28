@@ -1,6 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
 import { createDonationClient } from '../../packages/client/src/index';
-import type { DonationClientSuccess } from '../../packages/client/src/index';
 
 const makeFetch = (status: number, body: unknown) =>
   vi.fn().mockResolvedValue(
@@ -59,10 +58,12 @@ describe('DonationClient contract', () => {
     expect(result.status).toBe('donation_created');
   });
 
-  it('response includes donationId, amountCents, currency, kind, shelterId, createdAt', async () => {
+  it('response includes donationId and manual-tier fields', async () => {
     const fetch = makeFetch(201, successBody);
 
-    const result = (await makeClient(fetch).submitDonation(validInput)) as DonationClientSuccess;
+    const result = await makeClient(fetch).submitDonation(validInput);
+
+    if (!result.ok || result.tier !== 'manual') throw new Error('expected manual success');
 
     expect(result.donationId).toBe('donation-001');
     expect(result.amountCents).toBe(1000);
@@ -70,6 +71,90 @@ describe('DonationClient contract', () => {
     expect(result.kind).toBe('one_time_donation');
     expect(result.shelterId).toBe('shelter-a');
     expect(result.createdAt).toBeTruthy();
+    expect(result.iban).toBe('PT50000201231234567890154');
+  });
+
+  it('automated tier multibanco → ok true with reference.method multibanco', async () => {
+    const fetch = makeFetch(201, {
+      status: 'donation_created',
+      donationId: 'donation-auto-001',
+      tier: 'automated',
+      provider: 'eupago',
+      reference: {
+        method: 'multibanco',
+        entity: '10611',
+        reference: '123456789',
+        expiresAt: '2026-07-01T00:00:00.000Z',
+      },
+    });
+
+    const result = await makeClient(fetch).submitDonation(validInput);
+
+    if (!result.ok || result.tier !== 'automated') throw new Error('expected automated success');
+
+    expect(result.donationId).toBe('donation-auto-001');
+    expect(result.provider).toBe('eupago');
+    expect(result.reference.method).toBe('multibanco');
+    if (result.reference.method === 'multibanco') {
+      expect(result.reference.entity).toBe('10611');
+      expect(result.reference.reference).toBe('123456789');
+      expect(result.reference.expiresAt).toBe('2026-07-01T00:00:00.000Z');
+    }
+  });
+
+  it('automated tier mb_way → ok true with reference.method mb_way', async () => {
+    const fetch = makeFetch(201, {
+      status: 'donation_created',
+      donationId: 'donation-auto-002',
+      tier: 'automated',
+      provider: 'eupago',
+      reference: {
+        method: 'mb_way',
+        phone: '+351910000001',
+        expiresAt: null,
+      },
+    });
+
+    const result = await makeClient(fetch).submitDonation(validInput);
+
+    if (!result.ok || result.tier !== 'automated') throw new Error('expected automated success');
+    expect(result.reference.method).toBe('mb_way');
+    if (result.reference.method === 'mb_way') {
+      expect(result.reference.phone).toBe('+351910000001');
+    }
+  });
+
+  it('automated tier missing reference → worker_response_invalid', async () => {
+    const fetch = makeFetch(201, {
+      status: 'donation_created',
+      donationId: 'donation-auto-003',
+      tier: 'automated',
+      provider: 'eupago',
+      // no reference field
+    });
+
+    const result = await makeClient(fetch).submitDonation(validInput);
+
+    expect(result.ok).toBe(false);
+    expect(result.status).toBe('worker_response_invalid');
+  });
+
+  it('502 payment_reference_failed → client failure with that status', async () => {
+    const fetch = makeFetch(502, { status: 'payment_reference_failed' });
+
+    const result = await makeClient(fetch).submitDonation(validInput);
+
+    expect(result.ok).toBe(false);
+    expect(result.status).toBe('payment_reference_failed');
+  });
+
+  it('503 provider_credentials_unavailable → client failure with that status', async () => {
+    const fetch = makeFetch(503, { status: 'provider_credentials_unavailable' });
+
+    const result = await makeClient(fetch).submitDonation(validInput);
+
+    expect(result.ok).toBe(false);
+    expect(result.status).toBe('provider_credentials_unavailable');
   });
 
   it('constructs URL as {workerBaseUrl}/donations', async () => {

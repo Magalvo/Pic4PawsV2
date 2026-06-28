@@ -1,4 +1,4 @@
-import type { DonationClient, DonationClientFailureStatus, DonationClientInput } from '@pic4paws/client';
+import type { DonationClient, DonationClientFailureStatus, DonationClientInput, DonationClientPaymentReference } from '@pic4paws/client';
 
 export type WebDonationUiContent = {
   locale: 'pt-PT';
@@ -28,6 +28,11 @@ export const webDonationUiContent: WebDonationUiContent = {
       state: 'submitted',
       title: 'Doação recebida!',
       message: 'A tua doação foi processada com sucesso. Obrigado pelo teu apoio!',
+    },
+    {
+      state: 'submitted_automated',
+      title: 'Pagamento iniciado!',
+      message: 'Segue as instruções abaixo para completar o pagamento.',
     },
     {
       state: 'failed',
@@ -62,6 +67,15 @@ export type WebDonationSubmittedState = {
   createdAt: string;
 };
 
+export type WebDonationSubmittedAutomatedState = {
+  state: 'submitted_automated';
+  title: string;
+  message: string;
+  donationId: string;
+  provider: 'eupago' | 'ifthenpay';
+  reference: DonationClientPaymentReference;
+};
+
 export type WebDonationFailedState = {
   state: 'failed';
   title: string;
@@ -75,6 +89,7 @@ export type WebDonationResultViewModel =
   | WebDonationIdleState
   | WebDonationSubmittingState
   | WebDonationSubmittedState
+  | WebDonationSubmittedAutomatedState
   | WebDonationFailedState;
 
 const unsafeReasonMarkers = [
@@ -114,8 +129,19 @@ export const createWebDonationUi = ({
 
   submitDonation: async (
     input: DonationClientInput,
-  ): Promise<WebDonationSubmittedState | WebDonationFailedState> => {
+  ): Promise<WebDonationSubmittedState | WebDonationSubmittedAutomatedState | WebDonationFailedState> => {
     const result = await donationClient.submitDonation(input);
+
+    if (result.ok && result.tier === 'automated') {
+      return {
+        state: 'submitted_automated',
+        title: 'Pagamento iniciado!',
+        message: 'Segue as instruções abaixo para completar o pagamento.',
+        donationId: result.donationId,
+        provider: result.provider,
+        reference: result.reference,
+      };
+    }
 
     if (result.ok) {
       return {
