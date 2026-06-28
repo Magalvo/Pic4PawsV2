@@ -66,7 +66,7 @@ export default function DoacaoReviewScreen() {
               const result = await uiRef.current.approve(donationId);
               setViewModel(result);
             } catch {
-              setViewModel({ state: 'failed', title: 'Erro', message: 'Não foi possível aprovar o donativo.' });
+              setViewModel({ state: 'failed', title: 'Erro', message: 'Não foi possível aprovar o donativo.', status: 'worker_request_failed', reasons: [], canRetry: true });
             }
           },
         },
@@ -91,7 +91,7 @@ export default function DoacaoReviewScreen() {
               const result = await uiRef.current.reject(donationId);
               setViewModel(result);
             } catch {
-              setViewModel({ state: 'failed', title: 'Erro', message: 'Não foi possível rejeitar o donativo.' });
+              setViewModel({ state: 'failed', title: 'Erro', message: 'Não foi possível rejeitar o donativo.', status: 'worker_request_failed', reasons: [], canRetry: true });
             }
           },
         },
