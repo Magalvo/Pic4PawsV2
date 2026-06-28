@@ -1,4 +1,4 @@
-import type { DonationClient, DonationClientFailureStatus, DonationClientInput } from '@pic4paws/client';
+import type { DonationClient, DonationClientFailureStatus, DonationClientInput, DonationClientPaymentReference } from '@pic4paws/client';
 
 export type MobileDonationUiContent = {
   locale: 'pt-PT';
@@ -28,6 +28,11 @@ export const mobileDonationUiContent: MobileDonationUiContent = {
       state: 'submitted',
       title: 'Doação recebida!',
       message: 'A tua doação foi processada com sucesso. Obrigado pelo teu apoio!',
+    },
+    {
+      state: 'submitted_automated',
+      title: 'Pagamento iniciado!',
+      message: 'Segue as instruções abaixo para completar o pagamento.',
     },
     {
       state: 'failed',
@@ -62,6 +67,15 @@ export type MobileDonationSubmittedState = {
   createdAt: string;
 };
 
+export type MobileDonationSubmittedAutomatedState = {
+  state: 'submitted_automated';
+  title: string;
+  message: string;
+  donationId: string;
+  provider: 'eupago' | 'ifthenpay';
+  reference: DonationClientPaymentReference;
+};
+
 export type MobileDonationFailedState = {
   state: 'failed';
   title: string;
@@ -75,6 +89,7 @@ export type MobileDonationResultViewModel =
   | MobileDonationIdleState
   | MobileDonationSubmittingState
   | MobileDonationSubmittedState
+  | MobileDonationSubmittedAutomatedState
   | MobileDonationFailedState;
 
 const unsafeReasonMarkers = [
@@ -114,8 +129,19 @@ export const createMobileDonationUi = ({
 
   submitDonation: async (
     input: DonationClientInput,
-  ): Promise<MobileDonationSubmittedState | MobileDonationFailedState> => {
+  ): Promise<MobileDonationSubmittedState | MobileDonationSubmittedAutomatedState | MobileDonationFailedState> => {
     const result = await donationClient.submitDonation(input);
+
+    if (result.ok && result.tier === 'automated') {
+      return {
+        state: 'submitted_automated',
+        title: 'Pagamento iniciado!',
+        message: 'Segue as instruções abaixo para completar o pagamento.',
+        donationId: result.donationId,
+        provider: result.provider,
+        reference: result.reference,
+      };
+    }
 
     if (result.ok) {
       return {

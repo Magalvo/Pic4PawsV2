@@ -63,14 +63,15 @@ describe('mobile donation UI', () => {
     expect(mobileDonationUiContent.status).toBe('product-flow-ready');
   });
 
-  it('mobileDonationUiContent has all required states: idle, submitting, submitted, failed', () => {
+  it('mobileDonationUiContent has all required states: idle, submitting, submitted, submitted_automated, failed', () => {
     const stateNames = mobileDonationUiContent.states.map((s) => s.state);
 
     expect(stateNames).toContain('idle');
     expect(stateNames).toContain('submitting');
     expect(stateNames).toContain('submitted');
+    expect(stateNames).toContain('submitted_automated');
     expect(stateNames).toContain('failed');
-    expect(stateNames).toHaveLength(4);
+    expect(stateNames).toHaveLength(5);
   });
 
   it('submitDonation with success returns submitted state with all donation fields', async () => {
@@ -163,6 +164,65 @@ describe('mobile donation UI', () => {
     expect(serialized).not.toContain('service-role-secret');
     expect(serialized).not.toContain('r2_secret');
     expect(serialized).not.toContain('bearer abc123');
+  });
+
+  it('automated tier multibanco → submitted_automated state with reference', async () => {
+    const ui = createMobileDonationUi({
+      donationClient: makeDonationClient({
+        ok: true,
+        status: 'donation_created',
+        donationId: 'donation-auto-001',
+        tier: 'automated',
+        provider: 'eupago',
+        reference: { method: 'multibanco', entity: '10611', reference: '123456789', expiresAt: null },
+      }),
+    });
+
+    const state = await ui.submitDonation(validInput);
+
+    expect(state.state).toBe('submitted_automated');
+    if (state.state === 'submitted_automated') {
+      expect(state.donationId).toBe('donation-auto-001');
+      expect(state.provider).toBe('eupago');
+      expect(state.reference.method).toBe('multibanco');
+      expect(state.title).toBeTruthy();
+      expect(state.message).toBeTruthy();
+    }
+  });
+
+  it('payment_reference_failed → failed state with that status', async () => {
+    const ui = createMobileDonationUi({
+      donationClient: makeDonationClient({
+        ok: false,
+        status: 'payment_reference_failed',
+        reasons: ['psp_error'],
+      }),
+    });
+
+    const state = await ui.submitDonation(validInput);
+
+    expect(state.state).toBe('failed');
+    if (state.state === 'failed') {
+      expect(state.status).toBe('payment_reference_failed');
+      expect(state.canRetry).toBe(true);
+    }
+  });
+
+  it('provider_credentials_unavailable → failed state with that status', async () => {
+    const ui = createMobileDonationUi({
+      donationClient: makeDonationClient({
+        ok: false,
+        status: 'provider_credentials_unavailable',
+        reasons: ['provider_credentials_unavailable'],
+      }),
+    });
+
+    const state = await ui.submitDonation(validInput);
+
+    expect(state.state).toBe('failed');
+    if (state.state === 'failed') {
+      expect(state.status).toBe('provider_credentials_unavailable');
+    }
   });
 
   it('mobileDonationUiContent has pt-PT locale and product-flow-ready status', () => {

@@ -98,6 +98,26 @@ export default function DoarPage({ params }: Props) {
     );
   }
 
+  if (viewModel.state === 'submitted_automated') {
+    const ref = viewModel.reference;
+    return (
+      <main>
+        <h1>{viewModel.title}</h1>
+        <p>{viewModel.message}</p>
+        {ref.method === 'multibanco' && (
+          <p>Entidade: {ref.entity} · Referência: {ref.reference}{ref.expiresAt ? ` · Válido até: ${new Date(ref.expiresAt).toLocaleDateString('pt-PT')}` : ''}</p>
+        )}
+        {ref.method === 'mb_way' && (
+          <p>Aceite o pagamento no número {ref.phone}</p>
+        )}
+        {ref.method === 'bank_transfer' && (
+          <p>IBAN: {ref.iban}</p>
+        )}
+        <a href={`/abrigos/${shelterId}`}>Voltar ao abrigo</a>
+      </main>
+    );
+  }
+
   if (viewModel.state === 'failed') {
     return (
       <main>

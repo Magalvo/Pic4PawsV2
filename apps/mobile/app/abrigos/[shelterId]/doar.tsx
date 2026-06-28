@@ -107,6 +107,32 @@ export default function DoarScreen() {
     );
   }
 
+  if (viewModel?.state === 'submitted_automated') {
+    const ref = viewModel.reference;
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.content}>
+          <Text style={styles.title}>{viewModel.title}</Text>
+          <Text style={styles.message}>{viewModel.message}</Text>
+          {ref.method === 'multibanco' && (
+            <Text style={styles.referenceText}>
+              Entidade: {ref.entity} · Referência: {ref.reference}{ref.expiresAt ? ` · Válido até: ${new Date(ref.expiresAt).toLocaleDateString('pt-PT')}` : ''}
+            </Text>
+          )}
+          {ref.method === 'mb_way' && (
+            <Text style={styles.referenceText}>Aceite o pagamento no número {ref.phone}</Text>
+          )}
+          {ref.method === 'bank_transfer' && (
+            <Text style={styles.referenceText}>IBAN: {ref.iban}</Text>
+          )}
+          <TouchableOpacity style={styles.button} onPress={() => router.back()}>
+            <Text style={styles.buttonText}>Voltar ao abrigo</Text>
+          </TouchableOpacity>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   if (viewModel?.state === 'failed') {
     return (
       <SafeAreaView style={styles.container}>
@@ -229,6 +255,7 @@ const styles = StyleSheet.create({
   hint: { color: '#475569', fontSize: 14, lineHeight: 20, marginBottom: 4 },
   message: { color: '#475569', fontSize: 15, lineHeight: 22 },
   amountDisplay: { color: '#0f172a', fontSize: 32, fontWeight: '800', textAlign: 'center', marginVertical: 8 },
+  referenceText: { color: '#0f172a', fontSize: 15, fontWeight: '600', lineHeight: 22, textAlign: 'center', marginVertical: 8 },
   field: { gap: 6 },
   label: { color: '#374151', fontSize: 14, fontWeight: '600', flexShrink: 1 },
   input: {

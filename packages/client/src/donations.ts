@@ -31,25 +31,41 @@ export type DonationClientInput = {
   donorEmail?: string | null;
 };
 
-export type DonationClientSuccess = {
-  ok: true;
-  status: 'donation_created';
-  donationId: string;
-  amountCents: number;
-  currency: string;
-  kind: DonationClientKind;
-  shelterId: string;
-  createdAt: string;
-  tier: 'manual' | 'automated';
-  iban: string | null;
-  mbWayPhone: string | null;
-};
+export type DonationClientPaymentReference =
+  | { method: 'mb_way'; phone: string; expiresAt: string | null }
+  | { method: 'multibanco'; entity: string; reference: string; expiresAt: string | null }
+  | { method: 'bank_transfer'; iban: string };
+
+export type DonationClientSuccess =
+  | {
+      ok: true;
+      status: 'donation_created';
+      donationId: string;
+      tier: 'manual';
+      amountCents: number;
+      currency: string;
+      kind: DonationClientKind;
+      shelterId: string;
+      createdAt: string;
+      iban: string | null;
+      mbWayPhone: string | null;
+    }
+  | {
+      ok: true;
+      status: 'donation_created';
+      donationId: string;
+      tier: 'automated';
+      provider: 'eupago' | 'ifthenpay';
+      reference: DonationClientPaymentReference;
+    };
 
 export type DonationClientFailureStatus =
   | 'unauthenticated'
   | 'invalid_donation'
   | 'donation_repository_not_configured'
   | 'auth_adapter_not_configured'
+  | 'payment_reference_failed'
+  | 'provider_credentials_unavailable'
   | 'worker_request_failed'
   | 'worker_response_invalid';
 
@@ -193,13 +209,46 @@ export type DonationStatusClient = {
 
 // ─── Private helpers ──────────────────────────────────────────────────────────
 
+const parsePaymentReference = (raw: unknown): DonationClientPaymentReference | null => {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const r = raw as Record<string, unknown>;
+  if (r.method === 'multibanco') {
+    if (typeof r.entity !== 'string' || typeof r.reference !== 'string') return null;
+    return { method: 'multibanco', entity: r.entity, reference: r.reference, expiresAt: typeof r.expiresAt === 'string' ? r.expiresAt : null };
+  }
+  if (r.method === 'mb_way') {
+    if (typeof r.phone !== 'string') return null;
+    return { method: 'mb_way', phone: r.phone, expiresAt: typeof r.expiresAt === 'string' ? r.expiresAt : null };
+  }
+  if (r.method === 'bank_transfer') {
+    if (typeof r.iban !== 'string') return null;
+    return { method: 'bank_transfer', iban: r.iban };
+  }
+  return null;
+};
+
 const parseDonationSuccess = (
   body: Record<string, unknown> | null,
 ): DonationClientSuccess | null => {
+  if (!body || body.status !== 'donation_created' || typeof body.donationId !== 'string') {
+    return null;
+  }
+
+  if (body.tier === 'automated') {
+    if (typeof body.provider !== 'string') return null;
+    const reference = parsePaymentReference(body.reference);
+    if (!reference) return null;
+    return {
+      ok: true,
+      status: 'donation_created',
+      donationId: body.donationId,
+      tier: 'automated',
+      provider: body.provider as 'eupago' | 'ifthenpay',
+      reference,
+    };
+  }
+
   if (
-    !body ||
-    body.status !== 'donation_created' ||
-    typeof body.donationId !== 'string' ||
     typeof body.amountCents !== 'number' ||
     typeof body.currency !== 'string' ||
     typeof body.kind !== 'string' ||
@@ -214,12 +263,12 @@ const parseDonationSuccess = (
     ok: true,
     status: 'donation_created',
     donationId: body.donationId,
+    tier: 'manual',
     amountCents: body.amountCents,
     currency: body.currency,
     kind: body.kind as DonationClientKind,
     shelterId: body.shelterId,
     createdAt: body.createdAt,
-    tier: body.tier as 'manual' | 'automated',
     iban: typeof body.iban === 'string' ? body.iban : null,
     mbWayPhone: typeof body.mbWayPhone === 'string' ? body.mbWayPhone : null,
   };
@@ -234,7 +283,9 @@ const parseDonationFailureStatus = (
     status === 'unauthenticated' ||
     status === 'invalid_donation' ||
     status === 'donation_repository_not_configured' ||
-    status === 'auth_adapter_not_configured'
+    status === 'auth_adapter_not_configured' ||
+    status === 'payment_reference_failed' ||
+    status === 'provider_credentials_unavailable'
   ) {
     return status;
   }
