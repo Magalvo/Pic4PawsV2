@@ -48,13 +48,13 @@ export const handleWorkerPushTokenRequest = async ({
     );
   }
 
+  if (!authenticator) {
+    return jsonResponse({ status: 'auth_adapter_not_configured' }, { status: 501 });
+  }
+
   const bearerToken = extractBearerToken(request);
   if (!bearerToken) {
     return jsonResponse({ status: 'unauthenticated' }, { status: 401 });
-  }
-
-  if (!authenticator) {
-    return jsonResponse({ status: 'auth_adapter_not_configured' }, { status: 501 });
   }
 
   const authorizationHeader = request.headers.get('Authorization') ?? '';
