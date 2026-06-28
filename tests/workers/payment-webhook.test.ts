@@ -200,12 +200,12 @@ describe('handleWorkerPaymentWebhookRequest', () => {
     });
   });
 
-  it('reads eupago signature from x-eupago-signature header', async () => {
+  it('reads eupago signature from X-Signature header (Realtime Webhooks 2.0)', async () => {
     const verifier = makeVerifier(sampleParsedEvent);
     const repo = makeRepository();
 
     await handleWorkerPaymentWebhookRequest({
-      request: makeRequest({ 'x-eupago-signature': 'eupago-sig-value' }),
+      request: makeRequest({ 'X-Signature': 'eupago-sig-value' }),
       rawBody: '{}',
       provider: 'eupago',
       webhookSecret: 'eupago-secret',
@@ -243,7 +243,7 @@ describe('handleWorkerPaymentWebhookRequest', () => {
   });
 
   it('PROVIDER_SIGNATURE_HEADERS exports correct header names for all providers', () => {
-    expect(PROVIDER_SIGNATURE_HEADERS.eupago).toBe('x-eupago-signature');
+    expect(PROVIDER_SIGNATURE_HEADERS.eupago).toBe('X-Signature');
     expect(PROVIDER_SIGNATURE_HEADERS.ifthenpay).toBeNull();
     expect(PROVIDER_SIGNATURE_HEADERS.stripe).toBe('stripe-signature');
   });

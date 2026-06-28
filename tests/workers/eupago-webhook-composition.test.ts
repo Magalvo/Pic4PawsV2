@@ -43,7 +43,8 @@ const validEupagoEnv: WorkerEnv = {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const computeHmacHex = async (data: string, secret: string): Promise<string> => {
+// Eupago Realtime Webhooks 2.0 — HMAC-SHA256, base64-encoded, X-Signature header
+const computeHmacBase64 = async (data: string, secret: string): Promise<string> => {
   const key = await crypto.subtle.importKey(
     'raw',
     new TextEncoder().encode(secret),
@@ -52,19 +53,32 @@ const computeHmacHex = async (data: string, secret: string): Promise<string> => 
     ['sign'],
   );
   const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(data));
-  return Array.from(new Uint8Array(sig))
-    .map((b) => b.toString(16).padStart(2, '0'))
-    .join('');
+  return btoa(String.fromCharCode(...new Uint8Array(sig)));
 };
 
-const makeBody = (transactionId = TRANSACTION_ID) =>
+const makeBodyMbWay = (transactionId = TRANSACTION_ID, status = 'Paid') =>
   JSON.stringify({
-    transactionId,
-    value: '15.00',
-    status: 'Success',
-    date: '2026-06-28',
-    method: 'MBW',
-    alias: '+351910000001',
+    transactions: {
+      transactionId,
+      value: '15.00',
+      status,
+      date: '2026-06-28',
+      method: 'MBW',
+      alias: '+351910000001',
+    },
+  });
+
+const makeBodyMultibanco = (transactionId = TRANSACTION_ID, status = 'Paid') =>
+  JSON.stringify({
+    transactions: {
+      transactionId,
+      value: '15.00',
+      status,
+      date: '2026-06-28',
+      method: 'MB',
+      entity: '10611',
+      reference: '123456789',
+    },
   });
 
 // ─── Setup ────────────────────────────────────────────────────────────────────
@@ -109,9 +123,9 @@ beforeEach(() => {
 // ─── Tests ────────────────────────────────────────────────────────────────────
 
 describe('Worker Eupago webhook composition', () => {
-  it('valid callback with correct HMAC → 200 webhook_accepted', async () => {
-    const body = makeBody();
-    const sig = await computeHmacHex(body, EUPAGO_WEBHOOK_SECRET);
+  it('MB WAY Paid callback with correct base64 HMAC → 200 webhook_accepted', async () => {
+    const body = makeBodyMbWay();
+    const sig = await computeHmacBase64(body, EUPAGO_WEBHOOK_SECRET);
     supabaseMock.createClient.mockReturnValue({
       auth: { getUser: vi.fn() },
       from: makeFromMock(),
@@ -121,7 +135,29 @@ describe('Worker Eupago webhook composition', () => {
     const res = await worker.fetch(
       new Request('https://worker.test/webhooks/payments/eupago', {
         method: 'POST',
-        headers: { 'x-eupago-signature': sig, 'Content-Type': 'application/json' },
+        headers: { 'X-Signature': sig, 'Content-Type': 'application/json' },
+        body,
+      }),
+      validEupagoEnv,
+    );
+
+    expect(res.status).toBe(200);
+    await expect(res.json()).resolves.toMatchObject({ status: 'webhook_accepted' });
+  });
+
+  it('Multibanco Paid callback with correct base64 HMAC → 200 webhook_accepted', async () => {
+    const body = makeBodyMultibanco();
+    const sig = await computeHmacBase64(body, EUPAGO_WEBHOOK_SECRET);
+    supabaseMock.createClient.mockReturnValue({
+      auth: { getUser: vi.fn() },
+      from: makeFromMock(),
+      rpc: supabaseMock.rpc,
+    });
+
+    const res = await worker.fetch(
+      new Request('https://worker.test/webhooks/payments/eupago', {
+        method: 'POST',
+        headers: { 'X-Signature': sig, 'Content-Type': 'application/json' },
         body,
       }),
       validEupagoEnv,
@@ -132,8 +168,8 @@ describe('Worker Eupago webhook composition', () => {
   });
 
   it('accepts a valid callback when the primary provider is Ifthenpay', async () => {
-    const body = makeBody();
-    const sig = await computeHmacHex(body, EUPAGO_WEBHOOK_SECRET);
+    const body = makeBodyMbWay();
+    const sig = await computeHmacBase64(body, EUPAGO_WEBHOOK_SECRET);
     supabaseMock.createClient.mockReturnValue({
       auth: { getUser: vi.fn() },
       from: makeFromMock(),
@@ -143,7 +179,7 @@ describe('Worker Eupago webhook composition', () => {
     const res = await worker.fetch(
       new Request('https://worker.test/webhooks/payments/eupago', {
         method: 'POST',
-        headers: { 'x-eupago-signature': sig, 'Content-Type': 'application/json' },
+        headers: { 'X-Signature': sig, 'Content-Type': 'application/json' },
         body,
       }),
       {
@@ -158,8 +194,8 @@ describe('Worker Eupago webhook composition', () => {
     await expect(res.json()).resolves.toMatchObject({ status: 'webhook_accepted' });
   });
 
-  it('invalid signature → 401', async () => {
-    const body = makeBody();
+  it('invalid base64 signature → 401', async () => {
+    const body = makeBodyMbWay();
     supabaseMock.createClient.mockReturnValue({
       auth: { getUser: vi.fn() },
       from: makeFromMock(),
@@ -169,7 +205,157 @@ describe('Worker Eupago webhook composition', () => {
     const res = await worker.fetch(
       new Request('https://worker.test/webhooks/payments/eupago', {
         method: 'POST',
-        headers: { 'x-eupago-signature': 'baadsignature00', 'Content-Type': 'application/json' },
+        headers: { 'X-Signature': 'aW52YWxpZHNpZ25hdHVyZQ==', 'Content-Type': 'application/json' },
+        body,
+      }),
+      validEupagoEnv,
+    );
+
+    expect(res.status).toBe(401);
+  });
+
+  it('Refund status → 200 accepted with newStatus refunded', async () => {
+    const body = makeBodyMbWay(TRANSACTION_ID, 'Refund');
+    const sig = await computeHmacBase64(body, EUPAGO_WEBHOOK_SECRET);
+    supabaseMock.rpc.mockResolvedValueOnce({
+      data: {
+        already_processed: false,
+        donation_found: true,
+        previous_status: 'paid',
+        new_status: 'refunded',
+        processed_at: '2026-06-28T13:00:00.000Z',
+        financial_timestamp: '2026-06-28T13:00:00.000Z',
+        raw_provider_event_ids: [`${TRANSACTION_ID}:refund`],
+      },
+      error: null,
+    });
+    supabaseMock.createClient.mockReturnValue({
+      auth: { getUser: vi.fn() },
+      from: makeFromMock(),
+      rpc: supabaseMock.rpc,
+    });
+
+    const res = await worker.fetch(
+      new Request('https://worker.test/webhooks/payments/eupago', {
+        method: 'POST',
+        headers: { 'X-Signature': sig, 'Content-Type': 'application/json' },
+        body,
+      }),
+      validEupagoEnv,
+    );
+
+    expect(res.status).toBe(200);
+    await expect(res.json()).resolves.toMatchObject({ status: 'webhook_accepted' });
+  });
+
+  it('Cancel status → 200 accepted with newStatus cancelled', async () => {
+    const body = makeBodyMbWay(TRANSACTION_ID, 'Cancel');
+    const sig = await computeHmacBase64(body, EUPAGO_WEBHOOK_SECRET);
+    supabaseMock.rpc.mockResolvedValueOnce({
+      data: {
+        already_processed: false,
+        donation_found: true,
+        previous_status: 'pending_payment',
+        new_status: 'cancelled',
+        processed_at: '2026-06-28T13:00:00.000Z',
+        financial_timestamp: null,
+        raw_provider_event_ids: [`${TRANSACTION_ID}:cancel`],
+      },
+      error: null,
+    });
+    supabaseMock.createClient.mockReturnValue({
+      auth: { getUser: vi.fn() },
+      from: makeFromMock(),
+      rpc: supabaseMock.rpc,
+    });
+
+    const res = await worker.fetch(
+      new Request('https://worker.test/webhooks/payments/eupago', {
+        method: 'POST',
+        headers: { 'X-Signature': sig, 'Content-Type': 'application/json' },
+        body,
+      }),
+      validEupagoEnv,
+    );
+
+    expect(res.status).toBe(200);
+    await expect(res.json()).resolves.toMatchObject({ status: 'webhook_accepted' });
+  });
+
+  it('Error status → 200 accepted with newStatus failed', async () => {
+    const body = makeBodyMbWay(TRANSACTION_ID, 'Error');
+    const sig = await computeHmacBase64(body, EUPAGO_WEBHOOK_SECRET);
+    supabaseMock.rpc.mockResolvedValueOnce({
+      data: {
+        already_processed: false,
+        donation_found: true,
+        previous_status: 'pending_payment',
+        new_status: 'failed',
+        processed_at: '2026-06-28T13:00:00.000Z',
+        financial_timestamp: null,
+        raw_provider_event_ids: [`${TRANSACTION_ID}:error`],
+      },
+      error: null,
+    });
+    supabaseMock.createClient.mockReturnValue({
+      auth: { getUser: vi.fn() },
+      from: makeFromMock(),
+      rpc: supabaseMock.rpc,
+    });
+
+    const res = await worker.fetch(
+      new Request('https://worker.test/webhooks/payments/eupago', {
+        method: 'POST',
+        headers: { 'X-Signature': sig, 'Content-Type': 'application/json' },
+        body,
+      }),
+      validEupagoEnv,
+    );
+
+    expect(res.status).toBe(200);
+    await expect(res.json()).resolves.toMatchObject({ status: 'webhook_accepted' });
+  });
+
+  it('flat payload (legacy format) → 401 (schema rejected before signature check)', async () => {
+    const legacyBody = JSON.stringify({
+      transactionId: TRANSACTION_ID,
+      value: '15.00',
+      status: 'Success',
+      date: '2026-06-28',
+      method: 'MBW',
+    });
+    const sig = await computeHmacBase64(legacyBody, EUPAGO_WEBHOOK_SECRET);
+    supabaseMock.createClient.mockReturnValue({
+      auth: { getUser: vi.fn() },
+      from: makeFromMock(),
+      rpc: supabaseMock.rpc,
+    });
+
+    const res = await worker.fetch(
+      new Request('https://worker.test/webhooks/payments/eupago', {
+        method: 'POST',
+        headers: { 'X-Signature': sig, 'Content-Type': 'application/json' },
+        body: legacyBody,
+      }),
+      validEupagoEnv,
+    );
+
+    expect(res.status).toBe(401);
+  });
+
+  it('old x-eupago-signature header (renamed) → 401', async () => {
+    const body = makeBodyMbWay();
+    const sig = await computeHmacBase64(body, EUPAGO_WEBHOOK_SECRET);
+    supabaseMock.createClient.mockReturnValue({
+      auth: { getUser: vi.fn() },
+      from: makeFromMock(),
+      rpc: supabaseMock.rpc,
+    });
+
+    const res = await worker.fetch(
+      new Request('https://worker.test/webhooks/payments/eupago', {
+        method: 'POST',
+        headers: { 'x-eupago-signature': sig, 'Content-Type': 'application/json' },
         body,
       }),
       validEupagoEnv,

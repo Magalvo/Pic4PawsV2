@@ -89,7 +89,8 @@ export const handle = async (
     let transactionId: string | null = null;
     try {
       const body = JSON.parse(rawBody) as Record<string, unknown>;
-      transactionId = typeof body.transactionId === 'string' ? body.transactionId : null;
+      const tx = body.transactions as Record<string, unknown> | undefined;
+      transactionId = tx && typeof tx.transactionId === 'string' ? tx.transactionId : null;
     } catch { /* keep null */ }
 
     const resolved = resolveWorkerRequestDependencies({ config, dependencies });

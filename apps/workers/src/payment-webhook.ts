@@ -57,7 +57,7 @@ export type PaymentWebhookRepository = {
 };
 
 export const PROVIDER_SIGNATURE_HEADERS: Record<DonationProvider, string | null> = {
-  eupago: 'x-eupago-signature',
+  eupago: 'X-Signature',
   ifthenpay: null,
   stripe: 'stripe-signature',
 };
