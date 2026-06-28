@@ -180,4 +180,21 @@ describe('worker media upload request contract', () => {
       reasons: ['signed_upload_requires_configured_signer'],
     });
   });
+
+  it('accepts donation_receipt as a valid purpose', async () => {
+    const parsed = parseEnvironmentConfig(developmentEnv);
+    expect(parsed.ok).toBe(true);
+    if (!parsed.ok) return;
+
+    const result = await createWorkerMediaUploadIntent({
+      payload: { ...validUploadPayload, purpose: 'donation_receipt', requestedVisibility: 'private' },
+      config: parsed.config,
+      now: '2026-06-28T00:00:00.000Z',
+    });
+
+    // donation_receipt is a valid purpose — invalid_purpose must not appear
+    if (!result.ok) {
+      expect(result.reasons).not.toContain('invalid_purpose');
+    }
+  });
 });
