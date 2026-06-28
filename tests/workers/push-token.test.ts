@@ -125,6 +125,19 @@ describe('handleWorkerPushTokenRequest — auth ladder', () => {
     expect(body.status).toBe('auth_adapter_not_configured');
   });
 
+  it('returns 501 before 401 when authenticator is missing and bearer is absent (ladder order)', async () => {
+    // No bearer token AND no authenticator — spec ladder: 501 before 401.
+    // Would return 401 if the bearer check ran first (the bug N-02 described).
+    const res = await handleWorkerPushTokenRequest({
+      request: makeRequest('POST', undefined, { token: 't', platform: 'expo' }),
+      pushTokenRepository: makeRepo(),
+      authenticator: undefined,
+    });
+    expect(res.status).toBe(501);
+    const body = await res.json();
+    expect(body.status).toBe('auth_adapter_not_configured');
+  });
+
   it('returns 401 when actor resolves to null (POST)', async () => {
     const res = await handleWorkerPushTokenRequest({
       request: makeRequest('POST', undefined, { token: 't', platform: 'expo' }, 'tok'),
