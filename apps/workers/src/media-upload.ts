@@ -105,6 +105,7 @@ const mediaUploadPurposes: MediaUploadPurpose[] = [
   'adoption_document',
   'identity_document',
   'medical_record',
+  'donation_receipt',
 ];
 
 const mediaVisibilities: MediaVisibility[] = ['public', 'private'];
