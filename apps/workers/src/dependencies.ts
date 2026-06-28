@@ -81,6 +81,8 @@ import type { ShelterPaymentConfigRepository } from './shelter-payment-config';
 import { createSupabaseShelterPaymentConfigRepositories } from './shelter-payment-config-supabase';
 import type { DonationManualRepository } from './donation-manual';
 import { createSupabaseDonationManualRepositories } from './donation-manual-supabase';
+import type { EupagoWebhookRepository } from './eupago-webhook-supabase';
+import { createEupagoWebhookRepositories } from './eupago-webhook-supabase';
 
 export type WorkerSupabaseTableQueryLike = SupabaseAuthTableQueryLike & SupabaseTableQueryLike;
 
@@ -139,6 +141,7 @@ export type WorkerRequestDependencies = {
   pushNotificationProvider?: PushNotificationProvider;
   shelterPaymentConfigRepository?: ShelterPaymentConfigRepository;
   donationManualRepository?: DonationManualRepository;
+  eupagoWebhookRepository?: EupagoWebhookRepository;
   supabaseClientFactory?: WorkerSupabaseClientFactory;
   now?: () => string;
 };
@@ -211,6 +214,7 @@ export const createWorkerSupabaseDependencies = ({
     const pushTokenRepositories = createSupabasePushTokenRepositories({ client });
     const shelterPaymentConfigRepositories = createSupabaseShelterPaymentConfigRepositories({ client });
     const donationManualRepositories = createSupabaseDonationManualRepositories({ client });
+    const eupagoWebhookRepo = createEupagoWebhookRepositories({ client });
     const notificationRepositories = createSupabaseNotificationRepositories({
       client,
       notificationPreferencesRepository: notificationPreferencesRepositories.notificationPreferencesRepository,
@@ -257,6 +261,7 @@ export const createWorkerSupabaseDependencies = ({
       pushTokenRepository: pushTokenRepositories.pushTokenRepository,
       shelterPaymentConfigRepository: shelterPaymentConfigRepositories.shelterPaymentConfigRepository,
       donationManualRepository: donationManualRepositories.donationManualRepository,
+      eupagoWebhookRepository: eupagoWebhookRepo,
       // paymentWebhookVerifier is intentionally NOT set here — it is provider-SDK-specific
       // and must be injected by the production fetch handler or tests
       now,
@@ -371,5 +376,7 @@ export const resolveWorkerRequestDependencies = ({
       dependencies.shelterPaymentConfigRepository ?? supabaseDependencies.shelterPaymentConfigRepository,
     donationManualRepository:
       dependencies.donationManualRepository ?? supabaseDependencies.donationManualRepository,
+    eupagoWebhookRepository:
+      dependencies.eupagoWebhookRepository ?? supabaseDependencies.eupagoWebhookRepository,
   };
 };

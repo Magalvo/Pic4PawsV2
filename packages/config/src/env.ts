@@ -38,6 +38,7 @@ const environmentSchema = z
     IFTHENPAY_WEBHOOK_SECRET: optionalSecret,
     STRIPE_SECRET_KEY: optionalSecret,
     STRIPE_WEBHOOK_SECRET: optionalSecret,
+    ENCRYPTION_SECRET: optionalSecret,
   })
   .superRefine((env, context) => {
     const providerRequirements = {
@@ -97,6 +98,7 @@ export type EnvironmentConfig = {
     ifthenpayWebhookSecret: string | null;
     stripeSecretKey: string | null;
     stripeWebhookSecret: string | null;
+    encryptionSecret: string | null;
   };
 };
 
@@ -171,6 +173,7 @@ export const parseEnvironmentConfig = (
         ifthenpayWebhookSecret: optionalSecretToNullable(env.IFTHENPAY_WEBHOOK_SECRET),
         stripeSecretKey: optionalSecretToNullable(env.STRIPE_SECRET_KEY),
         stripeWebhookSecret: optionalSecretToNullable(env.STRIPE_WEBHOOK_SECRET),
+        encryptionSecret: optionalSecretToNullable(env.ENCRYPTION_SECRET),
       },
     },
   };
@@ -202,5 +205,6 @@ export const redactEnvironmentConfig = (config: EnvironmentConfig): EnvironmentC
     ifthenpayWebhookSecret: redactSecret(config.payments.ifthenpayWebhookSecret),
     stripeSecretKey: redactSecret(config.payments.stripeSecretKey),
     stripeWebhookSecret: redactSecret(config.payments.stripeWebhookSecret),
+    encryptionSecret: redactSecret(config.payments.encryptionSecret),
   },
 });

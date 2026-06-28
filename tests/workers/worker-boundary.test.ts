@@ -65,9 +65,9 @@ describe('worker health boundary', () => {
 });
 
 describe('worker payment webhook boundary', () => {
-  it('uses the validated environment webhook path and rejects GET for POST providers', async () => {
+  it('eupago route rejects GET → 405', async () => {
     const response = await handleWorkerRequest(
-      new Request('https://worker.test/webhooks/payments'),
+      new Request('https://worker.test/webhooks/payments/eupago'),
       { ...validEnv, PAYMENT_WEBHOOKS_ENABLED: 'true' },
     );
 
@@ -79,22 +79,9 @@ describe('worker payment webhook boundary', () => {
     });
   });
 
-  it('allows GET for Ifthenpay callbacks and reaches verifier composition', async () => {
+  it('ifthenpay route rejects POST → 405', async () => {
     const response = await handleWorkerRequest(
-      new Request('https://worker.test/webhooks/payments?key=ifthenpay-anti-phishing-key'),
-      { ...validIfthenpayEnv, PAYMENT_WEBHOOKS_ENABLED: 'true' },
-    );
-
-    expect(response.status).toBe(501);
-    await expect(json(response)).resolves.toEqual({
-      status: 'payment_webhook_verifier_not_configured',
-      provider: 'ifthenpay',
-    });
-  });
-
-  it('rejects POST for Ifthenpay callbacks', async () => {
-    const response = await handleWorkerRequest(
-      new Request('https://worker.test/webhooks/payments', {
+      new Request('https://worker.test/webhooks/payments/ifthenpay', {
         method: 'POST',
         body: '{}',
       }),
@@ -109,29 +96,11 @@ describe('worker payment webhook boundary', () => {
     });
   });
 
-  it('reads raw body and defers to verifier — non-JSON body still reaches 501 without adapter', async () => {
-    // The webhook handler reads the raw body as text for signature verification.
-    // Without a PaymentWebhookVerifier injected, any body (even non-JSON) → 501.
+  it('eupago route blocks when webhooks are disabled → 503', async () => {
     const response = await handleWorkerRequest(
-      new Request('https://worker.test/webhooks/payments', {
+      new Request('https://worker.test/webhooks/payments/eupago', {
         method: 'POST',
-        body: '{not-json',
-      }),
-      { ...validEnv, PAYMENT_WEBHOOKS_ENABLED: 'true' },
-    );
-
-    expect(response.status).toBe(501);
-    await expect(json(response)).resolves.toEqual({
-      status: 'payment_webhook_verifier_not_configured',
-      provider: 'eupago',
-    });
-  });
-
-  it('blocks payment webhooks by default until provider verification is operationally enabled', async () => {
-    const response = await handleWorkerRequest(
-      new Request('https://worker.test/webhooks/payments', {
-        method: 'POST',
-        body: JSON.stringify({ providerEventId: 'evt-1', status: 'paid' }),
+        body: JSON.stringify({ transactionId: 'txn-1' }),
       }),
       validEnv,
     );
@@ -143,19 +112,41 @@ describe('worker payment webhook boundary', () => {
     });
   });
 
-  it('does not silently fall back to provider_adapter_not_configured when enabled without verifier', async () => {
+  it('ifthenpay route blocks when webhooks are disabled → 503', async () => {
     const response = await handleWorkerRequest(
-      new Request('https://worker.test/webhooks/payments', {
+      new Request('https://worker.test/webhooks/payments/ifthenpay?key=k&requestId=r'),
+      validIfthenpayEnv,
+    );
+
+    expect(response.status).toBe(503);
+    await expect(json(response)).resolves.toEqual({
+      status: 'payment_webhooks_disabled',
+      provider: 'ifthenpay',
+    });
+  });
+
+  it('eupago route with non-JSON body → 401 (cannot extract transactionId)', async () => {
+    const response = await handleWorkerRequest(
+      new Request('https://worker.test/webhooks/payments/eupago', {
         method: 'POST',
-        body: JSON.stringify({ providerEventId: 'evt-1', status: 'paid' }),
+        body: '{not-json',
       }),
       { ...validEnv, PAYMENT_WEBHOOKS_ENABLED: 'true' },
     );
 
-    expect(response.status).toBe(501);
+    expect(response.status).toBe(401);
     await expect(json(response)).resolves.toEqual({
-      status: 'payment_webhook_verifier_not_configured',
-      provider: 'eupago',
+      status: 'webhook_signature_invalid',
     });
+  });
+
+  it('legacy GET /webhooks/payments → 410 gone', async () => {
+    const response = await handleWorkerRequest(
+      new Request('https://worker.test/webhooks/payments'),
+      { ...validEnv, PAYMENT_WEBHOOKS_ENABLED: 'true' },
+    );
+
+    expect(response.status).toBe(410);
+    await expect(json(response)).resolves.toMatchObject({ status: 'gone' });
   });
 });

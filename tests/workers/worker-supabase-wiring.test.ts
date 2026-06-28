@@ -256,6 +256,7 @@ describe('Worker Supabase dependency wiring', () => {
           ifthenpayWebhookSecret: null,
           stripeSecretKey: null,
           stripeWebhookSecret: null,
+          encryptionSecret: null,
         },
       },
       supabaseClientFactory: (input) => {
@@ -396,6 +397,7 @@ describe('Worker Supabase dependency wiring', () => {
             ifthenpayWebhookSecret: null,
             stripeSecretKey: null,
             stripeWebhookSecret: null,
+            encryptionSecret: null,
           },
         },
         supabaseClientFactory: () => {
