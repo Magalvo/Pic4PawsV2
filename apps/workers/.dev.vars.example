@@ -1,0 +1,28 @@
+# Wrangler local dev secrets — copy to .dev.vars and fill in real values.
+# Never commit .dev.vars.
+
+# Supabase — from `supabase status`
+SUPABASE_URL=http://127.0.0.1:54321
+SUPABASE_ANON_KEY=replace-with-anon-key
+SUPABASE_SERVICE_ROLE_KEY=replace-with-service-role-key
+
+# Cloudflare — Account ID from the dashboard URL
+CLOUDFLARE_ACCOUNT_ID=replace-with-cloudflare-account-id
+
+# R2 API token — Access Key ID + Secret from R2 > Manage API Tokens
+R2_ACCESS_KEY_ID=replace-with-r2-access-key-id
+R2_SECRET_ACCESS_KEY=replace-with-r2-secret-access-key
+
+# Payment provider keys — for local dev without real payments use any non-empty placeholder.
+# Must match the PAYMENT_PRIMARY_PROVIDER set in wrangler.toml.
+STRIPE_SECRET_KEY=sk_test_placeholder
+STRIPE_WEBHOOK_SECRET=whsec_placeholder
+EUPAGO_API_KEY=
+EUPAGO_WEBHOOK_SECRET=
+IFTHENPAY_MB_KEY=
+IFTHENPAY_MBWAY_KEY=
+IFTHENPAY_WEBHOOK_SECRET=
+
+# Credential encryption key — 64 lowercase hex chars (32 bytes for AES-256-GCM).
+# Leave empty in dev unless testing payment config encryption.
+ENCRYPTION_SECRET=

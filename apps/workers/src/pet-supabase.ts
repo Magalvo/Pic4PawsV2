@@ -185,6 +185,7 @@ const assertSupabaseResult = <TData>(
   failureMessage: string,
 ): TData => {
   if (result.error) {
+    console.error('[supabase]', failureMessage, result.error);
     throw new SupabasePetRepositoryError(failureMessage);
   }
 

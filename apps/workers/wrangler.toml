@@ -1,0 +1,21 @@
+name = "pic4paws-workers"
+main = "src/index.ts"
+compatibility_date = "2026-06-23"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+APP_ENV = "development"
+PUBLIC_APP_ORIGIN = "http://localhost:3000"
+WORKER_PAYMENT_WEBHOOK_PATH = "/webhooks/payments"
+WORKER_MEDIA_UPLOAD_PATH = "/uploads/media"
+WORKER_PET_DRAFTS_PATH = "/pets/drafts"
+WORKER_PET_FEED_PATH = "/pets"
+WORKER_SHELTER_PATH = "/shelters"
+WORKER_ADOPTIONS_PATH = "/adoptions"
+WORKER_DONATIONS_PATH = "/donations"
+WORKER_SPONSORSHIPS_PATH = "/sponsorships"
+WORKER_NOTIFICATIONS_PATH = "/notifications"
+PAYMENT_PRIMARY_PROVIDER = "stripe"
+PAYMENT_WEBHOOKS_ENABLED = "false"
+R2_PUBLIC_BUCKET = "pic4paws-public-dev"
+R2_PRIVATE_BUCKET = "pic4paws-private-dev"

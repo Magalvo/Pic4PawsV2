@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { validateNextPath } from './src/nav';
 
 function isPublicRoute(pathname: string): boolean {
+  if (pathname === '/') return true;
   if (pathname === '/entrar') return true;
   if (pathname === '/animais') return true;
   if (/^\/animais\/[^/]+$/.test(pathname)) return true;

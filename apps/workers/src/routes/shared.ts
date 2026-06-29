@@ -1,13 +1,13 @@
 import type { parseEnvironmentConfig } from '@pic4paws/config';
 import type { WorkerRequestDependencies } from '../dependencies';
-import { jsonResponse, extractBearerToken } from '../http';
+import { jsonResponse, extractBearerToken, corsPreflightResponse, withCors } from '../http';
 
 export type WorkerParsedConfig = Extract<
   ReturnType<typeof parseEnvironmentConfig>,
   { ok: true }
 >['config'];
 
-export { jsonResponse };
+export { jsonResponse, corsPreflightResponse, withCors };
 
 export const parseJsonBody = async (request: Request): Promise<unknown | null> => {
   try {
