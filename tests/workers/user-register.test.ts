@@ -200,7 +200,7 @@ describe('handleWorkerUserRegisterRequest', () => {
 
 const FAKE_AUTH_USER_ID = '00000000-0000-0000-0000-000000000001';
 
-const makeAdminResult = (error: { message?: string } | null = null) => ({
+const makeAdminResult = (error: { message?: string; code?: string } | null = null) => ({
   data: error ? null : { user: { id: FAKE_AUTH_USER_ID } },
   error,
 });
@@ -269,22 +269,31 @@ describe('createSupabaseUserRegistrationRepositories', () => {
     expect(result.ok).toBe(true);
   });
 
-  it('returns email_already_registered when admin API reports user already registered', async () => {
+  it('returns email_already_registered when admin API returns user_already_exists code', async () => {
     const { userRegistrationRepository } = createSupabaseUserRegistrationRepositories({
-      client: makeClient(makeAdminResult({ message: 'User already registered' })),
+      client: makeClient(makeAdminResult({ message: 'User already registered', code: 'user_already_exists' })),
     });
     const result = await userRegistrationRepository.registerUser(registrationInput, registrationNow);
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.reason).toBe('email_already_registered');
   });
 
-  it('returns email_already_registered for case-insensitive match', async () => {
+  it('returns email_already_registered regardless of message text when code is user_already_exists', async () => {
     const { userRegistrationRepository } = createSupabaseUserRegistrationRepositories({
-      client: makeClient(makeAdminResult({ message: 'USER ALREADY REGISTERED in auth' })),
+      client: makeClient(makeAdminResult({ message: 'some future message wording', code: 'user_already_exists' })),
     });
     const result = await userRegistrationRepository.registerUser(registrationInput, registrationNow);
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.reason).toBe('email_already_registered');
+  });
+
+  it('throws when message contains "already registered" but code is absent — no string-sniff fallback', async () => {
+    const { userRegistrationRepository } = createSupabaseUserRegistrationRepositories({
+      client: makeClient(makeAdminResult({ message: 'User already registered' })),
+    });
+    await expect(
+      userRegistrationRepository.registerUser(registrationInput, registrationNow),
+    ).rejects.toThrow(SupabaseUserRegistrationRepositoryError);
   });
 
   it('throws SupabaseUserRegistrationRepositoryError on unknown admin API error', async () => {
@@ -322,7 +331,7 @@ describe('createSupabaseUserRegistrationRepositories', () => {
   });
 
   it('does not call RPC when admin API fails', async () => {
-    const client = makeClient(makeAdminResult({ message: 'User already registered' }));
+    const client = makeClient(makeAdminResult({ message: 'User already registered', code: 'user_already_exists' }));
     const { userRegistrationRepository } = createSupabaseUserRegistrationRepositories({ client });
 
     await userRegistrationRepository.registerUser(registrationInput, registrationNow);
