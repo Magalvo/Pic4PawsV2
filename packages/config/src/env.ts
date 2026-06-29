@@ -44,7 +44,8 @@ const environmentSchema = z
     PAYMENT_WEBHOOKS_ENABLED: booleanFlag,
     EUPAGO_API_KEY: optionalSecret,
     EUPAGO_WEBHOOK_SECRET: optionalSecret,
-    IFTHENPAY_API_KEY: optionalSecret,
+    IFTHENPAY_MB_KEY: optionalSecret,
+    IFTHENPAY_MBWAY_KEY: optionalSecret,
     IFTHENPAY_WEBHOOK_SECRET: optionalSecret,
     STRIPE_SECRET_KEY: optionalSecret,
     STRIPE_WEBHOOK_SECRET: optionalSecret,
@@ -53,7 +54,7 @@ const environmentSchema = z
   .superRefine((env, context) => {
     const providerRequirements = {
       eupago: ['EUPAGO_API_KEY', 'EUPAGO_WEBHOOK_SECRET'],
-      ifthenpay: ['IFTHENPAY_API_KEY', 'IFTHENPAY_WEBHOOK_SECRET'],
+      ifthenpay: ['IFTHENPAY_MB_KEY', 'IFTHENPAY_MBWAY_KEY', 'IFTHENPAY_WEBHOOK_SECRET'],
       stripe: ['STRIPE_SECRET_KEY', 'STRIPE_WEBHOOK_SECRET'],
     } as const;
 
@@ -104,7 +105,8 @@ export type EnvironmentConfig = {
     webhooksEnabled: boolean;
     eupagoApiKey: string | null;
     eupagoWebhookSecret: string | null;
-    ifthenpayApiKey: string | null;
+    ifthenpayMbKey: string | null;
+    ifthenpayMbWayKey: string | null;
     ifthenpayWebhookSecret: string | null;
     stripeSecretKey: string | null;
     stripeWebhookSecret: string | null;
@@ -179,7 +181,8 @@ export const parseEnvironmentConfig = (
         webhooksEnabled: env.PAYMENT_WEBHOOKS_ENABLED,
         eupagoApiKey: optionalSecretToNullable(env.EUPAGO_API_KEY),
         eupagoWebhookSecret: optionalSecretToNullable(env.EUPAGO_WEBHOOK_SECRET),
-        ifthenpayApiKey: optionalSecretToNullable(env.IFTHENPAY_API_KEY),
+        ifthenpayMbKey: optionalSecretToNullable(env.IFTHENPAY_MB_KEY),
+        ifthenpayMbWayKey: optionalSecretToNullable(env.IFTHENPAY_MBWAY_KEY),
         ifthenpayWebhookSecret: optionalSecretToNullable(env.IFTHENPAY_WEBHOOK_SECRET),
         stripeSecretKey: optionalSecretToNullable(env.STRIPE_SECRET_KEY),
         stripeWebhookSecret: optionalSecretToNullable(env.STRIPE_WEBHOOK_SECRET),
@@ -211,7 +214,8 @@ export const redactEnvironmentConfig = (config: EnvironmentConfig): EnvironmentC
     webhooksEnabled: config.payments.webhooksEnabled,
     eupagoApiKey: redactSecret(config.payments.eupagoApiKey),
     eupagoWebhookSecret: redactSecret(config.payments.eupagoWebhookSecret),
-    ifthenpayApiKey: redactSecret(config.payments.ifthenpayApiKey),
+    ifthenpayMbKey: redactSecret(config.payments.ifthenpayMbKey),
+    ifthenpayMbWayKey: redactSecret(config.payments.ifthenpayMbWayKey),
     ifthenpayWebhookSecret: redactSecret(config.payments.ifthenpayWebhookSecret),
     stripeSecretKey: redactSecret(config.payments.stripeSecretKey),
     stripeWebhookSecret: redactSecret(config.payments.stripeWebhookSecret),

@@ -8,7 +8,8 @@ import type {
 const IFTHENPAY_BASE = 'https://api.ifthenpay.com';
 
 export type CreateIfthenpayReferenceAdapterInput = {
-  apiKey: string;
+  mbKey: string;
+  mbWayKey: string;
   fetch: typeof globalThis.fetch;
 };
 
@@ -80,7 +81,8 @@ const callIfthenpay = async (
 };
 
 export const createIfthenpayReferenceAdapter = ({
-  apiKey,
+  mbKey,
+  mbWayKey,
   fetch: fetchFn,
 }: CreateIfthenpayReferenceAdapterInput): PaymentReferenceFactory => ({
   createReference: (input: PaymentReferenceInput): Promise<PaymentReferenceResult> => {
@@ -93,7 +95,7 @@ export const createIfthenpayReferenceAdapter = ({
           MobilePhone: input.mbWayPhone,
           Currency: input.currency,
         },
-        apiKey,
+        mbWayKey,
         fetchFn,
         parseMbWay,
       );
@@ -106,7 +108,7 @@ export const createIfthenpayReferenceAdapter = ({
         Amount: amountValue(input.amountCents),
         Currency: input.currency,
       },
-      apiKey,
+      mbKey,
       fetchFn,
       parseMultibanco,
     );
