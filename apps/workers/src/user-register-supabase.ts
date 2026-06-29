@@ -13,7 +13,7 @@ type AdminCreateUserParams = {
 
 type AdminCreateUserResult = {
   data: { user: { id: string } | null } | null;
-  error: { message?: string } | null;
+  error: { message?: string; code?: string } | null;
 };
 
 type AdminDeleteUserResult = {
@@ -47,10 +47,6 @@ export type CreateSupabaseUserRegistrationRepositoriesResult = {
   userRegistrationRepository: UserRegistrationRepository;
 };
 
-const isEmailAlreadyRegistered = (message: string): boolean =>
-  message.toLowerCase().includes('already registered') ||
-  message.toLowerCase().includes('already been registered');
-
 export const createSupabaseUserRegistrationRepositories = ({
   client,
 }: CreateSupabaseUserRegistrationRepositoriesInput): CreateSupabaseUserRegistrationRepositoriesResult => {
@@ -68,10 +64,10 @@ export const createSupabaseUserRegistrationRepositories = ({
       });
 
       if (createResult.error) {
-        const message = (createResult.error as { message?: string }).message ?? '';
-        if (isEmailAlreadyRegistered(message)) {
+        if (createResult.error.code === 'user_already_exists') {
           return { ok: false, reason: 'email_already_registered' };
         }
+        const message = createResult.error.message ?? '';
         throw new SupabaseUserRegistrationRepositoryError(
           `Failed to create auth user: ${message}`,
         );
