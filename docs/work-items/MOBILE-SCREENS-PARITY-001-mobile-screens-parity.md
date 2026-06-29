@@ -13,6 +13,11 @@ Apply brand styling (from `packages/ui` brandTokens) to the four unstyled mobile
 matching the design quality established by SCREENS-ONBOARDING-FEED-001 (web PR #303) and
 FOUNDATION-UI-001 (PR #302 mobile tab bar).
 
+## States
+
+- pending: four mobile screens use plain text layout with generic colours
+- done: pet feed shows 2-column branded card grid with navigation; pet profile shows hero, medical badges, sticky CTA bar; auth screens use orange primary CTA
+
 ## Screens
 
 1. **Pet feed** (`(app)/(tabs)/animais/index.tsx`) — 2-column FlatList card grid with
