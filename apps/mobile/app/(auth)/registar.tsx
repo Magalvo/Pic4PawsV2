@@ -59,9 +59,10 @@ export default function RegistarScreen() {
   if (viewModel?.state === 'registered') {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.content}>
-          <Text style={styles.title}>{viewModel.title}</Text>
-          <Text style={styles.message}>{viewModel.message}</Text>
+        <View style={styles.stateContent}>
+          <Text style={styles.stateEmoji}>✅</Text>
+          <Text style={styles.stateTitle}>{viewModel.title}</Text>
+          <Text style={styles.stateMessage}>{viewModel.message}</Text>
           <TouchableOpacity
             style={styles.button}
             onPress={() => router.replace('/(auth)/entrar' as never)}
@@ -76,9 +77,10 @@ export default function RegistarScreen() {
   if (viewModel?.state === 'failed') {
     return (
       <SafeAreaView style={styles.container}>
-        <View style={styles.content}>
-          <Text style={styles.title}>{viewModel.title}</Text>
-          <Text style={styles.message}>{viewModel.message}</Text>
+        <View style={styles.stateContent}>
+          <Text style={styles.stateEmoji}>⚠️</Text>
+          <Text style={styles.stateTitle}>{viewModel.title}</Text>
+          <Text style={styles.stateMessage}>{viewModel.message}</Text>
           {viewModel.status === 'email_already_registered' && (
             <TouchableOpacity
               style={styles.button}
@@ -105,13 +107,14 @@ export default function RegistarScreen() {
         style={{ flex: 1 }}
       >
         <ScrollView contentContainerStyle={styles.content}>
+          <Text style={styles.eyebrow}>Pic4Paws</Text>
           <Text style={styles.title}>Criar conta</Text>
           <Text style={styles.hint}>Preenche os dados para criar a tua conta de adotante.</Text>
 
           <View style={styles.field}>
             <Text style={styles.label}>Email *</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, submitting && styles.inputDisabled]}
               value={email}
               onChangeText={setEmail}
               keyboardType="email-address"
@@ -126,7 +129,7 @@ export default function RegistarScreen() {
           <View style={styles.field}>
             <Text style={styles.label}>Palavra-passe *</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, submitting && styles.inputDisabled]}
               value={password}
               onChangeText={setPassword}
               secureTextEntry
@@ -139,7 +142,7 @@ export default function RegistarScreen() {
           <View style={styles.field}>
             <Text style={styles.label}>Nome a apresentar *</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, submitting && styles.inputDisabled]}
               value={displayName}
               onChangeText={setDisplayName}
               editable={!submitting}
@@ -175,7 +178,7 @@ export default function RegistarScreen() {
             onPress={() => router.push('/(auth)/entrar' as never)}
             disabled={submitting}
           >
-            <Text style={styles.linkText}>Já tens conta? Entra aqui</Text>
+            <Text style={styles.signInLink}>Já tens conta? Entra aqui</Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -186,21 +189,38 @@ export default function RegistarScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8f6f6' },
   content: { gap: 16, padding: 24 },
+  stateContent: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+    gap: 12,
+  },
+  stateEmoji: { fontSize: 48 },
+  stateTitle: { color: '#0f172a', fontSize: 22, fontWeight: '700', textAlign: 'center' },
+  stateMessage: { color: '#475569', fontSize: 15, lineHeight: 22, textAlign: 'center' },
+  eyebrow: {
+    color: '#ec5b13',
+    fontSize: 13,
+    fontWeight: '700',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
   title: { color: '#0f172a', fontSize: 28, fontWeight: '800' },
-  hint: { color: '#475569', fontSize: 14, lineHeight: 20, marginBottom: 4 },
-  message: { color: '#475569', fontSize: 15, lineHeight: 22 },
+  hint: { color: '#64748b', fontSize: 14, lineHeight: 20, marginBottom: 4 },
   field: { gap: 6 },
   label: { color: '#374151', fontSize: 14, fontWeight: '600' },
   input: {
     backgroundColor: '#ffffff',
     borderColor: '#d1d5db',
-    borderRadius: 6,
+    borderRadius: 8,
     borderWidth: 1,
     color: '#0f172a',
     fontSize: 15,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
   },
+  inputDisabled: { opacity: 0.6 },
   checkboxRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 10 },
   checkbox: {
     width: 20,
@@ -218,13 +238,19 @@ const styles = StyleSheet.create({
   checkboxLabel: { flex: 1, color: '#374151', fontSize: 14, lineHeight: 20 },
   button: {
     alignItems: 'center',
-    backgroundColor: '#2aa7a2',
-    borderRadius: 6,
+    backgroundColor: '#ec5b13',
+    borderRadius: 24,
     marginTop: 4,
-    paddingVertical: 14,
+    paddingVertical: 15,
+    width: '100%',
   },
   buttonSecondary: { backgroundColor: '#64748b' },
   buttonDisabled: { opacity: 0.5 },
   buttonText: { color: '#ffffff', fontSize: 16, fontWeight: '700' },
-  linkText: { color: '#2aa7a2', fontSize: 14, textAlign: 'center', marginTop: 4 },
+  signInLink: {
+    color: '#2aa7a2',
+    fontSize: 14,
+    textAlign: 'center',
+    fontWeight: '500',
+  },
 });
