@@ -1,5 +1,5 @@
 import { appConfig, parseEnvironmentConfig, type EnvironmentRecord } from '@pic4paws/config';
-import { resolveWorkerRequestDependencies, type WorkerRequestDependencies } from './dependencies';
+import { resolveWorkerRequestDependencies, WorkerSupabaseWiringError, type WorkerRequestDependencies } from './dependencies';
 import { createR2UploadSignerWorkerDependencies } from './r2-signer';
 import { createSupabaseSdkWorkerDependencies } from './supabase-sdk';
 import { handle as handleWebhooks } from './routes/webhooks';
@@ -631,6 +631,9 @@ export const handleWorkerRequest = async (
     return await _dispatchWorkerRequest(request, env, dependencies);
   } catch (error) {
     console.error('[worker]', error);
+    if (error instanceof WorkerSupabaseWiringError) {
+      return jsonResponse({ status: 'dependency_configuration_error' }, { status: 500 });
+    }
     return jsonResponse({ status: 'internal_server_error' }, { status: 500 });
   }
 };
