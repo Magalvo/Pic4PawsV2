@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { use } from 'react';
+import Link from 'next/link';
 import { createSupabaseBrowserClient } from '../../../../src/supabase-browser';
 import { createSponsorshipClient } from '@pic4paws/client';
 import type { SponsorshipClientRecurringInterval } from '@pic4paws/client';
@@ -19,11 +20,13 @@ const IDLE: WebSponsorshipIdleState = {
   primaryAction: 'Apadrinhar',
 };
 
-const INTERVALS: Array<{ value: SponsorshipClientRecurringInterval; label: string }> = [
-  { value: 'monthly', label: 'Mensal' },
-  { value: 'quarterly', label: 'Trimestral' },
-  { value: 'annual', label: 'Anual' },
+const INTERVALS: Array<{ value: SponsorshipClientRecurringInterval; label: string; desc: string }> = [
+  { value: 'monthly', label: 'Mensal', desc: '12× por ano' },
+  { value: 'quarterly', label: 'Trimestral', desc: '4× por ano' },
+  { value: 'annual', label: 'Anual', desc: '1× por ano' },
 ];
+
+const inputCls = 'w-full rounded-lg border border-border bg-bg px-3 py-2.5 text-sm text-ink placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-teal/30 disabled:opacity-50';
 
 export default function ApadrinhamentoPage({ params }: { params: Promise<{ shelterId: string }> }) {
   const { shelterId } = use(params);
@@ -60,61 +63,116 @@ export default function ApadrinhamentoPage({ params }: { params: Promise<{ shelt
   }, [amountEuros, interval, shelterId]);
 
   if (viewModel.state === 'submitting') {
-    return <p>{viewModel.title}</p>;
+    return (
+      <div className="min-h-screen bg-bg flex items-center justify-center p-6">
+        <div className="bg-surface rounded-2xl border border-border p-8 w-full max-w-sm text-center shadow-sm">
+          <div className="w-12 h-12 rounded-full bg-teal/10 flex items-center justify-center mx-auto mb-4">
+            <span className="text-2xl">⏳</span>
+          </div>
+          <h1 className="text-lg font-bold text-ink mb-2">{viewModel.title}</h1>
+          <p className="text-sm text-muted">{viewModel.message}</p>
+        </div>
+      </div>
+    );
   }
 
   if (viewModel.state === 'submitted') {
     return (
-      <main>
-        <h1>{viewModel.title}</h1>
-        <p>{viewModel.message}</p>
-      </main>
+      <div className="min-h-screen bg-bg flex items-center justify-center p-6">
+        <div className="bg-surface rounded-2xl border border-border p-8 w-full max-w-sm text-center shadow-sm">
+          <div className="w-12 h-12 rounded-full bg-teal/10 flex items-center justify-center mx-auto mb-4">
+            <span className="text-2xl">🤲</span>
+          </div>
+          <h1 className="text-xl font-extrabold text-ink mb-2">{viewModel.title}</h1>
+          <p className="text-sm text-muted mb-6">{viewModel.message}</p>
+          <Link
+            href={`/abrigos/${shelterId}` as never}
+            className="block w-full py-3 rounded-xl bg-teal text-white font-bold text-sm text-center"
+          >
+            Voltar ao abrigo
+          </Link>
+        </div>
+      </div>
     );
   }
 
   if (viewModel.state === 'failed') {
     return (
-      <main>
-        <h1>{viewModel.title}</h1>
-        <p>{viewModel.message}</p>
-        <button type="button" onClick={() => setViewModel(IDLE)}>Tentar de novo</button>
-      </main>
+      <div className="min-h-screen bg-bg flex items-center justify-center p-6">
+        <div className="bg-surface rounded-2xl border border-border p-8 w-full max-w-sm text-center shadow-sm">
+          <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
+            <span className="text-2xl">⚠️</span>
+          </div>
+          <h1 className="text-xl font-extrabold text-ink mb-2">{viewModel.title}</h1>
+          <p className="text-sm text-muted mb-6">{viewModel.message}</p>
+          <button
+            type="button"
+            onClick={() => setViewModel(IDLE)}
+            className="w-full py-3 rounded-xl border border-border text-ink font-semibold text-sm"
+          >
+            Tentar de novo
+          </button>
+        </div>
+      </div>
     );
   }
 
   return (
-    <main>
-      <h1>{viewModel.title}</h1>
-      <p>{viewModel.message}</p>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12, maxWidth: 360 }}>
-        <label>
-          Valor (€)
-          <input
-            type="number"
-            min="1"
-            step="0.01"
-            value={amountEuros}
-            onChange={(e) => setAmountEuros(e.target.value)}
-            required
-          />
-        </label>
-        <fieldset style={{ border: 'none', padding: 0 }}>
-          <legend>Periodicidade</legend>
-          {INTERVALS.map(({ value, label }) => (
-            <label key={value} style={{ display: 'block' }}>
+    <div className="min-h-screen bg-bg py-8 px-4">
+      <div className="max-w-md mx-auto">
+        <h1 className="text-2xl font-extrabold text-ink mb-1">{viewModel.title}</h1>
+        <p className="text-sm text-muted mb-6">{viewModel.message}</p>
+
+        <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+          {/* Amount */}
+          <section className="bg-surface rounded-2xl border border-border p-5">
+            <h2 className="text-xs font-bold text-muted uppercase tracking-wide mb-4">Valor mensal (€)</h2>
+            <div className="relative">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted text-sm font-semibold">€</span>
               <input
-                type="radio"
-                name="interval"
-                value={value}
-                checked={interval === value}
-                onChange={() => setInterval(value)}
+                type="number"
+                min="1"
+                step="0.01"
+                className={`${inputCls} pl-7`}
+                value={amountEuros}
+                onChange={(e) => setAmountEuros(e.target.value)}
+                required
+                placeholder="10.00"
               />
-              {' '}{label}
-            </label>
-          ))}
-        </fieldset>
-        <button type="submit">{viewModel.primaryAction}</button>
-      </form>
-    </main>
+            </div>
+          </section>
+
+          {/* Interval */}
+          <section className="bg-surface rounded-2xl border border-border p-5">
+            <h2 className="text-xs font-bold text-muted uppercase tracking-wide mb-4">Periodicidade</h2>
+            <div className="flex flex-col gap-2">
+              {INTERVALS.map(({ value, label, desc }) => (
+                <button
+                  key={value}
+                  type="button"
+                  onClick={() => setInterval(value)}
+                  className={`flex items-center justify-between px-4 py-3 rounded-xl border transition-colors ${
+                    interval === value
+                      ? 'border-teal bg-teal/5'
+                      : 'border-border hover:bg-bg'
+                  }`}
+                >
+                  <span className={`text-sm font-semibold ${interval === value ? 'text-teal' : 'text-ink'}`}>{label}</span>
+                  <span className="text-xs text-muted">{desc}</span>
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <button
+            type="submit"
+            disabled={!amountEuros}
+            className="w-full py-3.5 rounded-xl bg-teal text-white font-bold text-sm disabled:opacity-40"
+          >
+            {viewModel.primaryAction}
+          </button>
+        </form>
+      </div>
+    </div>
   );
 }
