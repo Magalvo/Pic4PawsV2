@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { FlatList, Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
+import { FlatList, Image, Pressable, SafeAreaView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
-import { createPetFeedClient, type PetFeedPet } from '@pic4paws/client';
+import { createPetFeedClient, createMediaUrlClient, type PetFeedPet } from '@pic4paws/client';
 import { createMobilePetFeedUi, type MobilePetFeedResultViewModel } from '../../../../src/pet-feed';
 import { workerUrl } from '../../../../src/env';
 
@@ -18,6 +18,13 @@ const SPECIES_LABEL: Record<string, string> = {
 function PetCard({ pet, onPress }: { pet: PetFeedPet; onPress: () => void }) {
   const emoji = pet.species ? (SPECIES_EMOJI[pet.species] ?? '🐾') : '🐾';
   const speciesLabel = pet.species ? (SPECIES_LABEL[pet.species] ?? 'Animal') : 'Animal';
+  const [imgUrl, setImgUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!pet.heroMediaId) return;
+    const client = createMediaUrlClient({ workerBaseUrl: workerUrl(), mediaUrlPath: '/media', fetch: globalThis.fetch });
+    client.getMediaUrl(pet.heroMediaId).then((result) => { if (result.ok) setImgUrl(result.url); });
+  }, [pet.heroMediaId]);
 
   return (
     <Pressable
@@ -25,7 +32,10 @@ function PetCard({ pet, onPress }: { pet: PetFeedPet; onPress: () => void }) {
       onPress={onPress}
     >
       <View style={styles.cardHero}>
-        <Text style={styles.cardEmoji}>{emoji}</Text>
+        {imgUrl
+          ? <Image source={{ uri: imgUrl }} style={styles.cardHeroImage} resizeMode="cover" />
+          : <Text style={styles.cardEmoji}>{emoji}</Text>
+        }
         <View style={styles.cardBadge}>
           <Text style={styles.cardBadgeText}>Disponível</Text>
         </View>
@@ -156,7 +166,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#e6f7f6',
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
+  cardHeroImage: { width: '100%', height: '100%' },
   cardEmoji: { fontSize: 44 },
   cardBadge: {
     position: 'absolute',

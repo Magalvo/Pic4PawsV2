@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import {
+  Image,
   SafeAreaView,
   ScrollView,
   StyleSheet,
@@ -8,7 +9,7 @@ import {
   View,
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { createPetProfileClient, type PetProfilePet } from '@pic4paws/client';
+import { createPetProfileClient, createMediaUrlClient, type PetProfilePet } from '@pic4paws/client';
 import {
   createMobilePetProfileUi,
   type MobilePetProfileResultViewModel,
@@ -43,13 +44,23 @@ function PetProfileLoaded({ pet }: { pet: PetProfilePet }) {
   const { medical } = pet;
   const hasMedical =
     medical.vaccinated != null || medical.sterilized != null || medical.microchipped != null;
+  const [imgUrl, setImgUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!pet.heroMediaId) return;
+    const client = createMediaUrlClient({ workerBaseUrl: workerUrl(), mediaUrlPath: '/media', fetch: globalThis.fetch });
+    client.getMediaUrl(pet.heroMediaId).then((result) => { if (result.ok) setImgUrl(result.url); });
+  }, [pet.heroMediaId]);
 
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView>
         {/* Hero */}
         <View style={styles.hero}>
-          <Text style={styles.heroEmoji}>{emoji}</Text>
+          {imgUrl
+            ? <Image source={{ uri: imgUrl }} style={styles.heroImage} resizeMode="cover" />
+            : <Text style={styles.heroEmoji}>{emoji}</Text>
+          }
           <View style={styles.heroBadge}>
             <Text style={styles.heroBadgeText}>Disponível para adopção</Text>
           </View>
@@ -211,7 +222,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#e6f7f6',
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
+  heroImage: { width: '100%', height: '100%' },
   heroEmoji: { fontSize: 80 },
   heroBadge: {
     position: 'absolute',
