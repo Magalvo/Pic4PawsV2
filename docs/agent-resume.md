@@ -59,11 +59,11 @@ Do not batch items that can be reviewed or merged independently.
 - `npm run test`
 - `npm run build`
 
-## 4. Current State As Of 2026-06-28
+## 4. Current State As Of 2026-06-29
 
-**Repository status**: 2515 tests passing (279 test files). Push notifications complete. Full manual-donation slice complete + fully audit-remediated. Eupago multi-provider payment support complete through PR #280 (merged); PR #281 (`EUPAGO-DONATION-CLIENT-001`) in review.
+**Repository status**: 2546 tests passing (280 test files). Full Eupago multi-provider payment support complete and fully audit-remediated (PRs #276–#294, all open P1/P2 findings closed).
 
-**Main branch HEAD**: PR #281 (`EUPAGO-DONATION-CLIENT-001` — automated tier client + Web + Mobile boundaries) — `c9afc6c`.
+**Main branch HEAD**: PR #294 (docs: close 3 Eupago work items) — `9928413`.
 - `npm run typecheck` ✅
 - `npm run lint` ✅
 - `npm run test` ✅
@@ -71,9 +71,9 @@ Do not batch items that can be reviewed or merged independently.
 
 > **Note**: `packages/config/dist/` and `packages/domain/dist/` are gitignored. After pulling or switching branches, run `npm run build -w packages/config` and/or `npm run build -w packages/domain` if typecheck fails on `EnvironmentConfig` or domain types.
 
-**Latest checkpoint**: [2026-06-28-eupago-provider-support.md](docs/checkpoints/2026-06-28-eupago-provider-support.md) — covers PRs #276–#281 (all merged), Eupago multi-provider support + client boundary
+**Latest checkpoint**: [2026-06-29-eupago-remediation-complete.md](docs/checkpoints/2026-06-29-eupago-remediation-complete.md) — covers PRs #282–#295, full Eupago audit-remediation cycle complete
 
-**Latest audit**: [2026-06-28-sdd-audit-prs-257-269.md](docs/audits/2026-06-28-sdd-audit-prs-257-269.md) — score 7/10; P1 (donation_receipt allowlist) closed by PR #272; P2-2 (push-token ladder) closed by PR #273; P3s closed by hygiene sweep. All findings resolved.
+**Latest audit**: [2026-06-29-sdd-audit-prs-291-294.md](docs/audits/2026-06-29-sdd-audit-prs-291-294.md) — score 9/10; P1-6 (provider ID persistence) and P3-1 (dead mb_way_phone column) closed; one P3 advisory open (DonationRepository interface hardening).
 
 **Track E complete**: `PASSWD-RESET-WEB-001` (PR #207) + `PASSWD-RESET-MOBILE-001` (PR #208). Web: `/recuperar-palavra-passe` + `/recuperar-palavra-passe/confirmar`; mobile: `(auth)/recuperar-palavra-passe` screen (confirm step on web). Mobile `redirectTo` uses `EXPO_PUBLIC_WEB_BASE_URL ?? 'https://pic4paws.pt'`.
 
@@ -251,13 +251,26 @@ Do not batch items that can be reviewed or merged independently.
 - `WEB-DONATE-REVIEW-001` (PR #255) — `createWebDonationReviewUi`; idle/loading/loaded/approved/rejected/forbidden/failed states; shelter-side review panel
 - `MOBILE-DONATE-REVIEW-001` (PR #256) — `doacoes/[donationId].tsx` screen; `createMobileDonationReviewUi`; `mobileSupabaseClient` singleton; `uiRef` null-guards
 
-**Eupago multi-provider payment support (PRs #276–#280; PR #281 in review)**:
+**Eupago multi-provider payment support (PRs #276–#294, fully complete and audited)**:
 - PR #276 — spec: SDD update + 4 new Eupago work items
 - `EUPAGO-DB-001` (PR #277) — `shelter_active_provider` enum (`eupago | ifthenpay`); `eupago_api_key_encrypted` + `ifthenpay_api_key_encrypted` columns on `shelter_payment_configs`
 - `EUPAGO-CONFIG-WORKER-001` (PR #278) — `activeProvider` in `GET/PATCH /shelters/:id/payment-config`; AES-256-GCM credential encryption (`encryptCredential`/`decryptCredential`); provider-switch guard; `ShelterPaymentConfigClient` extended with `activeProvider`
 - `EUPAGO-WEBHOOK-001` (PR #279) — isolated per-provider webhook endpoints (`/webhooks/payments/eupago`, `/webhooks/payments/ifthenpay`); `EupagoWebhookVerifier` (query-param `chave` HMAC); per-shelter HMAC key lookup; old `GET /webhooks/payments` retired
 - `EUPAGO-REFERENCE-FACTORY-001` (PR #280) — `PaymentReferenceFactory` interface + `PaymentReferenceInput` + `PaymentReferenceResult` + `PaymentReference` discriminated union (`multibanco | mb_way | bank_transfer`); `createEupagoReferenceAdapter`; `createIfthenpayReferenceAdapter`; `createSupabasePaymentReferenceFactory`; automated-tier 501 stub in `POST /donations` replaced with full PSP flow (create row → call PSP → set `providerPaymentId` or fail)
 - `EUPAGO-DONATION-CLIENT-001` (PR #281) — `DonationClientSuccess` discriminated union on `tier`; `DonationClientPaymentReference` type (`multibanco | mb_way | bank_transfer`); `payment_reference_failed` + `provider_credentials_unavailable` statuses; `submitted_automated` Web + Mobile ViewModel state; pages render Multibanco entity/reference or MB WAY phone
+- Audit `2026-06-28-sdd-audit-prs-270-282.md` (PR #283, score 3/10) — 8 P1 findings raised; fully remediated by PRs #284–#292
+- `PAYMENT-CONFIG-RLS-001` (PR #284) — RLS enabled on `shelter_payment_configs`; anon/authenticated revoked; service_role CRUD retained; migration `0009_payment_config_rls`
+- `PAYMENT-CONFIG-SCHEMA-001` (PR #285) — phantom `ifthenpay_api_key_encrypted` column removed from factory projection; legacy `api_key_encrypted` used as Ifthenpay placeholder
+- `PAYMENT-WEBHOOK-COMPOSITION-001` (PR #286) — shared `paymentWebhookVerifier` dependency removed; each provider route instantiates its own verifier factory directly
+- `MOBILE-DONATION-AUTH-001` (PR #287) — `mobileSupabaseClient` singleton wired into donation page; authenticated session forwarded correctly
+- `PAYMENT-ENCRYPTION-KEY-001` (PR #288) — `ENCRYPTION_SECRET` validated at startup as 64-char hex; `fromHex` produces deterministic 32-byte key; env-contract tests added
+- `PAYMENT-METHOD-PROPAGATION-001` (PR #289) — `paymentMethod` and `mbWayPhone` added to `PaymentReferenceInput`; both adapters branch on method; mb_way_phone shelter column removed from path
+- `PAYMENT-PROVIDER-SWITCH-GUARD-001` (PR #290) — provider-switch guard correctly fires for automated→automated and automated→manual transitions
+- Audit `2026-06-28-sdd-audit-prs-283-292.md` (PR #293, score 7/10) — remediation check; P1-6 and P3-1 carried forward open
+- `PAYMENT-PROVIDER-ID-PERSISTENCE-001` (PR #291) — 201 blocked until `setProviderPaymentId` write succeeds; runtime guard + try/catch; `failDonation` called on all failure exits; dead `mb_way_phone` column removed from factory select (P3-1)
+- `EUPAGO-WEBHOOK-CONTRACT-001` (PR #292) — Eupago Webhooks 2.0 contract: nested `transactions` schema, base64 HMAC-SHA256, `X-Signature` header; status map covers Paid/Refund/Cancel/Error/Expired
+- Docs: work items PAYMENT-CONFIG-RLS-001, PAYMENT-CONFIG-SCHEMA-001, PAYMENT-WEBHOOK-COMPOSITION-001 closed (PR #294)
+- Audit `2026-06-29-sdd-audit-prs-291-294.md` (PR #295, score 9/10) — all P1/P2 findings closed; one P3 advisory open
 
 Real UI screens, auth, and navigation (PRs #157–#199):
 
@@ -442,7 +455,11 @@ per deployment.
 
 ## 5. Recommended Next Work Item
 
-**Status as of 2026-06-28**: Tracks A–H complete. GDPR-LEGAL-001 merged (PR #239). Push notifications done (PRs #240–#244). Full manual donation slice done (PRs #245–#256) + fully audit-remediated (PRs #272–#274). Eupago multi-provider support done through PR #280; PR #281 (`EUPAGO-DONATION-CLIENT-001`) in review. 2515 tests passing.
+**Status as of 2026-06-29**: Tracks A–H complete. Full Eupago multi-provider payment support done and fully audit-remediated (PRs #276–#295). Latest audit score 9/10 with one P3 advisory. 2546 tests passing.
+
+**Immediate (code, low-risk):**
+
+- **P3 interface hardening** — Remove `?:` from `setProviderPaymentId` and `failDonation` in `DonationRepository` (`apps/workers/src/donation.ts:75-76`). The Supabase implementation already provides both; making them non-optional lets TypeScript enforce it for future implementations. Also eliminates the now-unreachable runtime guard at `donation.ts:375`. Update the guard-path test at `tests/workers/donation.test.ts:494` to use a type cast.
 
 **Production-readiness gaps (confirmed):**
 
@@ -454,7 +471,7 @@ per deployment.
 
 4. **Mobile app store artifacts** — EAS build configuration, app icons, splash screens, bundle identifiers not yet set up. Required before App Store / Play Store submission.
 
-**Recommended next**: run a fresh SDD audit (`/sdd-audit`) to establish the Eupago baseline. The last audit covered PRs #257–#269; the Eupago track (PRs #276–#281) has not yet been audited.
+5. **Ifthenpay production readiness** — The legacy Ifthenpay path uses a single `api_key_encrypted` placeholder. Official Ifthenpay API requires distinct `MB KEY` and `MBWAY KEY` per payment method. Needs a dedicated work item before Ifthenpay shelters can go live.
 
 **Known deferred items:**
 - Mobile routing integration test (unauthenticated → redirect → sign-in → `returnTo`) requires React Native Testing Library setup.
@@ -474,11 +491,13 @@ Continue Pic4Paws V2 development from main using strict SDD/TDD:
 - Validate: npm run typecheck, lint, test, build
 - After any env.ts change: npm run build --workspace=packages/config
 
-Current state (2026-06-28, HEAD c9afc6c / PR #281): 2515 tests passing (279 files).
+Current state (2026-06-29, HEAD 9928413 / PR #294): 2546 tests passing (280 files).
 Tracks A–H complete. GDPR legal pages done (PR #239). Push notifications done (PRs #240–#244).
 Full manual donation slice done + fully audit-remediated (PRs #245–#256, #261–#267, #272–#274).
-Full Eupago multi-provider support done (PRs #276–#281): DB schema, payment config, webhook
-isolation, payment reference factory, automated donation client + Web + Mobile boundaries.
-Next: run a fresh SDD audit (/sdd-audit) to establish the Eupago baseline (PRs #276–#281
-not yet audited). Consult section 5 for the full production-readiness gap list.
+Full Eupago multi-provider support done + fully audit-remediated (PRs #276–#295): DB schema,
+payment config, webhook isolation, payment reference factory, automated donation client +
+Web + Mobile boundaries; all P1/P2 audit findings closed; score 9/10.
+Immediate next: P3 interface hardening (DonationRepository — remove optional from
+setProviderPaymentId and failDonation). Consult section 5 for the full production-readiness
+gap list.
 ```
