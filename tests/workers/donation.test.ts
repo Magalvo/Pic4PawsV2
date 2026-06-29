@@ -71,6 +71,8 @@ const makeDonationRepo = (
     pet: null,
   }),
   createDonation: vi.fn().mockResolvedValue(result),
+  setProviderPaymentId: vi.fn().mockResolvedValue(undefined),
+  failDonation: vi.fn().mockResolvedValue(undefined),
 });
 
 const makeDonationRequest = (body: unknown = validPayload) =>
@@ -227,6 +229,8 @@ describe('POST /donations — donation initiation', () => {
         pet: null,
       }),
       createDonation: vi.fn(),
+      setProviderPaymentId: vi.fn().mockResolvedValue(undefined),
+      failDonation: vi.fn().mockResolvedValue(undefined),
     };
 
     const response = await handleWorkerRequest(makeDonationRequest(), validEnv, {
@@ -255,6 +259,8 @@ describe('POST /donations — donation initiation', () => {
         pet: { id: 'pet-1', shelterId: 'shelter-b' },
       }),
       createDonation: vi.fn(),
+      setProviderPaymentId: vi.fn().mockResolvedValue(undefined),
+      failDonation: vi.fn().mockResolvedValue(undefined),
     };
 
     const response = await handleWorkerRequest(
@@ -349,6 +355,8 @@ describe('POST /donations — donation initiation', () => {
         pet: null,
       }),
       createDonation: vi.fn().mockResolvedValue(donationResult),
+      setProviderPaymentId: vi.fn().mockResolvedValue(undefined),
+      failDonation: vi.fn().mockResolvedValue(undefined),
     };
 
     const response = await handleWorkerRequest(makeDonationRequest(), validEnv, {
@@ -386,6 +394,8 @@ describe('POST /donations — donation initiation', () => {
         pet: null,
       }),
       createDonation: vi.fn(),
+      setProviderPaymentId: vi.fn().mockResolvedValue(undefined),
+      failDonation: vi.fn().mockResolvedValue(undefined),
     };
 
     const response = await handleWorkerRequest(makeDonationRequest(), validEnv, {
@@ -407,6 +417,8 @@ describe('POST /donations — donation initiation', () => {
         pet: null,
       }),
       createDonation: vi.fn(),
+      setProviderPaymentId: vi.fn().mockResolvedValue(undefined),
+      failDonation: vi.fn().mockResolvedValue(undefined),
     };
 
     const response = await handleWorkerRequest(makeDonationRequest(), validEnv, {
@@ -430,6 +442,7 @@ describe('POST /donations — donation initiation', () => {
       }),
       createDonation: vi.fn().mockResolvedValue(donationResult),
       setProviderPaymentId: vi.fn().mockResolvedValue(undefined),
+      failDonation: vi.fn().mockResolvedValue(undefined),
     };
 
     const factory: PaymentReferenceFactory = {
@@ -471,6 +484,7 @@ describe('POST /donations — donation initiation', () => {
         pet: null,
       }),
       createDonation: vi.fn().mockResolvedValue(donationResult),
+      setProviderPaymentId: vi.fn().mockResolvedValue(undefined),
       failDonation,
     };
 
@@ -493,7 +507,9 @@ describe('POST /donations — donation initiation', () => {
 
   it('automated tier + factory ok:true + no setProviderPaymentId → 502 payment_reference_failed', async () => {
     const failDonation = vi.fn().mockResolvedValue(undefined);
-    const donationRepository: DonationRepository = {
+    // Cast to bypass the interface requirement and verify runtime catch-block behaviour
+    // when setProviderPaymentId is missing (e.g. from a JS caller without type guarantees).
+    const donationRepository = {
       getDonationEligibilityContext: vi.fn().mockResolvedValue({
         shelter: { id: 'shelter-a', verificationStatus: 'verified', paymentAccountStatus: 'active' },
         paymentConfig: { tier: 'automated', activeProvider: 'eupago', iban: null, mbWayPhone: null },
@@ -502,7 +518,7 @@ describe('POST /donations — donation initiation', () => {
       createDonation: vi.fn().mockResolvedValue(donationResult),
       failDonation,
       // setProviderPaymentId intentionally absent
-    };
+    } as unknown as DonationRepository;
     const factory: PaymentReferenceFactory = {
       createReference: vi.fn().mockResolvedValue({
         ok: true,
@@ -565,6 +581,8 @@ describe('POST /donations — donation initiation', () => {
         pet: null,
       }),
       createDonation: vi.fn().mockResolvedValue(donationResult),
+      setProviderPaymentId: vi.fn().mockResolvedValue(undefined),
+      failDonation: vi.fn().mockResolvedValue(undefined),
     };
     const factory: PaymentReferenceFactory = { createReference: vi.fn() };
 
@@ -589,6 +607,7 @@ describe('POST /donations — donation initiation', () => {
       }),
       createDonation: vi.fn().mockResolvedValue(donationResult),
       setProviderPaymentId: vi.fn().mockResolvedValue(undefined),
+      failDonation: vi.fn().mockResolvedValue(undefined),
     };
     const factory: PaymentReferenceFactory = {
       createReference: vi.fn().mockResolvedValue({
