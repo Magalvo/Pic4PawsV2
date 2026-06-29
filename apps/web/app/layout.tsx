@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { SiteNav } from '../src/SiteNav';
 import './styles.css';
 
 export const metadata = {
@@ -9,7 +10,10 @@ export const metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="pt-PT">
-      <body suppressHydrationWarning>{children}</body>
+      <body suppressHydrationWarning>
+        <SiteNav />
+        {children}
+      </body>
     </html>
   );
 }
