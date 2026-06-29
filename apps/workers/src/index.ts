@@ -1,5 +1,5 @@
 import { appConfig, parseEnvironmentConfig, type EnvironmentRecord } from '@pic4paws/config';
-import type { WorkerRequestDependencies } from './dependencies';
+import { resolveWorkerRequestDependencies, type WorkerRequestDependencies } from './dependencies';
 import { createR2UploadSignerWorkerDependencies } from './r2-signer';
 import { createSupabaseSdkWorkerDependencies } from './supabase-sdk';
 import { handle as handleWebhooks } from './routes/webhooks';
@@ -11,7 +11,7 @@ import { handle as handleDonations } from './routes/donations';
 import { handle as handleSponsorships } from './routes/sponsorships';
 import { handle as handleNotifications } from './routes/notifications';
 import { handle as handleUsers } from './routes/users';
-import { jsonResponse } from './routes/shared';
+import { jsonResponse, corsPreflightResponse, withCors } from './routes/shared';
 export {
   createSupabaseAuthAdapter,
   SupabaseAuthAdapterError,
@@ -603,6 +603,7 @@ const _dispatchWorkerRequest = async (
   }
 
   const config = parsedConfig.config;
+  const resolvedDependencies = resolveWorkerRequestDependencies({ config, dependencies });
   const url = new URL(request.url);
 
   if (url.pathname === '/health') {
@@ -614,7 +615,7 @@ const _dispatchWorkerRequest = async (
   }
 
   for (const handle of ROUTE_HANDLERS) {
-    const response = await handle(request, config, dependencies);
+    const response = await handle(request, config, resolvedDependencies);
     if (response !== null) return response;
   }
 
@@ -628,23 +629,30 @@ export const handleWorkerRequest = async (
 ): Promise<Response> => {
   try {
     return await _dispatchWorkerRequest(request, env, dependencies);
-  } catch {
+  } catch (error) {
+    console.error('[worker]', error);
     return jsonResponse({ status: 'internal_server_error' }, { status: 500 });
   }
 };
 
 export default {
   fetch(request: Request, env: WorkerEnv): Promise<Response> {
+    const origin = (env.PUBLIC_APP_ORIGIN as string) || 'http://localhost:3000';
+
+    if (request.method === 'OPTIONS') {
+      return Promise.resolve(corsPreflightResponse(origin));
+    }
+
     const parsedConfig = parseEnvironmentConfig(env);
     const dependencies = createSupabaseSdkWorkerDependencies();
 
-    if (parsedConfig.ok) {
-      return handleWorkerRequest(request, env, {
-        ...dependencies,
-        ...createR2UploadSignerWorkerDependencies({ config: parsedConfig.config }),
-      });
-    }
+    const responsePromise = parsedConfig.ok
+      ? handleWorkerRequest(request, env, {
+          ...dependencies,
+          ...createR2UploadSignerWorkerDependencies({ config: parsedConfig.config }),
+        })
+      : handleWorkerRequest(request, env, dependencies);
 
-    return handleWorkerRequest(request, env, dependencies);
+    return responsePromise.then((res) => withCors(res, origin));
   },
 };
