@@ -1,7 +1,7 @@
 'use client';
 
 import { use, useState, useEffect } from 'react';
-import { createPetProfileClient, type PetProfilePet } from '@pic4paws/client';
+import { createPetProfileClient, createMediaUrlClient, type PetProfilePet } from '@pic4paws/client';
 import { createWebPetProfileUi, type WebPetProfileResultViewModel } from '../../../src/pet-profile';
 import { workerUrl } from '../../../src/env';
 
@@ -39,13 +39,23 @@ function PetProfileLoaded({ pet }: { pet: PetProfilePet }) {
   const speciesLabel = pet.species ? (SPECIES_LABEL[pet.species] ?? 'Animal') : 'Animal';
   const { medical } = pet;
   const hasMedical = medical.vaccinated != null || medical.sterilized != null || medical.microchipped != null;
+  const [imgUrl, setImgUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!pet.heroMediaId) return;
+    const client = createMediaUrlClient({ workerBaseUrl: workerUrl(), mediaUrlPath: '/media', fetch: globalThis.fetch });
+    client.getMediaUrl(pet.heroMediaId).then((result) => { if (result.ok) setImgUrl(result.url); });
+  }, [pet.heroMediaId]);
 
   return (
     <>
-      {/* Hero image area — 4:5 placeholder */}
+      {/* Hero image area — 4:5 */}
       <div className="w-full relative bg-gradient-to-br from-primary/10 via-bg to-teal/10" style={{ paddingBottom: '125%', maxHeight: '520px' }}>
-        <div className="absolute inset-0 flex items-center justify-center">
-          <span className="text-8xl">{emoji}</span>
+        <div className="absolute inset-0 flex items-center justify-center overflow-hidden">
+          {imgUrl
+            ? <img src={imgUrl} alt={pet.name ?? 'Foto do animal'} className="w-full h-full object-cover" />
+            : <span className="text-8xl">{emoji}</span>
+          }
         </div>
         {/* Status overlay */}
         <div className="absolute bottom-4 left-4">

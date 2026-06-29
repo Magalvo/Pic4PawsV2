@@ -27,6 +27,7 @@ const validConfig: EnvironmentConfig = {
   workers: {
     paymentWebhookPath: '/webhooks/payments',
     mediaUploadPath: '/uploads/media',
+    mediaUrlPath: '/media',
     petDraftsPath: '/pets/drafts',
     petFeedPath: '/pets',
     shelterPath: '/shelters',

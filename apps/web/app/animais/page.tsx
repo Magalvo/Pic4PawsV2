@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createPetFeedClient, type PetFeedPet } from '@pic4paws/client';
+import { createPetFeedClient, createMediaUrlClient, type PetFeedPet } from '@pic4paws/client';
 import { createWebPetFeedUi, type WebPetFeedResultViewModel } from '../../src/pet-feed';
 import { workerUrl } from '../../src/env';
 
@@ -18,13 +18,23 @@ const SPECIES_LABEL: Record<string, string> = {
 function PetCard({ pet }: { pet: PetFeedPet }) {
   const emoji = pet.species ? (SPECIES_EMOJI[pet.species] ?? '🐾') : '🐾';
   const speciesLabel = pet.species ? (SPECIES_LABEL[pet.species] ?? 'Animal') : 'Animal';
+  const [imgUrl, setImgUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!pet.heroMediaId) return;
+    const client = createMediaUrlClient({ workerBaseUrl: workerUrl(), mediaUrlPath: '/media', fetch: globalThis.fetch });
+    client.getMediaUrl(pet.heroMediaId).then((result) => { if (result.ok) setImgUrl(result.url); });
+  }, [pet.heroMediaId]);
 
   return (
     <article className="bg-surface rounded-card overflow-hidden shadow-sm border border-border flex flex-col">
-      {/* 4:5 photo placeholder */}
+      {/* 4:5 photo area */}
       <a href={`/animais/${pet.id}`} className="block relative" style={{ paddingBottom: '125%' }}>
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-bg to-teal/10 flex items-center justify-center">
-          <span className="text-6xl">{emoji}</span>
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-bg to-teal/10 flex items-center justify-center overflow-hidden">
+          {imgUrl
+            ? <img src={imgUrl} alt={pet.name ?? 'Foto do animal'} className="w-full h-full object-cover" />
+            : <span className="text-6xl">{emoji}</span>
+          }
         </div>
         <span className="absolute top-3 left-3 px-2.5 py-1 rounded-pill bg-primary text-white text-xs font-bold">
           Disponível

@@ -85,6 +85,8 @@ import type { EupagoWebhookRepository } from './eupago-webhook-supabase';
 import { createEupagoWebhookRepositories } from './eupago-webhook-supabase';
 import type { PaymentReferenceFactory } from './payment-reference-factory';
 import { createSupabasePaymentReferenceFactory } from './payment-reference-factory-supabase';
+import type { MediaAssetReadRepository, MediaDownloadSigner } from './media-url';
+import { createSupabaseMediaAssetReadRepository } from './media-url-supabase';
 
 export type WorkerSupabaseTableQueryLike = SupabaseAuthTableQueryLike & SupabaseTableQueryLike;
 
@@ -105,6 +107,8 @@ export type WorkerSupabaseClientFactory = (
 export type WorkerRequestDependencies = {
   mediaUploadSigner?: MediaUploadSigner;
   mediaAssetRepository?: MediaAssetRepository;
+  mediaAssetReadRepository?: MediaAssetReadRepository;
+  mediaDownloadSigner?: MediaDownloadSigner;
   petDraftAuthenticator?: WorkerPetDraftAuthenticator;
   petDraftRepository?: PetDraftRepository;
   petMediaAttachRepository?: PetMediaAttachRepository;
@@ -153,6 +157,7 @@ export type CreateWorkerSupabaseDependenciesInput = {
   supabaseClientFactory: WorkerSupabaseClientFactory;
   mediaUploadSigner?: MediaUploadSigner;
   mediaAssetRepository?: MediaAssetRepository;
+  mediaDownloadSigner?: MediaDownloadSigner;
   pushNotificationProvider?: PushNotificationProvider;
   now?: () => string;
 };
@@ -176,6 +181,7 @@ export const createWorkerSupabaseDependencies = ({
   supabaseClientFactory,
   mediaUploadSigner,
   mediaAssetRepository,
+  mediaDownloadSigner,
   pushNotificationProvider,
   now,
 }: CreateWorkerSupabaseDependenciesInput): WorkerRequestDependencies => {
@@ -226,6 +232,8 @@ export const createWorkerSupabaseDependencies = ({
     return {
       mediaUploadSigner,
       mediaAssetRepository: mediaAssetRepository ?? petRepositories.mediaAssetRepository,
+      mediaAssetReadRepository: createSupabaseMediaAssetReadRepository({ client }),
+      mediaDownloadSigner,
       petDraftAuthenticator: createSupabaseAuthAdapter({ client }),
       petDraftRepository: petRepositories.petDraftRepository,
       petMediaAttachRepository: petRepositories.petMediaAttachRepository,
@@ -308,6 +316,8 @@ export const resolveWorkerRequestDependencies = ({
     ...dependencies,
     mediaAssetRepository:
       dependencies.mediaAssetRepository ?? supabaseDependencies.mediaAssetRepository,
+    mediaAssetReadRepository:
+      dependencies.mediaAssetReadRepository ?? supabaseDependencies.mediaAssetReadRepository,
     petDraftAuthenticator:
       dependencies.petDraftAuthenticator ?? supabaseDependencies.petDraftAuthenticator,
     petDraftRepository: dependencies.petDraftRepository ?? supabaseDependencies.petDraftRepository,

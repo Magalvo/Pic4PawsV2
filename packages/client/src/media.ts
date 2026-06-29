@@ -444,3 +444,44 @@ export const createMediaUploadFlowClient = (
   };
 };
 
+// ─── Media URL client ─────────────────────────────────────────────────────────
+
+export type MediaUrlClientResult =
+  | { ok: true; url: string; expiresAt: string; mediaId: string }
+  | { ok: false; status: 'not_found' | 'forbidden' | 'signer_not_configured' | 'failed' };
+
+export type CreateMediaUrlClientInput = {
+  workerBaseUrl: string;
+  mediaUrlPath: `/${string}`;
+  fetch: MediaUploadClientFetch;
+};
+
+export type MediaUrlClient = {
+  getMediaUrl: (mediaId: string) => Promise<MediaUrlClientResult>;
+};
+
+export const createMediaUrlClient = ({
+  workerBaseUrl,
+  mediaUrlPath,
+  fetch,
+}: CreateMediaUrlClientInput): MediaUrlClient => ({
+  getMediaUrl: async (mediaId) => {
+    const requestUrl = createWorkerUrl(workerBaseUrl, `${mediaUrlPath}/${mediaId}/url` as `/${string}`);
+    try {
+      const response = await fetch(requestUrl, { method: 'GET' });
+      if (response.status === 200) {
+        const body = await parseJsonResponse(response);
+        const data = body as { url?: string; expiresAt?: string; mediaId?: string } | null;
+        if (!data?.url) return { ok: false, status: 'failed' };
+        return { ok: true, url: data.url, expiresAt: data.expiresAt ?? '', mediaId: data.mediaId ?? mediaId };
+      }
+      if (response.status === 404) return { ok: false, status: 'not_found' };
+      if (response.status === 403) return { ok: false, status: 'forbidden' };
+      if (response.status === 501) return { ok: false, status: 'signer_not_configured' };
+      return { ok: false, status: 'failed' };
+    } catch {
+      return { ok: false, status: 'failed' };
+    }
+  },
+});
+
