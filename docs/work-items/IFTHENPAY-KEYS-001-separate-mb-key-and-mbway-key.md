@@ -65,13 +65,13 @@ No new ViewModel states. This is a credential-plumbing change only.
 
 ## Acceptance Criteria
 
-- [ ] `CreateIfthenpayReferenceAdapterInput` has `mbKey` + `mbWayKey` (no `apiKey`)
-- [ ] Adapter uses `mbKey` for Multibanco, `mbWayKey` for MB Way
-- [ ] Env schema: `IFTHENPAY_MB_KEY` + `IFTHENPAY_MBWAY_KEY`; both required when provider is `ifthenpay`
-- [ ] `EnvironmentConfig.payments` has `ifthenpayMbKey` + `ifthenpayMbWayKey`
-- [ ] Migration 0010 adds both encrypted columns
-- [ ] Supabase factory reads + decrypts both; no reference to `api_key_encrypted`
-- [ ] `npm run typecheck`, `npm run lint`, `npm run test`, `npm run build` pass with no regressions
+- [x] `CreateIfthenpayReferenceAdapterInput` has `mbKey` + `mbWayKey` (no `apiKey`)
+- [x] Adapter uses `mbKey` for Multibanco, `mbWayKey` for MB Way
+- [x] Env schema: `IFTHENPAY_MB_KEY` + `IFTHENPAY_MBWAY_KEY`; both required when provider is `ifthenpay`
+- [x] `EnvironmentConfig.payments` has `ifthenpayMbKey` + `ifthenpayMbWayKey`
+- [x] Migration 0010 adds both encrypted columns
+- [x] Supabase factory reads + decrypts both; no reference to `api_key_encrypted`
+- [x] `npm run typecheck`, `npm run lint`, `npm run test`, `npm run build` pass with no regressions
 
 ## Non-Goals
 
