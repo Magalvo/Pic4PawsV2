@@ -61,19 +61,38 @@ Do not batch items that can be reviewed or merged independently.
 
 ## 4. Current State As Of 2026-06-29
 
-**Repository status**: 2546 tests passing (280 test files). Full Eupago multi-provider payment support complete and fully audit-remediated (PRs #276–#294, all open P1/P2 findings closed).
+**Repository status**: 2550 tests passing (280 test files). Full Eupago multi-provider payment support complete and audited. Local dev stack wired. Tailwind v4 + core web screens implemented.
 
-**Main branch HEAD**: PR #294 (docs: close 3 Eupago work items) — `9928413`.
+**Main branch HEAD**: PR #303 (feat: homepage role cards, pet feed grid, pet profile, auth forms) — `af30eae`.
 - `npm run typecheck` ✅
 - `npm run lint` ✅
 - `npm run test` ✅
 - `npm run build` ✅
 
 > **Note**: `packages/config/dist/` and `packages/domain/dist/` are gitignored. After pulling or switching branches, run `npm run build -w packages/config` and/or `npm run build -w packages/domain` if typecheck fails on `EnvironmentConfig` or domain types.
+>
+> **Local dev**: Supabase CLI does NOT auto-grant `service_role` table privileges. Migration `0011_service_role_grants` handles this. Worker secrets go in `.dev.vars` (gitignored) — copy from `.dev.vars.example`.
 
-**Latest checkpoint**: [2026-06-29-eupago-remediation-complete.md](docs/checkpoints/2026-06-29-eupago-remediation-complete.md) — covers PRs #282–#295, full Eupago audit-remediation cycle complete
+**Latest checkpoint**: [2026-06-29-ui-foundation-screens-complete.md](docs/checkpoints/2026-06-29-ui-foundation-screens-complete.md) — covers PRs #300–#303: local dev wiring, Tailwind v4 foundation, and core web screens
 
-**Latest audit**: [2026-06-29-sdd-audit-prs-291-294.md](docs/audits/2026-06-29-sdd-audit-prs-291-294.md) — score 9/10; P1-6 (provider ID persistence) and P3-1 (dead mb_way_phone column) closed; one P3 advisory open (DonationRepository interface hardening).
+**Latest audit**: [2026-06-29-sdd-audit-prs-291-294.md](docs/audits/2026-06-29-sdd-audit-prs-291-294.md) — score 9/10; one P3 advisory open (DonationRepository interface hardening: remove `?:` from `setProviderPaymentId`/`failDonation` in `apps/workers/src/donation.ts:75-76`).
+
+**UX/UI gap analysis**: [docs/ux-ui-gap-analysis.md](docs/ux-ui-gap-analysis.md) — updated 2026-06-29. Foundation and core web screens done. Next: shelter dashboard → mobile screen parity → real pet images.
+
+**UI implementation complete** (PRs #302–#303):
+- Tailwind v4 on web — `@theme {}` brand variables, `postcss.config.mjs`, `@tailwindcss/postcss`
+- `packages/ui` — full design token set (colours, typography, radii, spacing, RN shadows)
+- Web `SiteNav` — sticky header, active nav links, auth CTAs
+- Mobile tab bar — branded with Material Icons and orange/slate tints
+- Homepage `/` — two role-selection cards (Adopter orange, Shelter teal)
+- Pet feed `/animais` — responsive 3-col card grid with species placeholder, Disponível badge, Adoptar/Apadrinha CTAs
+- Pet profile `/animais/[petId]` — hero area, medical badges, sticky CTA bar (Apadrinha + Adoptar)
+- Auth forms `/entrar` + `/registar` — branded card forms, all states styled
+
+**Local dev stack** (PRs #300–#301):
+- `resolveWorkerRequestDependencies` now called inside `_dispatchWorkerRequest`; CORS preflight added; `WorkerSupabaseWiringError` mapped to `dependency_configuration_error`
+- `wrangler.toml` added; `.dev.vars.example` documents required secrets
+- Migration `0011_service_role_grants` grants `service_role` full access to all public tables
 
 **Track E complete**: `PASSWD-RESET-WEB-001` (PR #207) + `PASSWD-RESET-MOBILE-001` (PR #208). Web: `/recuperar-palavra-passe` + `/recuperar-palavra-passe/confirmar`; mobile: `(auth)/recuperar-palavra-passe` screen (confirm step on web). Mobile `redirectTo` uses `EXPO_PUBLIC_WEB_BASE_URL ?? 'https://pic4paws.pt'`.
 
