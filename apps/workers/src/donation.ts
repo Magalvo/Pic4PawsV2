@@ -72,8 +72,8 @@ export type DonationRepository = {
     query: DonationEligibilityQuery,
   ) => Promise<DonationEligibilityContext>;
   createDonation: (input: CreateDonationInput) => Promise<CreateDonationResult>;
-  setProviderPaymentId?: (donationId: string, providerPaymentId: string) => Promise<void>;
-  failDonation?: (donationId: string) => Promise<void>;
+  setProviderPaymentId: (donationId: string, providerPaymentId: string) => Promise<void>;
+  failDonation: (donationId: string) => Promise<void>;
 };
 
 // ─── Payload validation ───────────────────────────────────────────────────────
@@ -368,18 +368,14 @@ export const handleWorkerDonationRequest = async ({
     });
 
     if (!refResult.ok) {
-      await donationRepository.failDonation?.(donationResult.donationId).catch(() => {});
+      await donationRepository.failDonation(donationResult.donationId).catch(() => {});
       return jsonResponse({ status: 'payment_reference_failed' }, { status: 502 });
     }
 
-    if (!donationRepository.setProviderPaymentId) {
-      await donationRepository.failDonation?.(donationResult.donationId).catch(() => {});
-      return jsonResponse({ status: 'payment_reference_failed' }, { status: 502 });
-    }
     try {
       await donationRepository.setProviderPaymentId(donationResult.donationId, refResult.providerPaymentId);
     } catch {
-      await donationRepository.failDonation?.(donationResult.donationId).catch(() => {});
+      await donationRepository.failDonation(donationResult.donationId).catch(() => {});
       return jsonResponse({ status: 'payment_reference_failed' }, { status: 502 });
     }
 
