@@ -17,6 +17,7 @@ import type { WorkerParsedConfig } from '../../apps/workers/src/routes/shared';
 const PATHS = {
   webhook: '/webhooks/payment',
   media: '/media/upload',
+  mediaUrl: '/media',
   petFeed: '/pets',
   petDrafts: '/pets/drafts',
   shelter: '/shelters',
@@ -30,6 +31,7 @@ const config = {
   workers: {
     paymentWebhookPath: PATHS.webhook,
     mediaUploadPath: PATHS.media,
+    mediaUrlPath: PATHS.mediaUrl,
     petFeedPath: PATHS.petFeed,
     petDraftsPath: PATHS.petDrafts,
     shelterPath: PATHS.shelter,

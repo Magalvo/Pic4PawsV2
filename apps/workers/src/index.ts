@@ -1,6 +1,6 @@
 import { appConfig, parseEnvironmentConfig, type EnvironmentRecord } from '@pic4paws/config';
 import { resolveWorkerRequestDependencies, WorkerSupabaseWiringError, type WorkerRequestDependencies } from './dependencies';
-import { createR2UploadSignerWorkerDependencies } from './r2-signer';
+import { createR2UploadSignerWorkerDependencies, createR2DownloadSignerWorkerDependencies } from './r2-signer';
 import { createSupabaseSdkWorkerDependencies } from './supabase-sdk';
 import { handle as handleWebhooks } from './routes/webhooks';
 import { handle as handleMedia } from './routes/media';
@@ -403,6 +403,8 @@ export type {
 export {
   createR2UploadSigner,
   createR2UploadSignerWorkerDependencies,
+  createR2DownloadSigner,
+  createR2DownloadSignerWorkerDependencies,
   R2UploadSignerFactoryError,
 } from './r2-signer';
 export { handleWorkerDonationRequest, validateDonationPayload } from './donation';
@@ -558,7 +560,20 @@ export type {
   R2UploadPresigner,
   R2UploadPresignerInput,
   R2UploadPresignerResult,
+  CreateR2DownloadSignerInput,
+  R2DownloadPresigner,
+  R2DownloadPresignerInput,
 } from './r2-signer';
+export { handleWorkerMediaUrlRequest, matchWorkerMediaUrlPath } from './media-url';
+export type {
+  MediaAssetReadRepository,
+  MediaAssetReadRow,
+  MediaDownloadSigner,
+  MediaDownloadSignerInput,
+  MediaDownloadSignerResult,
+  HandleWorkerMediaUrlResult,
+} from './media-url';
+export { createSupabaseMediaAssetReadRepository } from './media-url-supabase';
 
 export type {
   PaymentReferenceFactory,
@@ -653,6 +668,7 @@ export default {
       ? handleWorkerRequest(request, env, {
           ...dependencies,
           ...createR2UploadSignerWorkerDependencies({ config: parsedConfig.config }),
+          ...createR2DownloadSignerWorkerDependencies({ config: parsedConfig.config }),
         })
       : handleWorkerRequest(request, env, dependencies);
 

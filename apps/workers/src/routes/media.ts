@@ -3,6 +3,7 @@ import {
   createWorkerMediaUploadIntent,
   persistWorkerMediaUploadIntent,
 } from '../media-upload';
+import { handleWorkerMediaUrlRequest, matchWorkerMediaUrlPath } from '../media-url';
 import type { WorkerRequestDependencies } from '../dependencies';
 import { jsonResponse, parseJsonBody, authenticateWorkerActor } from './shared';
 import type { WorkerParsedConfig } from './shared';
@@ -13,6 +14,42 @@ export const handle = async (
   dependencies: WorkerRequestDependencies,
 ): Promise<Response | null> => {
   const url = new URL(request.url);
+
+  // GET /media/:mediaId/url — signed download URL
+  const mediaId = matchWorkerMediaUrlPath(url.pathname, config.workers.mediaUrlPath);
+  if (mediaId !== null) {
+    if (request.method !== 'GET') {
+      return jsonResponse(
+        { status: 'method_not_allowed', allowedMethods: ['GET'] },
+        { status: 405, headers: { Allow: 'GET' } },
+      );
+    }
+
+    if (!dependencies.mediaAssetReadRepository) {
+      return jsonResponse({ status: 'download_signer_not_configured' }, { status: 501 });
+    }
+
+    const result = await handleWorkerMediaUrlRequest({
+      mediaId,
+      config,
+      mediaAssetReadRepository: dependencies.mediaAssetReadRepository,
+      mediaDownloadSigner: dependencies.mediaDownloadSigner,
+    });
+
+    if (!result.ok) {
+      const status =
+        result.status === 'not_found' ? 404 :
+        result.status === 'forbidden' ? 403 :
+        501;
+      return jsonResponse({ status: result.status }, { status });
+    }
+
+    return jsonResponse(
+      { url: result.url, expiresAt: result.expiresAt, mediaId: result.mediaId },
+      { status: 200 },
+    );
+  }
+
   if (url.pathname !== config.workers.mediaUploadPath) return null;
 
   if (request.method !== 'POST') {

@@ -40,6 +40,7 @@ const environmentSchema = z
     WORKER_DONATIONS_PATH: z.string().startsWith('/').default('/donations'),
     WORKER_SPONSORSHIPS_PATH: z.string().startsWith('/').default('/sponsorships'),
     WORKER_NOTIFICATIONS_PATH: z.string().startsWith('/').default('/notifications'),
+    WORKER_MEDIA_URL_PATH: z.string().startsWith('/').default('/media'),
     PAYMENT_PRIMARY_PROVIDER: z.enum(['eupago', 'ifthenpay', 'stripe']),
     PAYMENT_WEBHOOKS_ENABLED: booleanFlag,
     EUPAGO_API_KEY: optionalSecret,
@@ -99,6 +100,7 @@ export type EnvironmentConfig = {
     donationsPath: string;
     sponsorshipsPath: string;
     notificationsPath: string;
+    mediaUrlPath: string;
   };
   payments: {
     primaryProvider: PrimaryPaymentProvider;
@@ -175,6 +177,7 @@ export const parseEnvironmentConfig = (
         donationsPath: env.WORKER_DONATIONS_PATH,
         sponsorshipsPath: env.WORKER_SPONSORSHIPS_PATH,
         notificationsPath: env.WORKER_NOTIFICATIONS_PATH,
+        mediaUrlPath: env.WORKER_MEDIA_URL_PATH,
       },
       payments: {
         primaryProvider: env.PAYMENT_PRIMARY_PROVIDER,
