@@ -12,6 +12,7 @@ import {
   registerShelterMigration,
   registerUserMigration,
   renderMigrationArtifact,
+  serviceRoleGrantsMigration,
 } from '../../packages/database/src/index';
 
 describe('database migration artifacts', () => {
@@ -29,6 +30,7 @@ describe('database migration artifacts', () => {
       manualDonationTierMigration,
       eupagoProviderMigration,
       paymentConfigRlsMigration,
+      serviceRoleGrantsMigration,
     ]);
   });
 
@@ -177,6 +179,19 @@ describe('database migration artifacts', () => {
     expect(sql).not.toContain('create policy');
     expect(sql).not.toMatch(/grant .* to (anon|authenticated)/);
     expect(() => assertNonDestructiveMigration(paymentConfigRlsMigration)).not.toThrow();
+  });
+
+  it('grants service_role access to all public tables in migration 0011', () => {
+    expect(serviceRoleGrantsMigration.id).toBe('0011_service_role_grants');
+    expect(serviceRoleGrantsMigration.filename).toBe('0011_service_role_grants.sql');
+    expect(serviceRoleGrantsMigration.destructive).toBe(false);
+
+    const sql = renderMigrationArtifact(serviceRoleGrantsMigration);
+
+    expect(sql).toContain('grant all on all tables in schema public to service_role;');
+    expect(sql).toContain('grant all on all sequences in schema public to service_role;');
+    expect(sql).toContain('alter default privileges in schema public grant all on tables to service_role;');
+    expect(() => assertNonDestructiveMigration(serviceRoleGrantsMigration)).not.toThrow();
   });
 
   it('guards migration artifacts against destructive SQL', () => {
