@@ -53,36 +53,95 @@ export default function PublicarPage({ params }: { params: Promise<{ petId: stri
   }, [petId, petName]);
 
   if (viewModel.state === 'publishing') {
-    return <p>{viewModel.title}</p>;
+    return (
+      <div className="min-h-screen bg-bg flex items-center justify-center p-6">
+        <div className="bg-surface rounded-2xl border border-border p-8 w-full max-w-md text-center shadow-sm">
+          <div className="w-12 h-12 rounded-full bg-teal/10 flex items-center justify-center mx-auto mb-4">
+            <span className="text-2xl">⏳</span>
+          </div>
+          <h1 className="text-lg font-bold text-ink mb-2">{viewModel.title}</h1>
+          <p className="text-sm text-muted">{viewModel.message}</p>
+        </div>
+      </div>
+    );
   }
 
   if (viewModel.state === 'published') {
     return (
-      <main>
-        <h1>{viewModel.title}</h1>
-        <p>{viewModel.message}</p>
-        <button type="button" onClick={() => router.back()}>Voltar</button>
-      </main>
+      <div className="min-h-screen bg-bg flex items-center justify-center p-6">
+        <div className="bg-surface rounded-2xl border border-border p-8 w-full max-w-md text-center shadow-sm">
+          <div className="w-12 h-12 rounded-full bg-teal/10 flex items-center justify-center mx-auto mb-4">
+            <span className="text-2xl">✅</span>
+          </div>
+          <h1 className="text-xl font-extrabold text-ink mb-2">{viewModel.title}</h1>
+          <p className="text-sm text-muted mb-6">{viewModel.message}</p>
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="w-full py-3 rounded-xl bg-teal text-white font-bold text-sm"
+          >
+            Voltar
+          </button>
+        </div>
+      </div>
     );
   }
 
   if (viewModel.state === 'failed') {
     return (
-      <main>
-        <h1>{viewModel.title}</h1>
-        <p>{viewModel.message}</p>
-        <button type="button" onClick={confirmPublish}>Tentar de novo</button>
-        <button type="button" onClick={() => router.back()}>Cancelar</button>
-      </main>
+      <div className="min-h-screen bg-bg flex items-center justify-center p-6">
+        <div className="bg-surface rounded-2xl border border-border p-8 w-full max-w-md text-center shadow-sm">
+          <div className="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
+            <span className="text-2xl">⚠️</span>
+          </div>
+          <h1 className="text-xl font-extrabold text-ink mb-2">{viewModel.title}</h1>
+          <p className="text-sm text-muted mb-6">{viewModel.message}</p>
+          <div className="flex flex-col gap-3">
+            <button
+              type="button"
+              onClick={confirmPublish}
+              className="w-full py-3 rounded-xl bg-teal text-white font-bold text-sm"
+            >
+              Tentar de novo
+            </button>
+            <button
+              type="button"
+              onClick={() => router.back()}
+              className="w-full py-3 rounded-xl border border-border text-ink font-semibold text-sm"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </div>
     );
   }
 
   return (
-    <main>
-      <h1>{viewModel.title}</h1>
-      <p>{viewModel.message}</p>
-      <button type="button" onClick={confirmPublish}>{viewModel.primaryAction}</button>
-      <button type="button" onClick={() => router.back()}>Cancelar</button>
-    </main>
+    <div className="min-h-screen bg-bg flex items-center justify-center p-6">
+      <div className="bg-surface rounded-2xl border border-border p-8 w-full max-w-md shadow-sm">
+        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+          <span className="text-2xl">📋</span>
+        </div>
+        <h1 className="text-xl font-extrabold text-ink mb-2">{viewModel.title}</h1>
+        <p className="text-sm text-muted mb-6">{viewModel.message}</p>
+        <div className="flex flex-col gap-3">
+          <button
+            type="button"
+            onClick={confirmPublish}
+            className="w-full py-3 rounded-xl bg-primary text-white font-bold text-sm"
+          >
+            {viewModel.primaryAction}
+          </button>
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="w-full py-3 rounded-xl border border-border text-ink font-semibold text-sm"
+          >
+            Cancelar
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
