@@ -1,17 +1,19 @@
 # UX/UI Gap Analysis — Pic4Paws
 
-> Compared against `docs/design-refs/stitch_dual_onboarding` · June 2026
+> Compared against `docs/design-refs/stitch_dual_onboarding` · Last updated 2026-06-29
 
 **Status legend:** None = no styling applied · Partial = some structure but doesn't match design ref · OK = matches design ref
 
 ---
 
-## Foundation
+## Foundation ✅
 
 | Screen / Component | Web | Mobile | What's missing |
 |---|---|---|---|
-| Design tokens & shared components (`packages/ui`) | None | None | Only `brandTokens` exported — no `Button`, `Card`, `Badge`, `Avatar`, `Input`, `ProgressBar`, `NavBar` components. No Tailwind config or CSS design system wired to web. No React Native component library for mobile. |
-| Global navigation (persistent header / bottom bar) | None | Partial | **Web:** no nav at all — no header, no bottom bar, no tab strip. **Mobile:** expo-router tab bar exists but unstyled — missing paw/explore/history/profile icons and active-state orange fill. |
+| Design tokens (`packages/ui`) | OK | OK | Full `brandTokens` — colours, typography scale + weights, radii (numeric), spacing, RN shadow presets. Single source of truth for both platforms. (PR #302) |
+| Tailwind v4 on web | OK | — | `@import "tailwindcss"` + `@theme {}` with all brand variables in `apps/web/app/styles.css`. PostCSS via `@tailwindcss/postcss`. (PR #302) |
+| Web global nav | OK | — | `SiteNav` sticky header: logo, main nav links with active-state highlight, Entrar/Registar auth CTAs. Mounted in `RootLayout`. (PR #302) |
+| Mobile bottom tab bar | OK | OK | Branded tabs: orange active tint (`#ec5b13`), slate inactive, white surface. Material Icons: pets / favorite / volunteer-activism / apartment / notifications. (PR #302) |
 
 ---
 
@@ -19,10 +21,10 @@
 
 | Screen / Component | Web | Mobile | What's missing |
 |---|---|---|---|
-| Homepage `/` (`hero_page` ref) | Partial | — | Has text + CTA buttons but wrong layout — design shows two role-selection **cards** (Adopter / Shelter) with illustrations. Missing paw logo and "Already have an account? Sign In" footer link. Button colour is teal instead of orange primary per spec. |
-| Login `/entrar` | None | None | Raw unstyled form — needs brand card, orange submit button, Inter styling, error state styles, link to registration. |
-| Registration `/registar` | None | None | Same as login — raw form, no brand styling. |
-| Recover password | None | None | Raw form, no design treatment. |
+| Homepage `/` (`hero_page` ref) | OK | — | Two role-selection cards (Adopter → orange, Shelter → teal), eyebrow, h1, subtitle, Termos/Privacidade footer strip. (PR #303) |
+| Login `/entrar` | OK | None | Branded card form — email/password fields with focus-ring, forgot-password link, orange CTA, error alert, sign-up crosslink. (PR #303) · **Mobile:** raw unstyled form. |
+| Registration `/registar` | OK | None | Branded card form — email/name/password/GDPR checkbox, success/failed states styled, crosslinks. (PR #303) · **Mobile:** raw unstyled form. |
+| Recover password | None | None | Raw form, no design treatment (both platforms). |
 
 ---
 
@@ -30,8 +32,8 @@
 
 | Screen / Component | Web | Mobile | What's missing |
 |---|---|---|---|
-| Feed list `/animais` (`paw_feed_home` ref) | None | None | **Web:** plain `<ul>` list with text only. **Mobile:** text-only cards, no images. **Both:** missing full-bleed 4:5 pet photo, shelter avatar + name header per card, "Adopt Me" (orange) and "Sponsor / Donate" (teal) overlay buttons, like/comment/share interaction bar, "Available for Adoption" rescue tag. |
-| Pet profile `/animais/[petId]` (`pet_profile` ref) | None | None | Hero full-screen image with status overlay ("Available for Adoption"). Breed + age subtitle. Shelter name with location pin. "About Me" narrative section. Sponsorship Goal progress bar (% funded). Vaccinated / Sterilized / Energy Level badge row. Sticky bottom bar: Sponsor (teal) + Adopt Me (orange). |
+| Feed list `/animais` (`paw_feed_home` ref) | OK | None | **Web (PR #303):** Responsive 1→2→3 column card grid. Each card: 4:5 aspect-ratio placeholder with species emoji + gradient, Disponível badge, species · location meta, clamp-2 description, Adoptar (orange) + Apadrinha (teal) CTA buttons. Empty/failed/loading states styled. · **Mobile:** still text-only list, no card layout. **Both:** placeholder replaces real photo — images appear when media URL resolution is wired on the worker. |
+| Pet profile `/animais/[petId]` (`pet_profile` ref) | OK | None | **Web (PR #303):** 4:5 hero placeholder, Disponível overlay, back link, name/species/location, shelter link, description, medical badge row (Vacinado / Esterilizado / Microchipado — green ✓ teal when true, grey ✗ when false), Necessidades especiais badge, publicNotes, sponsorship teaser section (`#apadrinha` anchor), sticky bottom CTA bar (🤲 Apadrinha teal + 🐾 Adoptar orange). · **Mobile:** raw text layout. **Both:** hero shows placeholder until media URL resolution is added. |
 
 ---
 
@@ -39,8 +41,8 @@
 
 | Screen / Component | Web | Mobile | What's missing |
 |---|---|---|---|
-| Shelter dashboard `/abrigos/[id]` (`shelter_association_dashboard` ref) | None | None | Performance Overview card (total donations + active sponsors with % change). "Have a new resident?" orange CTA banner. Active Residents grid — filter tabs (All / Dogs / Cats …) + 2-column card grid. SPONSORED / NEEDS SPONSOR status badges on resident cards. FAB (+) for quick add. |
-| Register shelter `/abrigos/registar` | None | None | Multi-step form with brand styling — no design treatment applied. |
+| Shelter profile `/abrigos/[id]` | None | None | No design treatment — route and view-model logic exist. Design ref (`shelter_association_dashboard`): Performance Overview card (donations + sponsors), "Have a new resident?" orange CTA banner, Active Residents 2-column grid with species filter tabs, SPONSORED / NEEDS SPONSOR badges, FAB (+). |
+| Register shelter `/abrigos/registar` | None | None | Multi-step form exists (logic wired) — no brand styling applied. |
 
 ---
 
@@ -48,8 +50,8 @@
 
 | Screen / Component | Web | Mobile | What's missing |
 |---|---|---|---|
-| New pet form `/animais/rascunhos/novo` (`upload_new_pet_form` ref) | None | None | Photo upload drop-zone with dashed orange border + camera icon. Traits & Tags section with removable chip pills. Health & Medical toggles (Vaccinated / Sterilized). Monthly Sponsorship Goal field. Medical Documents secondary upload zone. "Publish to Feed" sticky orange CTA + "Save Draft" ghost link. |
-| Upload success confirmation (`upload_success_confirmation` ref) | None | None | Celebration illustration, pet preview card, "View Listing" + "Back to Dashboard" buttons — currently no success screen exists. |
+| New pet form `/animais/rascunhos/novo` (`upload_new_pet_form` ref) | None | None | Photo upload drop-zone with dashed orange border + camera icon. Traits & Tags chip pills. Health & Medical toggles. Monthly Sponsorship Goal field. Medical Documents secondary upload zone. "Publish to Feed" sticky orange CTA + "Save Draft" ghost link. |
+| Upload success confirmation | None | None | Celebration illustration, pet preview card, "View Listing" + "Back to Dashboard" buttons — currently no success screen. |
 
 ---
 
@@ -57,7 +59,7 @@
 
 | Screen / Component | Web | Mobile | What's missing |
 |---|---|---|---|
-| Donation / sponsorship flows | None | None | All pages exist (logic wired) but no design applied — forms, receipts, review screens are plain HTML/RN text. |
+| Donation / sponsorship flows | None | None | All pages exist (logic fully wired) but no design applied — forms, receipts, review screens are plain HTML/RN text. |
 
 ---
 
@@ -73,15 +75,18 @@
 
 | Screen / Component | Web | Mobile | What's missing |
 |---|---|---|---|
-| Notification list & preferences | None | None | Pages exist, no styling. |
+| Notification list & preferences | None | None | Pages exist (logic wired), no styling. |
 
 ---
 
-## Priority Order
+## Priority Order (updated 2026-06-29)
 
-1. **Foundation first** — `packages/ui` shared components + web CSS system + mobile component base. Everything else depends on this.
-2. **High-priority screens** (design refs exist): homepage role-selection cards → pet feed social cards → pet profile with hero image/badges/CTAs → shelter dashboard with metrics and resident grid.
-3. **Systematic pass** on all remaining screens: login/register/recover forms → pet upload form → upload success screen → donations/adoption/sponsorship/notification pages.
+1. ✅ **Foundation** — Tailwind v4 on web, expanded brand tokens, global nav, mobile tab bar.
+2. ✅ **High-priority web screens** — homepage role cards, pet feed card grid, pet profile with medical badges, auth forms.
+3. **Next: shelter dashboard** — design ref exists (`shelter_association_dashboard`); performance overview card, residents grid, add-pet CTA banner.
+4. **Mobile screen parity** — apply card layouts and brand styling to mobile pet feed, pet profile, auth screens.
+5. **Systematic pass** — pet upload form, upload success, donations/adoption/sponsorship/notification pages.
+6. **Real pet images** — wire media URL resolution on the worker so `heroMediaId` becomes a signed R2 URL; replace placeholders in card and profile views.
 
 ---
 
@@ -90,7 +95,7 @@
 From `docs/design-refs/stitch_dual_onboarding/pic4paws_social/DESIGN.md`:
 
 - **Primary colour (Rescue Orange):** `#ec5b13` — adopt CTAs, active nav states, branding icons
-- **Secondary colour (Teal):** `#2dd4bf` / `#2aa7a2` — sponsor/donate actions
+- **Secondary colour (Teal):** `#2aa7a2` — sponsor/donate actions
 - **Background:** `#f8f6f6` (page canvas), `#ffffff` (cards/headers)
 - **Text:** `#0f172a` (body), `#64748b` (metadata)
 - **Font:** Inter exclusively
