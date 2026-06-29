@@ -439,6 +439,24 @@ export const paymentConfigRlsMigration: MigrationArtifact = {
   sql: paymentConfigRlsSql,
 };
 
+const serviceRoleGrantsSql = `
+grant all on all tables in schema public to service_role;
+grant all on all sequences in schema public to service_role;
+grant execute on all functions in schema public to service_role;
+alter default privileges in schema public grant all on tables to service_role;
+alter default privileges in schema public grant all on sequences to service_role;
+alter default privileges in schema public grant execute on functions to service_role;
+`.trim();
+
+export const serviceRoleGrantsMigration: MigrationArtifact = {
+  id: '0011_service_role_grants',
+  filename: '0011_service_role_grants.sql',
+  description:
+    'Grants service_role full access to all public tables and sequences. Supabase hosted sets this automatically; local development requires explicit grants.',
+  destructive: false,
+  sql: serviceRoleGrantsSql,
+};
+
 export const migrationArtifacts = [
   initialDatabaseMigration,
   notificationsMigration,
@@ -449,6 +467,7 @@ export const migrationArtifacts = [
   manualDonationTierMigration,
   eupagoProviderMigration,
   paymentConfigRlsMigration,
+  serviceRoleGrantsMigration,
 ] as const;
 
 export const assertNonDestructiveMigration = (artifact: MigrationArtifact): void => {
