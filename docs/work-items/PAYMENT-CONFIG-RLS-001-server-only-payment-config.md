@@ -1,7 +1,7 @@
 ---
 id: PAYMENT-CONFIG-RLS-001
 title: Protect shelter payment configuration as server-only data
-status: in_progress
+status: done
 ---
 
 # Work-Item: PAYMENT-CONFIG-RLS-001 - Server-Only Payment Configuration

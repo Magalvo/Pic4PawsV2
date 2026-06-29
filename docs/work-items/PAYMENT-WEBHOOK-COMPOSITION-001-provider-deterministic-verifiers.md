@@ -1,7 +1,7 @@
 ---
 id: PAYMENT-WEBHOOK-COMPOSITION-001
 title: Make provider webhook verifier selection deterministic
-status: in_progress
+status: done
 ---
 
 # Work-Item: PAYMENT-WEBHOOK-COMPOSITION-001 - Provider-Deterministic Verifiers

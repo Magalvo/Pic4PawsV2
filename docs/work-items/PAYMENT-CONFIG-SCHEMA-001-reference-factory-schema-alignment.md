@@ -1,7 +1,7 @@
 ---
 id: PAYMENT-CONFIG-SCHEMA-001
 title: Align payment reference factory with the canonical credential schema
-status: in_progress
+status: done
 ---
 
 # Work-Item: PAYMENT-CONFIG-SCHEMA-001 - Reference Factory Schema Alignment
