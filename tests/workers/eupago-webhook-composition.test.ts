@@ -185,7 +185,8 @@ describe('Worker Eupago webhook composition', () => {
       {
         ...validEupagoEnv,
         PAYMENT_PRIMARY_PROVIDER: 'ifthenpay',
-        IFTHENPAY_API_KEY: 'ifthenpay-api-key',
+        IFTHENPAY_MB_KEY: 'ifthenpay-mb-key',
+        IFTHENPAY_MBWAY_KEY: 'ifthenpay-mbway-key',
         IFTHENPAY_WEBHOOK_SECRET: 'ifthenpay-webhook-secret',
       },
     );

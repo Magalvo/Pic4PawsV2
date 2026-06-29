@@ -30,7 +30,8 @@ const validIfthenpayEnv: WorkerEnv = {
   WORKER_PAYMENT_WEBHOOK_PATH: '/webhooks/payments',
   PAYMENT_PRIMARY_PROVIDER: 'ifthenpay',
   PAYMENT_WEBHOOKS_ENABLED: 'true',
-  IFTHENPAY_API_KEY: 'ifthenpay-api-key',
+  IFTHENPAY_MB_KEY: 'ifthenpay-mb-key',
+  IFTHENPAY_MBWAY_KEY: 'ifthenpay-mbway-key',
   IFTHENPAY_WEBHOOK_SECRET: ANTI_PHISHING_KEY,
 };
 

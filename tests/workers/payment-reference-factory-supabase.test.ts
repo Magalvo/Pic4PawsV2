@@ -55,19 +55,20 @@ describe('createSupabasePaymentReferenceFactory schema contract', () => {
     expect(selected).toEqual([
       'active_provider',
       'eupago_api_key_encrypted',
-      'api_key_encrypted',
+      'ifthenpay_mb_key_encrypted',
+      'ifthenpay_mbway_key_encrypted',
     ]);
     expect(selected.every((column) => schemaColumns.includes(column))).toBe(true);
-    expect(selected).not.toContain('ifthenpay_api_key_encrypted');
+    expect(selected).not.toContain('api_key_encrypted');
   });
 
-  it('dispatches Eupago when the unused legacy Ifthenpay credential is null', async () => {
+  it('dispatches Eupago when Ifthenpay credentials are null', async () => {
     const encryptedKey = await encryptCredential('eupago-secret', ENCRYPTION_SECRET);
     const { client } = makeClient({
       active_provider: 'eupago',
       eupago_api_key_encrypted: encryptedKey,
-      api_key_encrypted: null,
-      mb_way_phone: null,
+      ifthenpay_mb_key_encrypted: null,
+      ifthenpay_mbway_key_encrypted: null,
     });
     const fetch = vi.fn().mockResolvedValue(
       Response.json({
@@ -89,13 +90,14 @@ describe('createSupabasePaymentReferenceFactory schema contract', () => {
     expect(fetch).toHaveBeenCalledOnce();
   });
 
-  it('uses api_key_encrypted for the legacy Ifthenpay compatibility path', async () => {
-    const encryptedKey = await encryptCredential('legacy-ifthenpay-key', ENCRYPTION_SECRET);
+  it('dispatches Ifthenpay using mbKey for Multibanco', async () => {
+    const encryptedMbKey = await encryptCredential('ifthenpay-mb-key', ENCRYPTION_SECRET);
+    const encryptedMbWayKey = await encryptCredential('ifthenpay-mbway-key', ENCRYPTION_SECRET);
     const { client } = makeClient({
       active_provider: 'ifthenpay',
       eupago_api_key_encrypted: null,
-      api_key_encrypted: encryptedKey,
-      mb_way_phone: null,
+      ifthenpay_mb_key_encrypted: encryptedMbKey,
+      ifthenpay_mbway_key_encrypted: encryptedMbWayKey,
     });
     const fetch = vi.fn().mockResolvedValue(
       Response.json({
@@ -117,17 +119,56 @@ describe('createSupabasePaymentReferenceFactory schema contract', () => {
     expect(fetch).toHaveBeenCalledWith(
       expect.any(String),
       expect.objectContaining({
-        headers: expect.objectContaining({ Authorization: 'Bearer legacy-ifthenpay-key' }),
+        headers: expect.objectContaining({ Authorization: 'Bearer ifthenpay-mb-key' }),
       }),
     );
   });
 
-  it('fails closed without calling Ifthenpay when the legacy credential is missing', async () => {
+  it('dispatches Ifthenpay using mbWayKey for MB Way', async () => {
+    const encryptedMbKey = await encryptCredential('ifthenpay-mb-key', ENCRYPTION_SECRET);
+    const encryptedMbWayKey = await encryptCredential('ifthenpay-mbway-key', ENCRYPTION_SECRET);
     const { client } = makeClient({
       active_provider: 'ifthenpay',
       eupago_api_key_encrypted: null,
-      api_key_encrypted: null,
-      mb_way_phone: null,
+      ifthenpay_mb_key_encrypted: encryptedMbKey,
+      ifthenpay_mbway_key_encrypted: encryptedMbWayKey,
+    });
+    const fetch = vi.fn().mockResolvedValue(
+      Response.json({
+        RequestId: 'ifthenpay-mbway-001',
+        Phone: '+351910000001',
+      }),
+    ) as unknown as typeof globalThis.fetch;
+    const factory = createSupabasePaymentReferenceFactory({
+      client,
+      encryptionSecret: ENCRYPTION_SECRET,
+      fetch,
+    });
+
+    const mbWayInput: PaymentReferenceInput = {
+      ...input,
+      paymentMethod: 'mb_way',
+      mbWayPhone: '+351910000001',
+    };
+    const result = await factory.createReference(mbWayInput);
+
+    expect(result).toMatchObject({ ok: true, providerPaymentId: 'ifthenpay-mbway-001' });
+    expect(fetch).toHaveBeenCalledOnce();
+    expect(fetch).toHaveBeenCalledWith(
+      expect.any(String),
+      expect.objectContaining({
+        headers: expect.objectContaining({ Authorization: 'Bearer ifthenpay-mbway-key' }),
+      }),
+    );
+  });
+
+  it('fails closed without calling Ifthenpay when either credential is missing', async () => {
+    const encryptedMbKey = await encryptCredential('ifthenpay-mb-key', ENCRYPTION_SECRET);
+    const { client } = makeClient({
+      active_provider: 'ifthenpay',
+      eupago_api_key_encrypted: null,
+      ifthenpay_mb_key_encrypted: encryptedMbKey,
+      ifthenpay_mbway_key_encrypted: null,
     });
     const fetch = vi.fn() as unknown as typeof globalThis.fetch;
     const factory = createSupabasePaymentReferenceFactory({
@@ -147,8 +188,8 @@ describe('createSupabasePaymentReferenceFactory schema contract', () => {
     const { client } = makeClient({
       active_provider: 'eupago',
       eupago_api_key_encrypted: 'not-valid-ciphertext',
-      api_key_encrypted: null,
-      mb_way_phone: null,
+      ifthenpay_mb_key_encrypted: null,
+      ifthenpay_mbway_key_encrypted: null,
     });
     const fetch = vi.fn() as unknown as typeof globalThis.fetch;
     const factory = createSupabasePaymentReferenceFactory({

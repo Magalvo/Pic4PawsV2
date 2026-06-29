@@ -55,7 +55,8 @@ describe('parseEnvironmentConfig', () => {
           webhooksEnabled: false,
           eupagoApiKey: 'eupago-api-key',
           eupagoWebhookSecret: 'eupago-webhook-secret',
-          ifthenpayApiKey: null,
+          ifthenpayMbKey: null,
+          ifthenpayMbWayKey: null,
           ifthenpayWebhookSecret: null,
           stripeSecretKey: null,
           stripeWebhookSecret: null,
@@ -96,6 +97,22 @@ describe('parseEnvironmentConfig', () => {
       errors: [
         { path: 'STRIPE_SECRET_KEY', message: 'Required for primary provider stripe' },
         { path: 'STRIPE_WEBHOOK_SECRET', message: 'Required for primary provider stripe' },
+      ],
+    });
+  });
+
+  it('requires both IFTHENPAY_MB_KEY and IFTHENPAY_MBWAY_KEY for ifthenpay provider', () => {
+    expect(
+      parseEnvironmentConfig({
+        ...validEnv,
+        PAYMENT_PRIMARY_PROVIDER: 'ifthenpay',
+        IFTHENPAY_WEBHOOK_SECRET: 'anti-phishing-key',
+      }),
+    ).toEqual({
+      ok: false,
+      errors: [
+        { path: 'IFTHENPAY_MB_KEY', message: 'Required for primary provider ifthenpay' },
+        { path: 'IFTHENPAY_MBWAY_KEY', message: 'Required for primary provider ifthenpay' },
       ],
     });
   });
@@ -179,7 +196,8 @@ describe('redactEnvironmentConfig', () => {
         webhooksEnabled: false,
         eupagoApiKey: '[redacted]',
         eupagoWebhookSecret: '[redacted]',
-        ifthenpayApiKey: null,
+        ifthenpayMbKey: null,
+        ifthenpayMbWayKey: null,
         ifthenpayWebhookSecret: null,
         stripeSecretKey: null,
         stripeWebhookSecret: null,

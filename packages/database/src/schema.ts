@@ -218,6 +218,8 @@ export const shelterPaymentConfigs = pgTable(
     eupagoApiKeyEncrypted: text('eupago_api_key_encrypted'),
     eupagoWebhookSecretEncrypted: text('eupago_webhook_secret_encrypted'),
     ifthenpayAntiPhishingKey: text('ifthenpay_anti_phishing_key'),
+    ifthenpayMbKeyEncrypted: text('ifthenpay_mb_key_encrypted'),
+    ifthenpayMbWayKeyEncrypted: text('ifthenpay_mbway_key_encrypted'),
     status: paymentAccountStatusEnum('status').notNull().default('not_configured'),
     ...auditColumns,
   },

@@ -7,7 +7,8 @@ import type { SupabaseClientLike } from './pet-supabase';
 type ShelterReferenceConfigRow = {
   active_provider: 'eupago' | 'ifthenpay' | null;
   eupago_api_key_encrypted: string | null;
-  api_key_encrypted: string | null;
+  ifthenpay_mb_key_encrypted: string | null;
+  ifthenpay_mbway_key_encrypted: string | null;
 };
 
 const NOT_CONFIGURED: PaymentReferenceResult = { ok: false, reason: 'invalid_response' };
@@ -24,7 +25,7 @@ export const createSupabasePaymentReferenceFactory = ({
   createReference: async (input) => {
     const { data, error } = await client
       .from('shelter_payment_configs')
-      .select('active_provider,eupago_api_key_encrypted,api_key_encrypted')
+      .select('active_provider,eupago_api_key_encrypted,ifthenpay_mb_key_encrypted,ifthenpay_mbway_key_encrypted')
       .eq('shelter_id', input.shelterId)
       .is('deleted_at', null)
       .maybeSingle();
@@ -46,14 +47,16 @@ export const createSupabasePaymentReferenceFactory = ({
     }
 
     if (row.active_provider === 'ifthenpay') {
-      if (!row.api_key_encrypted) return NOT_CONFIGURED;
-      let apiKey: string;
+      if (!row.ifthenpay_mb_key_encrypted || !row.ifthenpay_mbway_key_encrypted) return NOT_CONFIGURED;
+      let mbKey: string;
+      let mbWayKey: string;
       try {
-        apiKey = await decryptCredential(row.api_key_encrypted, encryptionSecret);
+        mbKey = await decryptCredential(row.ifthenpay_mb_key_encrypted, encryptionSecret);
+        mbWayKey = await decryptCredential(row.ifthenpay_mbway_key_encrypted, encryptionSecret);
       } catch {
         return NOT_CONFIGURED;
       }
-      const adapter = createIfthenpayReferenceAdapter({ apiKey, fetch: fetchFn });
+      const adapter = createIfthenpayReferenceAdapter({ mbKey, mbWayKey, fetch: fetchFn });
       return adapter.createReference(input);
     }
 
