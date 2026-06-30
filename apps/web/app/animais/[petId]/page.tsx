@@ -3,7 +3,7 @@
 import { use, useState, useEffect } from 'react';
 import { createPetProfileClient, createMediaUrlClient, type PetProfilePet } from '@pic4paws/client';
 import { createWebPetProfileUi, type WebPetProfileResultViewModel } from '../../../src/pet-profile';
-import { workerUrl } from '../../../src/env';
+import { workerUrl, mediaUrlPath } from '../../../src/env';
 
 type Props = {
   params: Promise<{ petId: string }>;
@@ -43,7 +43,7 @@ function PetProfileLoaded({ pet }: { pet: PetProfilePet }) {
 
   useEffect(() => {
     if (!pet.heroMediaId) return;
-    const client = createMediaUrlClient({ workerBaseUrl: workerUrl(), mediaUrlPath: '/media', fetch: globalThis.fetch });
+    const client = createMediaUrlClient({ workerBaseUrl: workerUrl(), mediaUrlPath: mediaUrlPath(), fetch: globalThis.fetch });
     client.getMediaUrl(pet.heroMediaId).then((result) => { if (result.ok) setImgUrl(result.url); });
   }, [pet.heroMediaId]);
 
