@@ -3,7 +3,7 @@ import { FlatList, Image, Pressable, SafeAreaView, StyleSheet, Text, View } from
 import { useRouter } from 'expo-router';
 import { createPetFeedClient, createMediaUrlClient, type PetFeedPet } from '@pic4paws/client';
 import { createMobilePetFeedUi, type MobilePetFeedResultViewModel } from '../../../../src/pet-feed';
-import { workerUrl } from '../../../../src/env';
+import { workerUrl, mediaUrlPath } from '../../../../src/env';
 
 const SPECIES_EMOJI: Record<string, string> = {
   dog: '🐕', cat: '🐈', horse: '🐴', donkey: '🫏',
@@ -22,7 +22,7 @@ function PetCard({ pet, onPress }: { pet: PetFeedPet; onPress: () => void }) {
 
   useEffect(() => {
     if (!pet.heroMediaId) return;
-    const client = createMediaUrlClient({ workerBaseUrl: workerUrl(), mediaUrlPath: '/media', fetch: globalThis.fetch });
+    const client = createMediaUrlClient({ workerBaseUrl: workerUrl(), mediaUrlPath: mediaUrlPath(), fetch: globalThis.fetch });
     client.getMediaUrl(pet.heroMediaId).then((result) => { if (result.ok) setImgUrl(result.url); });
   }, [pet.heroMediaId]);
 

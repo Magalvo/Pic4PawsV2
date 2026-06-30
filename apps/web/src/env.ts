@@ -15,3 +15,6 @@ export const supabaseAnonKey = (): string => {
   if (!key) throw new Error('NEXT_PUBLIC_SUPABASE_ANON_KEY is not set');
   return key;
 };
+
+export const mediaUrlPath = (): `/${string}` =>
+  (process.env.NEXT_PUBLIC_WORKER_MEDIA_URL_PATH as `/${string}`) ?? '/media';
