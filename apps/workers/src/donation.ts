@@ -368,14 +368,14 @@ export const handleWorkerDonationRequest = async ({
     });
 
     if (!refResult.ok) {
-      await donationRepository.failDonation(donationResult.donationId).catch(() => {});
+      await donationRepository.failDonation(donationResult.donationId).catch((err) => console.error('[donation] failDonation error:', err));
       return jsonResponse({ status: 'payment_reference_failed' }, { status: 502 });
     }
 
     try {
       await donationRepository.setProviderPaymentId(donationResult.donationId, refResult.providerPaymentId);
     } catch {
-      await donationRepository.failDonation(donationResult.donationId).catch(() => {});
+      await donationRepository.failDonation(donationResult.donationId).catch((err) => console.error('[donation] failDonation error:', err));
       return jsonResponse({ status: 'payment_reference_failed' }, { status: 502 });
     }
 
