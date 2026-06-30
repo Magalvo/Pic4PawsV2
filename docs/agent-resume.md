@@ -59,11 +59,11 @@ Do not batch items that can be reviewed or merged independently.
 - `npm run test`
 - `npm run build`
 
-## 4. Current State As Of 2026-06-29
+## 4. Current State As Of 2026-06-30
 
-**Repository status**: 2550 tests passing (280 test files). Full Eupago multi-provider payment support complete and audited. Local dev stack wired. Tailwind v4 + core web screens implemented.
+**Repository status**: 2558 tests passing (281 test files). All web and mobile screens fully styled with Tailwind v4 brand tokens. Full Eupago multi-provider payment support complete and audited. All audit findings from the 2026-06-30 audit closed.
 
-**Main branch HEAD**: PR #303 (feat: homepage role cards, pet feed grid, pet profile, auth forms) — `af30eae`.
+**Main branch HEAD**: PR #316 (fix: SDD-AUDIT-P3 retroactive work items + failDonation observability) — `4e9f030`.
 - `npm run typecheck` ✅
 - `npm run lint` ✅
 - `npm run test` ✅
@@ -72,22 +72,26 @@ Do not batch items that can be reviewed or merged independently.
 > **Note**: `packages/config/dist/` and `packages/domain/dist/` are gitignored. After pulling or switching branches, run `npm run build -w packages/config` and/or `npm run build -w packages/domain` if typecheck fails on `EnvironmentConfig` or domain types.
 >
 > **Local dev**: Supabase CLI does NOT auto-grant `service_role` table privileges. Migration `0011_service_role_grants` handles this. Worker secrets go in `.dev.vars` (gitignored) — copy from `.dev.vars.example`.
+>
+> **Media URL path**: `NEXT_PUBLIC_WORKER_MEDIA_URL_PATH` (web) and `EXPO_PUBLIC_WORKER_MEDIA_URL_PATH` (mobile) control the Worker media path. Both default to `/media` if unset. See `.env.example`.
 
-**Latest checkpoint**: [2026-06-29-ui-foundation-screens-complete.md](docs/checkpoints/2026-06-29-ui-foundation-screens-complete.md) — covers PRs #300–#303: local dev wiring, Tailwind v4 foundation, and core web screens
+**Latest checkpoint**: [2026-06-30-styling-complete-audit-remediated.md](docs/checkpoints/2026-06-30-styling-complete-audit-remediated.md) — covers PRs #305–#316: full UI styling wave + media URL Worker route + audit cycle
 
-**Latest audit**: [2026-06-29-sdd-audit-prs-291-294.md](docs/audits/2026-06-29-sdd-audit-prs-291-294.md) — score 9/10; one P3 advisory open (DonationRepository interface hardening: remove `?:` from `setProviderPaymentId`/`failDonation` in `apps/workers/src/donation.ts:75-76`).
+**Latest audit**: [2026-06-30-sdd-audit-prs-295-313.md](docs/audits/2026-06-30-sdd-audit-prs-295-313.md) — score 8/10; all findings closed by PRs #315 + #316.
 
-**UX/UI gap analysis**: [docs/ux-ui-gap-analysis.md](docs/ux-ui-gap-analysis.md) — updated 2026-06-29. Foundation and core web screens done. Next: shelter dashboard → mobile screen parity → real pet images.
-
-**UI implementation complete** (PRs #302–#303):
+**UI implementation complete** (PRs #302–#313, all web + mobile):
 - Tailwind v4 on web — `@theme {}` brand variables, `postcss.config.mjs`, `@tailwindcss/postcss`
 - `packages/ui` — full design token set (colours, typography, radii, spacing, RN shadows)
 - Web `SiteNav` — sticky header, active nav links, auth CTAs
 - Mobile tab bar — branded with Material Icons and orange/slate tints
-- Homepage `/` — two role-selection cards (Adopter orange, Shelter teal)
-- Pet feed `/animais` — responsive 3-col card grid with species placeholder, Disponível badge, Adoptar/Apadrinha CTAs
-- Pet profile `/animais/[petId]` — hero area, medical badges, sticky CTA bar (Apadrinha + Adoptar)
-- Auth forms `/entrar` + `/registar` — branded card forms, all states styled
+- All 30+ web pages styled: homepage, pet feed, pet profile, shelter profile, auth forms, pet draft forms, adopt/publish, candidaturas, donation/sponsorship/registration forms, shelter management (8 pages), notifications, preferences, donor adoptions list
+- All mobile screens styled: pet feed, pet profile, auth forms (login + register), shelter management screens, donation/sponsorship flows
+- Real pet images via `GET /media/:mediaId/url` signed R2 URLs on both web and mobile
+
+**Media URL Worker route** (PR #308):
+- `GET /media/:mediaId/url` returns 15-min signed R2 URL
+- `createMediaUrlClient` in `@pic4paws/client`
+- Path configurable via `WORKER_MEDIA_URL_PATH` env var (PR #315); `mediaUrlPath()` helper in both app env modules
 
 **Local dev stack** (PRs #300–#301):
 - `resolveWorkerRequestDependencies` now called inside `_dispatchWorkerRequest`; CORS preflight added; `WorkerSupabaseWiringError` mapped to `dependency_configuration_error`
@@ -474,27 +478,41 @@ per deployment.
 
 ## 5. Recommended Next Work Item
 
-**Status as of 2026-06-29**: Tracks A–H complete. Full Eupago multi-provider payment support done and fully audit-remediated (PRs #276–#295). Latest audit score 9/10 with one P3 advisory. 2546 tests passing.
+**Status as of 2026-06-30**: Tracks A–H complete. Full Eupago multi-provider payment support done and fully audit-remediated. All web and mobile screens styled. Latest audit score 8/10 — all findings closed (PRs #315 + #316). 2558 tests passing (281 files).
 
-**Immediate (code, low-risk):**
+**Recommended immediate:**
 
-- **P3 interface hardening** — Remove `?:` from `setProviderPaymentId` and `failDonation` in `DonationRepository` (`apps/workers/src/donation.ts:75-76`). The Supabase implementation already provides both; making them non-optional lets TypeScript enforce it for future implementations. Also eliminates the now-unreachable runtime guard at `donation.ts:375`. Update the guard-path test at `tests/workers/donation.test.ts:494` to use a type cast.
+- **Fresh SDD audit** — run `/sdd-audit` to cover PRs #305–#316 (the 2026-06-30 audit only covered #295–#313). This confirms the remediation landed cleanly and establishes the new baseline before the Stripe track.
+
+**Next feature track — Stripe / Stripe Connect:**
+
+The architecture is already Stripe-aware (`'stripe'` in `DonationProvider`, env vars declared, DB columns exist). Key work items:
+
+1. `STRIPE-DB-001` — migration: extend `shelter_active_provider` enum, add `stripe_connect_account_id` + `stripe_connect_onboarding_complete` to `shelter_payment_configs`
+2. `STRIPE-ADAPTER-001` — `stripe-reference-adapter.ts` implementing `PaymentReferenceFactory`; extend `PaymentReference` union with `{ method: 'card'; checkoutUrl: string; sessionId: string }`
+3. `STRIPE-WEBHOOK-001` — `stripe-webhook-verifier.ts` implementing `PaymentWebhookVerifier`; wire `POST /webhooks/payments/stripe`
+4. `STRIPE-CONNECT-ONBOARD-WORKER-001` + client + web/mobile — shelter Connect account onboarding flow
+5. `STRIPE-SUBSCRIPTIONS-001` — recurring sponsorships via Stripe Subscriptions (large scope, separate sub-track)
+
+Recommend Checkout redirect (not embedded Elements) for MVP — no Stripe.js or React Native SDK needed.
 
 **Production-readiness gaps (confirmed):**
 
 1. ~~**GDPR legal pages**~~ — **Done** (`GDPR-LEGAL-001`, PR #239).
 
-2. **Payment provider env wiring** — `PAYMENT_ENCRYPTION_SECRET` must be set in Workers env before any shelter can save Eupago/Ifthenpay credentials. Not a code work item — deployment config. Per-shelter credentials are now stored encrypted in DB; the encryption key must be provisioned before shelters can configure automated payments.
+2. **Payment provider env wiring** — `PAYMENT_ENCRYPTION_SECRET` must be set in Cloudflare Workers secrets before any shelter can configure automated payment credentials. Deployment config only, not a code work item.
 
 3. ~~**Push notification delivery**~~ — **Done** (PRs #240–#244).
 
 4. **Mobile app store artifacts** — EAS build configuration, app icons, splash screens, bundle identifiers not yet set up. Required before App Store / Play Store submission.
 
-5. **Ifthenpay production readiness** — The legacy Ifthenpay path uses a single `api_key_encrypted` placeholder. Official Ifthenpay API requires distinct `MB KEY` and `MBWAY KEY` per payment method. Needs a dedicated work item before Ifthenpay shelters can go live.
+5. **CI/CD pipeline** — no GitHub Actions deploy-on-merge workflow. One `wrangler deploy` step + one Vercel deploy step covers everything.
+
+6. **Recover password styling** — logic complete (Track E, PRs #207–#208) but web and mobile forms have no brand design treatment.
 
 **Known deferred items:**
 - Mobile routing integration test (unauthenticated → redirect → sign-in → `returnTo`) requires React Native Testing Library setup.
-- P2-2 (fragile `isEmailAlreadyRegistered` string matching in `apps/workers/src/user-register-supabase.ts`) — deferred until Supabase SDK upgrade provides a stable error code.
+- P2-2 (fragile email detection in `apps/workers/src/user-register-supabase.ts`) — deferred until Supabase SDK provides a stable error code.
 - End-to-end Eupago smoke test against the real API (staging environment, not yet set up).
 
 ## 6. Handoff Prompt For New Agent Session
@@ -510,13 +528,13 @@ Continue Pic4Paws V2 development from main using strict SDD/TDD:
 - Validate: npm run typecheck, lint, test, build
 - After any env.ts change: npm run build --workspace=packages/config
 
-Current state (2026-06-29, HEAD 9928413 / PR #294): 2546 tests passing (280 files).
-Tracks A–H complete. GDPR legal pages done (PR #239). Push notifications done (PRs #240–#244).
-Full manual donation slice done + fully audit-remediated (PRs #245–#256, #261–#267, #272–#274).
-Full Eupago multi-provider support done + fully audit-remediated (PRs #276–#295): DB schema,
-payment config, webhook isolation, payment reference factory, automated donation client +
-Web + Mobile boundaries; all P1/P2 audit findings closed; score 9/10.
-Immediate next: P3 interface hardening (DonationRepository — remove optional from
-setProviderPaymentId and failDonation). Consult section 5 for the full production-readiness
-gap list.
+Current state (2026-06-30, HEAD 4e9f030 / PR #316): 2558 tests passing (281 files).
+Tracks A–H complete. All web and mobile screens fully styled with Tailwind v4 brand tokens.
+Full Eupago multi-provider payment support done and fully audit-remediated (PRs #276–#316).
+Latest audit 2026-06-30: score 8/10, all findings closed.
+Media URL Worker route done (PR #308); path env-driven via mediaUrlPath() (PR #315).
+Real pet images on web and mobile (PRs #308–#309).
+Immediate next: run /sdd-audit to cover PRs #305–#316, then start Stripe Connect track
+(STRIPE-DB-001 → STRIPE-ADAPTER-001 → STRIPE-WEBHOOK-001 → STRIPE-CONNECT-ONBOARD-*).
+Consult section 5 for the full production-readiness gap list.
 ```
